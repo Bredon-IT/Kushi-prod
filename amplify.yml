@@ -7,19 +7,19 @@ frontend:
         - cd project && (npm ci || npm install)
         - cd ..
 
-        # Install dependencies for Admin app (new path)
+        # Install dependencies for Admin app
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
     build:
       commands:
         - rm -rf dist && mkdir -p dist
 
-        # 👇 Build Customer app (output -> dist/)
+        # Build Customer app -> dist/
         - cd project && npm run build
         - cp -r dist/* ../dist/
         - cd ..
 
-        # 👇 Build Admin app (output -> dist/admin/)
+        # Build Admin app -> dist/admin/
         - cd Admin/AdminDashboard && npm run build
         - mkdir -p ../../dist/admin
         - cp -r dist/* ../../dist/admin/
@@ -27,11 +27,26 @@ frontend:
     postBuild:
       commands:
         - echo "✅ Build completed successfully!"
+
   artifacts:
     baseDirectory: dist
     files:
       - '**/*'
+
   cache:
     paths:
       - project/node_modules
       - Admin/AdminDashboard/node_modules
+
+# ✅ Important: Handle React Router routes for both apps
+# This prevents 404s when refreshing /dashboard or /admin/login
+rewrites:
+  # Customer app routing
+  - source: "</^((?!/admin).*$)/>"
+    target: /index.html
+    status: 200
+
+  # Admin app routing
+  - source: "/admin/<*>"
+    target: /admin/index.html
+    status: 200
