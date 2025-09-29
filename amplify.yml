@@ -1,0 +1,37 @@
+version: 2
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Install dependencies for Customer app
+        - cd project && (npm ci || npm install)
+        - cd ..
+
+        # Install dependencies for Admin app (new path)
+        - cd Admin/AdminDashboard && (npm ci || npm install)
+        - cd ../..
+    build:
+      commands:
+        - rm -rf dist && mkdir -p dist
+
+        # 👇 Build Customer app (output -> dist/)
+        - cd project && npm run build
+        - cp -r dist/* ../dist/
+        - cd ..
+
+        # 👇 Build Admin app (output -> dist/admin/)
+        - cd Admin/AdminDashboard && npm run build
+        - mkdir -p ../../dist/admin
+        - cp -r dist/* ../../dist/admin/
+        - cd ../..
+    postBuild:
+      commands:
+        - echo "✅ Build completed successfully!"
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - project/node_modules
+      - Admin/AdminDashboard/node_modules
