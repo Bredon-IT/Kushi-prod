@@ -3,11 +3,11 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Install dependencies for Customer app
+        # Install Customer app deps
         - cd project && (npm ci || npm install)
         - cd ..
 
-        # Install dependencies for Admin app
+        # Install Admin app deps
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
     build:
@@ -26,7 +26,7 @@ frontend:
         - cd ../..
     postBuild:
       commands:
-        - echo "✅ Build completed successfully!"
+        - echo "✅ Both Customer & Admin built successfully!"
 
   artifacts:
     baseDirectory: dist
@@ -38,10 +38,9 @@ frontend:
       - project/node_modules
       - Admin/AdminDashboard/node_modules
 
-# ✅ Important: Handle React Router routes for both apps
-# This prevents 404s when refreshing /dashboard or /admin/login
+# ✅ Handle React Router refreshes
 rewrites:
-  # Customer app routing
+  # Customer app routing (everything except /admin goes here)
   - source: "</^((?!/admin).*$)/>"
     target: /index.html
     status: 200
