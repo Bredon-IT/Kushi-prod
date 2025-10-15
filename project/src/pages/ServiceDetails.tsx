@@ -675,7 +675,7 @@ useEffect(() => {
     {/* --- CUSTOMer ASKS --- */}
     <div className="flex justify-start items-start gap-4">
       <img
-        src="/public/Lady_avatar.png" // <- Update this path
+        src="/Lady_avatar.png" // <- Update this path
         alt="Customer avatar thinking"
         className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-blue-300 shadow-md"
       />
@@ -697,7 +697,7 @@ useEffect(() => {
       </div>
       {/* Team Member Avatar - Change to a man's avatar as requested */}
       <img
-        src="/public/team-avatar.png" // <- Update this path with your man avatar image
+        src="/team-avatar.png" // <- Update this path with your man avatar image
         alt="Team member avatar describing the process"
         className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-green-300 shadow-md"
       />
@@ -766,7 +766,7 @@ useEffect(() => {
     <div className="flex justify-start"> {/* Ensures the whole block starts at the left */}
         <div className="flex items-start gap-4 p-4 rounded-lg bg-blue-50 shadow-sm border border-blue-100 max-w-[90%]">
           <img
-            src="/public/lady-avatar.png" // **<- Update this path**
+            src="/lady-avatar.png" // **<- Update this path**
             alt="Customer avatar asking about inclusions"
             className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-blue-300"
           />
@@ -807,7 +807,7 @@ useEffect(() => {
             </ul>
           </div>
           <img
-            src="/public/team-avatar.png" // **<- Update this path**
+            src="/team-avatar.png" // **<- Update this path**
             alt="Team member avatar explaining inclusions"
             className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-green-300"
           />
@@ -818,7 +818,7 @@ useEffect(() => {
     <div className="flex justify-start mt-6"> {/* Ensures the whole block starts at the left */}
         <div className="flex items-start gap-4 p-4 rounded-lg bg-red-50 shadow-sm border border-red-100 max-w-[90%]">
           <img
-            src="/public/lady-avatar.png" // **<- Update this path**
+            src="/lady-avatar.png" // **<- Update this path**
             alt="Customer avatar asking about exclusions"
             className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-red-300"
           />
@@ -859,7 +859,7 @@ useEffect(() => {
             </ul>
           </div>
           <img
-            src="/public/team-avatar.png" // **<- Update this path**
+            src="/team-avatar.png" // **<- Update this path**
             alt="Team member avatar explaining exclusions"
             className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-orange-300"
           />
@@ -879,7 +879,7 @@ useEffect(() => {
         <div className="flex justify-start items-start gap-4">
             {/* AI-Generated Lady Avatar */}
             <img
-                src="/public/Lady_avatar.png" 
+                src="/Lady_avatar.png" 
                 alt="AI Customer avatar thinking"
                 className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-blue-300 shadow-md"
             />
@@ -905,7 +905,7 @@ useEffect(() => {
             </div>
             {/* AI-Generated Team Avatar */}
             <img
-                src="/public/team-avatar.png" 
+                src="/team-avatar.png" 
                 alt="AI Team member avatar explaining benefits"
                 className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-green-300 shadow-md"
             />
