@@ -27,6 +27,8 @@ export interface Service {
   whats_included: string;
   whats_not_included: string;
   why_choose_us: string;
+  kushi_teamwork: string;
+  faq: string;
   remarks?: string;
   created_by?: string;
   updated_by?: string;
@@ -57,6 +59,8 @@ const initialEmptyFormData = {
   whats_included: '',
   whats_not_included: '',
   why_choose_us: '',
+  kushi_teamwork: '',
+  faq: '',
 };
  
 export function Services() {
@@ -121,6 +125,8 @@ const removePackage = (index: number) => setPackages(packages.filter((_, i) => i
           whats_included: item.whats_included,
           whats_not_included: item.whats_not_included,
           why_choose_us: item.why_choose_us,
+          kushi_teamwork: item.kushi_teamwork,
+          faq: item.faq,
         }));
         setServices(mappedServices);
       } catch (error) {
@@ -158,6 +164,8 @@ const removePackage = (index: number) => setPackages(packages.filter((_, i) => i
       whats_included: service.whats_included || '',
       whats_not_included: service.whats_not_included || '',
       why_choose_us: service.why_choose_us || '',
+      kushi_teamwork: service.kushi_teamwork || '',
+      faq: service.faq || '',
     });
  
     // ← Add this here
@@ -230,6 +238,8 @@ const removePackage = (index: number) => setPackages(packages.filter((_, i) => i
                 whats_included: response.data.whats_included,
                 whats_not_included: response.data.whats_not_included,
                 why_choose_us: response.data.why_choose_us,
+                kushi_teamwork: response.data.kushi_teamwork,
+                faq: response.data.faq,
               }
               : s
           )
@@ -263,6 +273,8 @@ const removePackage = (index: number) => setPackages(packages.filter((_, i) => i
           whats_included: response.data.whats_included,
           whats_not_included: response.data.whats_not_included,
           why_choose_us: response.data.why_choose_us,
+          kushi_teamwork: response.data.kushi_teamwork,
+          faq: response.data.faq,
          
         };
         setServices(prev => [newService, ...prev]);
@@ -585,6 +597,8 @@ const toggleAvailability = async (serviceId: string, currentAvailable: boolean) 
                 <textarea name="whats_included" placeholder="Whats Included" wrap="soft" value={formData.whats_included} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight: '100px', resize: 'vertical' }} />
                 <textarea name="whats_not_included" placeholder="Whats Not Included" wrap="soft" value={formData.whats_not_included} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight: '100px', resize: 'vertical' }} />
                 <textarea name="why_choose_us" placeholder="Why Choose Us" wrap="soft" value={formData.why_choose_us} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight:'100px', resize: 'vertical' }} />
+                <textarea name="kushi_teamwork" placeholder="Kushi Teamwork" wrap="soft" value={formData.kushi_teamwork} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight:'100px', resize: 'vertical' }} />                
+                <textarea name="faq" placeholder="FAQs" wrap="soft" value={formData.faq} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight:'100px', resize: 'vertical' }} />
               </div>
             </div>
  
@@ -695,6 +709,18 @@ const toggleAvailability = async (serviceId: string, currentAvailable: boolean) 
                   <p className="whitespace-pre-wrap">{viewService.why_choose_us}</p>
                 </div>
               )}
+              {viewService.kushi_teamwork && (
+                <div>
+                  <h4 className="font-semibold text-lg">Kushi Teamwork</h4>
+                  <p className="whitespace-pre-wrap">{viewService.kushi_teamwork}</p>
+                </div>
+              )}
+              {viewService.faq && (
+                <div>
+                  <h4 className="font-semibold text-lg">FAQs</h4>
+                  <p className="whitespace-pre-wrap">{viewService.faq}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -702,4 +728,5 @@ const toggleAvailability = async (serviceId: string, currentAvailable: boolean) 
     </div>
   );
 }
+ 
  

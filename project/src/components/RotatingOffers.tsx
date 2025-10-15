@@ -10,16 +10,26 @@ interface Offer {
   imageUrl?: string;
 }
 
+interface Banner {
+  id: number;
+  imageUrl: string;
+  link?: string; // optional clickable banner
+}
+
 interface RotatingOffersProps {
   onHeroImageUpdate: (imageUrl: string | null) => void;
 }
 
 const RotatingOffers: React.FC<RotatingOffersProps> = ({ onHeroImageUpdate }) => {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
   const requestRef = useRef<number>();
+  const speed = 1; // pixels per frame
 
+  // Fetch offers
   const fetchOffers = async () => {
     try {
       const res = await axios.get<Offer[]>("https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/offers");
@@ -32,21 +42,43 @@ const RotatingOffers: React.FC<RotatingOffersProps> = ({ onHeroImageUpdate }) =>
     }
   };
 
+  // Fetch banners
+  const fetchBanners = async () => {
+    try {
+      const res = await axios.get<Banner[]>("https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/banners");
+      // Prepend backend URL if imageUrl is just a filename
+      const bannersWithFullUrl = res.data.map((b) => ({
+        ...b,
+        imageUrl: b.imageUrl.startsWith("http")
+          ? b.imageUrl
+          : `https://bmytsqa7b3.ap-south-1.awsapprunner.com/uploads/${b.imageUrl}`,
+      }));
+      console.log("Fetched banners:", bannersWithFullUrl);
+      setBanners(bannersWithFullUrl);
+    } catch (err) {
+      console.error("Error fetching banners:", err);
+    }
+  };
+
   useEffect(() => {
     fetchOffers();
-    const interval = setInterval(fetchOffers, 15000);
+    fetchBanners();
+    const interval = setInterval(() => {
+      fetchOffers();
+      fetchBanners();
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
-  const speed = 1; // pixels per frame
-
   const animateScroll = () => {
-    if (!scrollRef.current) return;
+    if (!scrollRef.current || !containerRef.current) return;
 
-    const scrollWidth = scrollRef.current.scrollWidth / 2; // only reset after half (original offers)
+    const scrollWidth = scrollRef.current.scrollWidth;
 
     offsetRef.current -= speed;
-    if (-offsetRef.current >= scrollWidth) offsetRef.current = 0;
+    if (-offsetRef.current >= scrollWidth / 2) {
+      offsetRef.current = 0;
+    }
 
     scrollRef.current.style.transform = `translateX(${offsetRef.current}px)`;
     requestRef.current = requestAnimationFrame(animateScroll);
@@ -68,27 +100,63 @@ const RotatingOffers: React.FC<RotatingOffersProps> = ({ onHeroImageUpdate }) =>
     );
   }
 
+  // Duplicate offers enough times to fill the screen
+  const duplicatedOffers = [...offers];
+  while (
+    duplicatedOffers.reduce((sum, o) => sum + (o.text.length * 10 + 32), 0) <
+    window.innerWidth * 2
+  ) {
+    duplicatedOffers.push(...offers);
+  }
+
   return (
-    <div className="bg-peach-50 border-t border-b border-peach-300 overflow-hidden h-12 w-full relative">
+    <div>
+      {/* Scrolling Offers */}
       <div
-        ref={scrollRef}
-        className="flex whitespace-nowrap gap-16 absolute top-1/2 -translate-y-1/2"
-        style={{ willChange: "transform" }}
+        ref={containerRef}
+        className="bg-peach-50 border-t border-b border-peach-300 overflow-hidden h-12 w-full relative"
       >
-        {/* Duplicate offers for seamless loop */}
-        {[...offers, ...offers].map((offer, idx) => (
-          <span
-            key={idx}
-            className="text-lg font-semibold"
-            style={{
-              fontFamily: offer.fontFamily || "Arial",
-              color: offer.color || "#000",
-            }}
-          >
-            {offer.emoji} {offer.text}
-          </span>
-        ))}
+        <div
+          ref={scrollRef}
+          className="flex whitespace-nowrap absolute top-1/2 -translate-y-1/2"
+          style={{ willChange: "transform" }}
+        >
+          {duplicatedOffers.map((offer, idx) => (
+            <span
+              key={idx}
+              className="text-lg font-semibold mr-16 inline-block"
+              style={{
+                minWidth: "200px",
+                fontFamily: offer.fontFamily || "Arial",
+                color: offer.color || "#000",
+              }}
+            >
+              {offer.emoji} {offer.text}
+            </span>
+          ))}
+        </div>
       </div>
+
+      {/* Admin Banners */}
+      {banners.length > 0 && (
+        <div className="mt-2 w-full flex justify-center gap-4 flex-wrap">
+          {banners.map((banner) => (
+            <a
+              key={banner.id}
+              href={banner.link || "#"}
+              className="inline-block"
+              target={banner.link ? "_blank" : "_self"}
+              rel="noopener noreferrer"
+            >
+              <img
+                src={banner.imageUrl}
+                alt="Banner"
+                className="max-w-full h-auto rounded-md shadow-md"
+              />
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

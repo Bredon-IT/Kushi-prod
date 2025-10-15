@@ -22,6 +22,8 @@ interface Service {
     whats_included?: string;
     whats_not_included?: string;
     why_choose_us?: string;
+    kushi_teamwork: string;
+    faq: string;
     active: string;
 }
 
@@ -40,7 +42,6 @@ const Services: React.FC = () => {
         'Other Services',
     ];
 
-    // Fetch services from API
     useEffect(() => {
         const fetchServices = async () => {
             try {
@@ -75,6 +76,8 @@ const Services: React.FC = () => {
                         whats_included: item.whats_included || '',
                         whats_not_included: item.whats_not_included || '',
                         why_choose_us: item.why_choose_us || '',
+                        kushi_teamwork: item.kushi_teamwork || '',
+                        faq: item.faq || '',
                         active: item.active,
                     }));
 
@@ -87,7 +90,6 @@ const Services: React.FC = () => {
         fetchServices();
     }, []);
 
-    // Prepare subcategories grouped by category
     const subcategoryData = useMemo(() => {
         const subcategoriesByCat: Record<string, { id: string; name: string; image: string }[]> = {};
         categories.forEach(cat => {
@@ -116,132 +118,141 @@ const Services: React.FC = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleSubcategoryClick = (subcategoryName: string) => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        const urlSubcategory = subcategoryName.toLowerCase().replace(/\s/g, '-');
-        const filteredServices = allServices.filter(
-            (s) => s.subcategory.toLowerCase().replace(/\s/g, '-') === urlSubcategory
-        );
-        navigate(`/services/${urlSubcategory}`, { state: { services: filteredServices } });
-    };
+   const handleSubcategoryClick = async (subcategoryName: string) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+ 
+    // Convert to URL-friendly format (e.g., "1BHK" → "1bhk")
+    const urlSubcategory = subcategoryName.toLowerCase().replace(/\s/g, '-');
+ 
+    // Filter services under this subcategory
+    const filteredServices = allServices.filter(
+        (s) => s.subcategory.toLowerCase().replace(/\s/g, '-') === urlSubcategory
+    );
+ 
+    // ✅ Logic: If only one service, open it directly
+    if (filteredServices.length === 1) {
+        navigate(`/services/${urlSubcategory}`, {
+            state: { services: filteredServices, openDirectly: true },
+        });
+    } else {
+        // ✅ Otherwise, open list page showing all services
+        navigate(`/services/${urlSubcategory}`, {
+            state: { services: filteredServices, openDirectly: false },
+        });
+    }
+};
 
     const filteredCategories = categories;
     const displayedSubcategories = selectedCategory ? subcategoryData[selectedCategory] : [];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-peach-50 to-navy-50  relative">
+        <div className="min-h-screen bg-gradient-to-br from-peach-50 to-navy-50 relative">
 
-            {/* Hero Section */}
-            <div className="bg-gradient-to-r from-peach-300 to-navy-700 text-white py-20 relative overflow-hidden">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-                        Professional <span className="text-peach-300">Cleaning</span> Services
-                    </h1>
-                    <p className="text-xl mb-8 max-w-3xl mx-auto text-peach-100 animate-fade-in-delay">
-                        Transform your space with our premium cleaning solutions. Professional, reliable, and trusted by thousands of satisfied customers across Bangalore.
-                    </p>
+            {/* Hero Section - Reduced height */}
+            {!selectedCategory && (
+                <div className="bg-gradient-to-r from-peach-300 to-navy-700 text-white py-10 relative overflow-hidden">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-8 text-center">
+                        <h1 className="text-2xl md:text-4xl font-bold mb-4 animate-fade-in">
+                            Professional <span className="text-peach-300">Cleaning</span> Services
+                        </h1>
+                        <p className="text-lg mb-6 max-w-3xl mx-auto text-peach-100 animate-fade-in-delay">
+                            Transform your space with our premium cleaning solutions. Professional, reliable, and trusted by thousands of satisfied customers across Bangalore.
+                        </p>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Category / Subcategory Section */}
-            
-           <div className="bg-pink-50 w-full py-12">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="mb-12 text-center">
-                    {selectedCategory ? (
-                        <>
-                            <h2 className="text-3xl font-bold text-navy-800 mb-6">
-                                Explore Subcategories for <span className="text-navy-800">{selectedCategory}</span>
+            <div className="bg-pink-50 w-full py-2">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="mb-12 text-center">
+                        {!selectedCategory && (
+                            <h2 className="text-3xl font-bold text-navy-900 mb-6">
+                                Explore Our <span className="text-peach-400">Categories</span>
                             </h2>
+                        )}
+                        {selectedCategory && displayedSubcategories.length === 0 && (
+                            <p className="text-navy-700 text-lg">No subcategories available for this category.</p>
+                        )}
+                    </div>
+
+                    {/* Selected Category Name above Back button */}
+                    {selectedCategory && (
+                        <div className="mb-4 text-center">
+                            <h1 className="text-2xl font-bold text-navy-900 mb-2">
+                                {selectedCategory}
+                            </h1>
+                        </div>
+                    )}
+
+                    {/* Back to Categories button */}
+                    {selectedCategory && (
+                        <div className="mb-8 text-center">
                             <button
                                 onClick={() => setSelectedCategory(null)}
-                                className="mb-8 px-6 py-3 rounded-full text-sm font-semibold bg-gradient-to-r from-peach-200 to-navy-800 text-white hover:from-peach-300 hover:to-navy-900 transition-all duration-300">
-                                ← Back to all Categories
+                                className="px-6 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-peach-300 to-navy-700 text-white hover:from-peach-300 hover:to-navy-900 transition-all duration-300"
+                            >
+                                ← Back to Categories
                             </button>
-                        </>
-                    ) : (
-                        <h2 className="text-3xl font-bold text-navy-900 mb-6">
-                            Explore Our <span className="text-peach-400">Categories</span>
-                        </h2>
+                        </div>
                     )}
-                </div>
 
-                {selectedCategory ? (
-                    displayedSubcategories.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                            {displayedSubcategories.map((sub) => (
-                                <div
-                                    key={sub.id}
-                                    className="group rounded-3xl shadow-xl overflow-hidden bg-white transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl cursor-pointer flex flex-col"
-                                    onClick={() => handleSubcategoryClick(sub.name)}
-                                >
-                                    <div className="relative w-full h-48 sm:h-56 overflow-hidden">
-                                        <img
-                                            src={sub.image}
-                                            alt={sub.name}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
-                                    </div>
-                                    <div className="p-4 text-center flex-grow flex flex-col justify-between">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-navy-900 mb-2 group-hover:text-peach-300 transition-colors duration-300">
-                                                {sub.name}
-                                            </h3>
+                    {selectedCategory ? (
+                        displayedSubcategories.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                                {displayedSubcategories.map((sub) => (
+                                    <div
+                                        key={sub.id}
+                                        className="group rounded-3xl shadow-xl overflow-hidden bg-white transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl cursor-pointer flex flex-col"
+                                        onClick={() => handleSubcategoryClick(sub.name)}
+                                    >
+                                        <div className="relative w-full h-48 sm:h-56 overflow-hidden">
+                                            <img
+                                                src={sub.image}
+                                                alt={sub.name}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
                                         </div>
-                                        <button
-                                            className="w-full px-4 py-2 mt-2 font-semibold rounded-full bg-gradient-to-r from-peach-300 to-navy-700 text-white hover:from-peach-300 hover:to-navy-900 transition-colors duration-300"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleSubcategoryClick(sub.name);
-                                            }}
-                                        >
-                                            View Services
-                                        </button>
+                                        <div className="p-4 text-center flex-grow flex flex-col justify-between">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-navy-900 mb-2 group-hover:text-peach-300 transition-colors duration-300">
+                                                    {sub.name}
+                                                </h3>
+                                            </div>
+                                            <button
+                                                className="w-full px-4 py-2 mt-2 font-semibold rounded-full bg-gradient-to-r from-peach-300 to-navy-700 text-white hover:from-peach-300 hover:to-navy-900 transition-colors duration-300"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSubcategoryClick(sub.name);
+                                                }}
+                                            >
+                                                View Services
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                            {filteredCategories.map((category, index) => (
+                                <div
+                                    key={category}
+                                    onClick={() => handleCategoryClick(category)}
+                                    className={`group rounded-3xl shadow-xl overflow-hidden transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 border-2 cursor-pointer
+                                        bg-white text-navy-900 border-peach-200 hover:bg-gradient-to-r hover:from-peach-300 hover:to-navy-700 hover:text-white`}
+                                    style={{ animationDelay: `${index * 100}ms` }}
+                                >
+                                    <div className="p-8 text-center">
+                                        <h3 className="text-xl font-bold mb-2 transition-colors duration-300">{category}</h3>
+                                        <p className="text-sm transition-colors duration-300">View types</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    ) : (
-                        <div className="text-center p-12 bg-white rounded-lg shadow-lg">
-                            <p className="text-xl font-semibold text-gray-700">No services found for this category yet.</p>
-                            <p className="text-gray-500 mt-2">Please check back later or try a different category.</p>
-                        </div>
-                    )
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {filteredCategories.map((category, index) => (
-                            <div
-                                key={category}
-                                onClick={() => handleCategoryClick(category)}
-                                className={`group rounded-3xl shadow-xl overflow-hidden transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 border-2 cursor-pointer
-                                    ${selectedCategory === category
-                                        ? 'bg-gradient-to-r from-peach-200 to-navy-800 text-white border-peach-400'
-                                        : 'bg-white text-navy-900 border-peach-200 hover:bg-gradient-to-r hover:from-peach-300 hover:to-navy-700 hover:text-white'
-                                    }`}
-                                style={{ animationDelay: `${index * 100}ms` }}
-                            >
-                                <div className="p-8 text-center">
-                                    <h3
-                                        className={`text-xl font-bold mb-2 transition-colors duration-300 ${
-                                            selectedCategory === category
-                                                ? 'text-white'
-                                                : 'group-hover:text-white'
-                                        }`}
-                                    >
-                                        {category}
-                                    </h3>
-                                    <p className={`text-sm transition-colors duration-300 ${
-                                        selectedCategory === category ? 'text-white' : 'group-hover:text-white'
-                                    }`}>
-                                        View types
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
         </div>
     );
 };

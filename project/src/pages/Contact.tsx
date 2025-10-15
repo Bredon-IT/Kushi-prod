@@ -1,12 +1,70 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 
+const servicesWithSubcategories: { [key: string]: string[] } = {
+  residential: [
+   'Home Deep Cleaning Services',
+  'Kitchen Cleaning Services',
+  'Fridge Cleaning Services',
+  'Bathroom Cleaning Services', 
+  'Carpet Cleaning Services',
+  'Sofa Cleaning Services',
+  'Mattress cleaning Services',
+  'Window Cleaning Services',
+  'Balcony Cleaning Services',
+  'Hall Cleaning Services',
+  'Bedroom Cleaning Services',
+  'Exterior Cleaning',
+  'Water Sump Cleaning and Water Tank Cleaning',
+  'Floor Deep Cleaning Services',
+  ],
+  commercial: [
+     'Commercial Cleaning Services',
+  'Office Cleaning Services',
+  'Office Carpet Cleaning Services',
+  'Office Chair Cleaning Services',
+  'Hotel and restaurant cleaning',
+  
+  ],
+  industrial: [
+    "Factory Cleaning",
+    "Machine Cleaning",
+    "Industrial Floor Polishing",
+  ],
+  pestControl: [
+   'Cockroach Pest Control',
+  'Bedbug Pest Control',
+  'Termite Treatment',
+  'Woodborer Pest Control',
+  'Rodent Pest Control',
+  'Mosquito Pest Control',
+  'General Pest Control',
+  'Commercial Pest Control',
+  'AMC Pest Control',
+  ],
+  marblePolishing: [
+   'Indian Marble Polishing Services',
+  'Italian Marble Polishing Services',
+  'Mosaic Tile Polishing Services',
+  ],
+  packersMovers: [
+  'Home Shifting Services',
+  'Office Shifting Services',
+  ],
+  other: ['Borewell Motor Repair Services',
+  'Swimming Pool Cleaning Services',
+  'Paver Laying and Maintenance Services',
+  'Layout Development and Maintenance Services'
+]
+};
+
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     service: '',
+    subcategory: '',
     message: ''
   });
   const [errors, setErrors] = useState<any>({});
@@ -15,25 +73,12 @@ const Contact: React.FC = () => {
   const validateForm = () => {
     const newErrors: any = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Phone number must be 10 digits';
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
-    }
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Phone number must be 10 digits';
+    if (!formData.message.trim()) newErrors.message = 'Message is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -50,13 +95,11 @@ const Contact: React.FC = () => {
         email: '',
         phone: '',
         service: '',
+        subcategory: '',
         message: ''
       });
       
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setIsSubmitted(false);
-      }, 5000);
+      setTimeout(() => setIsSubmitted(false), 5000);
     }
   };
 
@@ -64,26 +107,21 @@ const Contact: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === "service" ? { subcategory: '' } : {}) // reset subcategory if service changes
     }));
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   return (
-    <div className="py-20 bg-pink-50">
+    <div className="py-20 bg-white">
       {/* Hero Section */}
       <section className="bg-gradient-to-br-pink-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Contact <span className="bg-gradient-to-r from-peach-300 to-navy-800 bg-clip-text text-transparent">Us</span>
+              Contact <span className="bg-gradient-to-r from-navy-800 to-navy-800 bg-clip-text text-transparent">Us</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Ready to transform your space? Contact our expert team today for a personalized consultation and premium service quote.
@@ -93,7 +131,7 @@ const Contact: React.FC = () => {
       </section>
 
       {/* Contact Form & Info */}
-      <section className="py-20 bg-pink-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Information */}
@@ -101,15 +139,13 @@ const Contact: React.FC = () => {
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">Get in Touch</h2>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  We're here to help you with all your cleaning and hygiene needs. 
-                  Reach out to us through any of the following channels, and we'll 
-                  get back to you promptly.
+                  We're here to help you with all your cleaning and hygiene needs. Reach out to us through any of the following channels, and we'll get back to you promptly.
                 </p>
               </div>
 
               <div className="space-y-6">
                 <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 shadow-lg">
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-3 rounded-lg shadow-lg">
+                  <div className="bg-gradient-to-r from-navy-700 to-peach-300 text-white p-3 rounded-lg shadow-lg">
                     <Phone size={24} />
                   </div>
                   <div>
@@ -119,8 +155,8 @@ const Contact: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 shadow-lg">
-                  <div className="bg-gradient-to-r from-peach-300 to-navy-700 text-white p-3 rounded-lg shadow-lg">
+                <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 shadow-lg">
+                  <div className="bg-gradient-to-r from-navy-700 to-peach-300 text-white p-3 rounded-lg shadow-lg">
                     <Mail size={24} />
                   </div>
                   <div>
@@ -130,19 +166,22 @@ const Contact: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-6 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200 shadow-lg">
-                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-lg shadow-lg">
-                    <MapPin size={24} />
+                <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 shadow-lg">
+                  <div className="bg-gradient-to-r from-navy-700 to-peach-300 text-white p-3 rounded-lg shadow-lg">   
+                     <MapPin size={24} />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Address</h3>
-                    <p className="text-gray-600">No 115, GVR Complex, Thambu Chetty Palya Main Rd, opposite to Axis Bank ATM, P and T Layout, Anandapura, Battarahalli<br />Bengaluru, Karnataka 560049</p>
+                    <p className="text-gray-600">
+                      No 115, GVR Complex, Thambu Chetty Palya Main Rd, opposite to Axis Bank ATM, P and T Layout, Anandapura, Battarahalli<br/>
+                      Bengaluru, Karnataka 560049
+                    </p>
                     <p className="text-sm text-gray-500">Visit us for consultations</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200 shadow-lg">
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-lg shadow-lg">
+                <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 shadow-lg">
+                  <div className="bg-gradient-to-r from-navy-700 to-peach-300 text-white p-3 rounded-lg shadow-lg">
                     <Clock size={24} />
                   </div>
                   <div>
@@ -237,11 +276,35 @@ const Contact: React.FC = () => {
                     className="w-full p-3 bg-white border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                   >
                     <option value="">Select a service</option>
-                    <option value="residential">Residential Cleaning</option>
-                    <option value="commercial">Commercial Hygiene</option>
-                    <option value="industrial">Industrial Cleaning</option>
-                    <option value="construction">Post-Construction</option>
+                    <option value="residential">Residential Cleaning Services</option>
+                    <option value="commercial">Commercial Cleaning Services</option>
+                    <option value="industrial">Industrial Cleaning Services</option>
+                    <option value="pestControl">Pest Control Services</option>
+                    <option value="marblePolishing">Marble Polishing Services</option>
+                    <option value="packersMovers">Packers & Movers</option>
                     <option value="other">Other</option>
+                  </select>
+                </div>
+
+                {/* Subcategory Dropdown */}
+                <div>
+                  <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-2">
+                    Subcategory
+                  </label>
+                  <select
+                    id="subcategory"
+                    name="subcategory"
+                    value={formData.subcategory}
+                    onChange={handleChange}
+                    className="w-full p-3 bg-white border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
+                    disabled={!formData.service}
+                  >
+                    <option value="">Select a subcategory</option>
+                    {formData.service &&
+                      servicesWithSubcategories[formData.service]?.map((sub, index) => (
+                        <option key={index} value={sub}>{sub}</option>
+                      ))
+                    }
                   </select>
                 </div>
 
@@ -265,7 +328,7 @@ const Contact: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-peach-300 to-navy-800 text-white py-3 px-6 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all shadow-lg flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-navy-700 to-peach-200 text-white py-3 px-6 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all shadow-lg flex items-center justify-center gap-2"
                 >
                   <Send size={20} />
                   Send Message

@@ -1,5 +1,6 @@
+// App.tsx
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -18,14 +19,15 @@ import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import ForgetPassword from './pages/ForgetPassword';
-
+import { LocationProvider } from "./contexts/LocationContext";
 import ServiceDetails from './pages/ServiceDetails';
 import Gallery from './pages/Gallery';
 import OrderHistory from './pages/OrderHistory';
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <LocationProvider>
         <div className="min-h-screen bg-orange-50 text-gray-900">
           <Navbar />
           <main className="pt-20">
@@ -39,20 +41,20 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/booking" element={<Booking />}/>
+              <Route path="/booking" element={<Booking />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/orderhistory" element={<OrderHistory />}/>
+              <Route path="/orderhistory" element={<OrderHistory />} />
               <Route path="/services/:subcategory" element={<ServiceDetails />} />
-              <Route path="/gallery" element={<Gallery/>}/>
-              <Route path="/forgetpassword" element={<ForgetPassword/>}/>
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/forgetpassword" element={<ForgetPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
           <Footer />
           <WhatsAppButton />
         </div>
-      </Router>
+      </LocationProvider>
     </AuthProvider>
   );
 }

@@ -47,17 +47,38 @@ export default {
           '0%': { opacity: 0, transform: 'translateY(10px)' },
           '100%': { opacity: 1, transform: 'translateY(0)' },
         },
+        'fade-in-up': {
+          '0%': { opacity: 0, transform: 'translateY(10px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
+        },
         scroll: {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(-100%)' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.05)', opacity: '0.8' },
         },
       },
 
       animation: {
         'fade-in': 'fade-in 0.5s ease-out forwards',
+        'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         scroll: 'scroll 20s linear infinite',
+        'pulse-slow': 'pulse-slow 3s infinite ease-in-out',
+      },
+
+      screens: {
+        sm: '480px',   // Mobile devices
+        md: '768px',   // Tablets
+        lg: '1024px',  // Laptops
+        xl: '1280px',  // Desktops
+        '2xl': '1536px', // Large screens
       },
     },
   },
-  plugins: [],
-}
+
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
+};
