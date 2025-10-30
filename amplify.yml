@@ -1,0 +1,51 @@
+version: 2
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Install Customer app deps
+        - cd project && (npm ci || npm install)
+        - cd ..
+
+        # Install Admin app deps
+        - cd Admin/AdminDashboard && (npm ci || npm install)
+        - cd ../..
+    build:
+      commands:
+        - rm -rf dist && mkdir -p dist
+
+        # Build Customer app -> dist/
+        - cd project && npm run build
+        - cp -r dist/* ../dist/
+        - cd ..
+
+        # Build Admin app -> dist/admin/
+        - cd Admin/AdminDashboard && npm run build
+        - mkdir -p ../../dist/admin
+        - cp -r dist/* ../../dist/admin/
+        - cd ../..
+    postBuild:
+      commands:
+        - echo "✅ Both Customer & Admin built successfully!"
+
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+
+  cache:
+    paths:
+      - project/node_modules
+      - Admin/AdminDashboard/node_modules
+
+# ✅ Handle React Router refreshes
+rewrites:
+  # Customer app routing (everything except /admin goes here)
+  - source: "</^((?!/admin).*$)/>"
+    target: /index.html
+    status: 200
+
+  # Admin app routing
+  - source: "/admin/<*>"
+    target: /admin/index.html
+    status: 200
