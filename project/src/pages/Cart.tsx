@@ -46,7 +46,7 @@ const mockMiniServices: Service[] = [
     reviews: '120',
     duration: '1-2 hours',
     description: 'With our skilled kitchen chimney cleaning services, you can restore suction power and get rid of grease buildup. To guarantee smoke-free cooking and better kitchen hygiene, we thoroughly clean filters, ducts, and hoods using non-toxic, safe techniques. Our service, which is trusted by residences and dining establishments, keeps your kitchen fresh and your chimney operating efficiently.',
-    image: 'https://th.bing.com/th/id/OIP.od-xJrn3Q9c-JZTOHf5glQHaE8?w=231&h=180&c=7&r=0&o=7&am…',
+    image: 'https://th.bing.com/th/id/OIP.od-xJrn3Q9c-JZTOHf5glQHaE8?w=231&h=180&c=7&r=0&o=7&pid=1.7&rm=3', 
   },
   {
     id: 'mini-2',
@@ -58,9 +58,9 @@ const mockMiniServices: Service[] = [
     reviews: '85',
     duration: '30 mins',
     description: 'Use our expert microwave oven cleaning services to guarantee hygienic and safe cooking. We use non-toxic, food-safe products to remove food stains, grease, and smells from all interior surfaces. Our service, which is perfect for both residential and commercial kitchens, restores the cleanliness and functionality of your microwave in a single visit.',
-    image: 'https://thumbs.dreamstime.com/b/anti-grease-spray-hand-girl-who-cleaning-kitchen-microwave-oven-dirt-modern-antistatic-agent-334440744.jpg',
-  },
- 
+     image: 'https://thumbs.dreamstime.com/b/anti-grease-spray-hand-girl-who-cleaning-kitchen-microwave-oven-dirt-modern-antistatic-agent-334440744.jpg', 
+  
+        },
   {
     id: 'mini-3',
     name: 'Exhaust fan cleaning',
@@ -71,8 +71,9 @@ const mockMiniServices: Service[] = [
     reviews: '60',
     duration: '45 mins',
     description: 'Use our professional exhaust fan cleaning services to maintain fresh, clean air in your kitchen or bathroom. To restore ideal airflow and lower the risk of a fire, we remove grease, dust, and grime accumulation. Our skilled experts make sure your exhaust fan operates smoothly and effectively by using safe, efficient techniques.',
-    image: 'https://www.wikihow.com/images/thumb/e/e5/Clean-a-Kitchen-Exhaust-Fan-Step-6-Version-2.jpg/v4-460px-Clean-a-Kitchen-Exhaust-Fan-Step-6-Version-2.jpg',
-  },
+     image: 'https://www.wikihow.com/images/thumb/e/e5/Clean-a-Kitchen-Exhaust-Fan-Step-6-Version-2.jpg/v4-460px-Clean-a-Kitchen-Exhaust-Fan-Step-6-Version-2.jpg', 
+  
+       },
   {
     id: 'mini-4',
     name: 'Fridge Cleaning (150-200ltr)',
@@ -83,7 +84,7 @@ const mockMiniServices: Service[] = [
     reviews: '150',
     duration: '1 hour',
     description: 'Use our expert fridge cleaning services to keep your refrigerator odor-free, hygienic, and fresh. We use eco-friendly, food-safe products to remove spills, stains, and bacteria from all surfaces, including shelves, trays, and seals. Perfect for commercial and residential kitchens. With professional deep cleaning from Kushi Services, you can guarantee safe food storage.',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.gBHvUlKTqQsxNndmeVyfpQHaHf?rs=1&pid=ImgDetMain&o=7&rm=3%27',
+    image:'https://tse4.mm.bing.net/th/id/OIP.gBHvUlKTqQsxNndmeVyfpQHaHf?rs=1&pid=ImgDetMain&o=7&rm=3', 
     service_package: '150-200ltr',
   },
   {
@@ -96,8 +97,9 @@ const mockMiniServices: Service[] = [
     reviews: '150',
     duration: '1-2 hours',
     description: 'Use our expert fridge cleaning services to keep your refrigerator odor-free, hygienic, and fresh. We use eco-friendly, food-safe products to remove spills, stains, and bacteria from all surfaces, including shelves, trays, and seals. Perfect for commercial and residential kitchens. With professional deep cleaning from Kushi Services, you can guarantee safe food storage.',
-    image: 'https://c8.alamy.com/comp/2GNEE46/the-man-cleaning-fridge-in-hygiene-concept-2GNEE46.jpg',
-  service_package: '200-500ltr',
+    image: 'https://images.airtasker.com/v7/https://airtasker-seo-assets-prod.s3.amazonaws.com/en_AU/1724116114503-fridge-cleaning.jpg',
+ 
+      service_package: '200-500ltr',
   },
   {
     id: 'mini-6',
@@ -109,8 +111,8 @@ const mockMiniServices: Service[] = [
     reviews: '150',
     duration: '2-3 hours',
     description: 'Use our expert fridge cleaning services to keep your refrigerator odor-free, hygienic, and fresh. We use eco-friendly, food-safe products to remove spills, stains, and bacteria from all surfaces, including shelves, trays, and seals. Perfect for commercial and residential kitchens. With professional deep cleaning from Kushi Services, you can guarantee safe food storage.',
-    image: 'https://images.airtasker.com/v7/https://airtasker-seo-assets-prod.s3.amazonaws.com/en_AU/1724116114503-fridge-cleaning.jpg',
-    service_package: '500-1000ltr',
+    image:'https://c8.alamy.com/comp/2GNEE46/the-man-cleaning-fridge-in-hygiene-concept-2GNEE46.jpg',
+        service_package: '500-1000ltr',
   },
 ];
  
@@ -172,7 +174,7 @@ const Cart: React.FC = () => {
           image: item.service_image_url
             ? item.service_image_url.startsWith("http")
               ? item.service_image_url
-              :  `Global_API_BASE${item.service_image_url}`
+              : `Global_API_BASE${item.service_image_url}`
             : "/placeholder.jpg",
           service_package: item.service_package || "",
         }));
@@ -258,12 +260,12 @@ const Cart: React.FC = () => {
   const cartSubcategories = Array.from(new Set(cart.map(item => item.subcategory)));
   const cartCategories = Array.from(new Set(cart.map(item => item.category)));
  
-  // 1. Attempt 1: Filter for Same Subcategory
+ // 1. Attempt 1: Filter for Same Subcategory
   let similarServices = allServices
-    .filter(service =>
-      cartSubcategories.includes(service.subcategory) &&
-      !cart.some(item => item.id === service.id)
-    );
+  .filter(service =>
+    cartSubcategories.includes(service.subcategory) &&
+    !cart.some(item => item.id === service.id)
+   );
  
   // 2. Fallback 1: If no same-subcategory services, find Same Main Category services
   if (similarServices.length === 0) {
@@ -300,8 +302,6 @@ const Cart: React.FC = () => {
  
  
  
- 
- 
   const toggleDescription = (id: string) => {
     setExpandedDescriptions(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -309,18 +309,20 @@ const Cart: React.FC = () => {
   // --- EMPTY CART VIEW ---
   if (cart.length === 0) {
     return (
-      <div className="bg-white py-10 w-full">
-        <div className="max-w-4xl mx-auto px-2 sm:px-3 lg:px-4">
-          <div className="text-center bg-white rounded-3xl p-12 shadow-xl border-2 border-peach-200">
-           
-            <h1 className="text-4xl font-bold text-navy-900 mb-6">Your Cart is Empty</h1>
-            <p className="text-xl text-navy-600 mb-4 max-w-1xl mx-auto">
+      <div className="bg-white py-2 ">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center bg-white rounded-3xl p-6 shadow-xl border-2 border-peach-200">
+            <div className="bg-gradient-to-r from-peach-100 to-navy-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
+              <ShoppingCart size={38} className="text-navy-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-navy-900 mb-6">Your Cart is Empty</h1>
+            <p className="text-3m text-navy-600 mb-8 max-w-2xl mx-auto">
               Discover our professional cleaning services and add them to your cart.
             </p>
             <div className="flex justify-center">
               <Link
                 to="/services"
-                className="bg-gradient-to-r from-peach-300 to-navy-700 text-white px-8 py-4 rounded-xl text-lg font-bold hover:from-peach-200 hover:to-navy-800 transition-all shadow-lg inline-flex items-center justify-center gap-2"
+                className="bg-gradient-to-r from-peach-300 to-navy-700 text-white px-8 py-4 rounded-xl text-lg font-bold hover:from-peach-300 hover:to-navy-700 transition-all shadow-lg inline-flex items-center justify-center gap-2"
               >
                 <ShoppingCart size={20} />
                 Browse Services
@@ -334,9 +336,15 @@ const Cart: React.FC = () => {
  
   // --- MAIN CART VIEW ---
   return (
-    <div className="bg-white py-10 w-full">
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8">
-       
+    <div className="bg-white py-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Link
+          to="/services"
+          className="inline-flex items-center gap-2 text-peach-600 hover:text-peach-700 font-medium mb-6 bg-white px-4 py-2 rounded-lg shadow-md border border-peach-200"
+        >
+          <ArrowLeft size={20} />
+          Continue Shopping
+        </Link>
  
         <div className="text-center mb-6">
           <h1 className="text-4xl sm:text-5xl font-bold text-navy-900 mb-4">
@@ -418,7 +426,7 @@ const Cart: React.FC = () => {
  
           {/* Order Summary (lg:col-span-1) */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-peach-200 ">
+            <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-peach-200 sticky top-24">
               <h3 className="text-2xl font-bold text-navy-900 mb-6 text-center">Order Summary</h3>
  
               <div className="space-y-4 mb-6">
@@ -441,7 +449,7 @@ const Cart: React.FC = () => {
               <button
                 onClick={handleProceedToBooking}
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-peach-300 to-navy-700 text-white py-4 rounded-xl text-lg font-bold hover:from-peach-300 hover:to-navy-700 transition-all shadow-lg mb-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-peach-300 to-navy-700 text-white py-4 rounded-xl text-lg font-bold hover:from-peach-700 hover:to-navy-800 transition-all shadow-lg mb-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isProcessing ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
@@ -486,7 +494,7 @@ const Cart: React.FC = () => {
               100% { transform: translateX(-66.666%); }
             }
             .animate-marquee-seamless {
-              animation: marquee-seamless 80s linear infinite;
+              animation: marquee-seamless 50s linear infinite;
               will-change: transform;
             }
           `}</style>
@@ -576,7 +584,7 @@ const Cart: React.FC = () => {
               100% { transform: translateX(-66.666%); }
             }
             .animate-marquee-seamless {
-              animation: marquee-seamless 50s linear infinite;
+              animation: marquee-seamless 30s linear infinite;
               will-change: transform;
             }
           `}</style>

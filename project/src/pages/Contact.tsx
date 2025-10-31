@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { useLocationContext } from "../contexts/LocationContext";
+// 1. IMPORT useNavigate from react-router-dom
+import { useNavigate } from 'react-router-dom';
 
 const locationDetails: Record<string, any> = {
   Bangalore: {
@@ -10,7 +12,7 @@ const locationDetails: Record<string, any> = {
     hours: 'Mon-Sat: 8:00 AM - 8:00 PM | Sun: Emergency'
   },
   Hyderabad: {
-    phone: "+91 9000000000",
+    phone:"+91 9606999081/82/83/84/85",
     email: "info.hyderabad@kushiservices.in",
     address: "Some Hyderabad Address, Telangana 500001 (Near Test Landmark)",
     hours: 'Mon-Sat: 9:00 AM - 7:00 PM | Sun: Closed'
@@ -57,6 +59,7 @@ const InputGroup = ({ label, name, type, value, onChange, error, placeholder }: 
 
 const Contact: React.FC = () => {
   const { location } = useLocationContext();
+  const navigate = useNavigate(); // 2. INITIALIZE useNavigate hook
   const currentDetails = locationDetails[location] || locationDetails['Bangalore'];
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', subcategory: '', message: '' });
   const [errors, setErrors] = useState<any>({});
@@ -64,8 +67,8 @@ const Contact: React.FC = () => {
 
   // Dynamic Directions URL Construction
   const encodedAddress = encodeURIComponent(currentDetails.address);
-  // Use 'saddr=Current+Location' to prompt for user's location, and 'daddr' for destination
-  const directionsUrl = `https://www.google.com/maps/dir/Current+Location/${encodedAddress}`;
+  // Corrected the Google Maps URL structure and removed the placeholder prefix
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`; 
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -83,9 +86,18 @@ const Contact: React.FC = () => {
     e.preventDefault();
     if (validateForm()) {
       console.log('Form submitted:', formData);
+      
+      // Simulate API call success
       setIsSubmitted(true);
       setFormData({ name: '', email: '', phone: '', service: '', subcategory: '', message: '' });
-      setTimeout(() => setIsSubmitted(false), 5000);
+      
+      // 3. NAVIGATION LOGIC
+      // Wait for a short moment to show the success message, then navigate.
+      // Use the actual path to your services page, e.g., '/services'
+      setTimeout(() => {
+        setIsSubmitted(false);
+        navigate('/services'); 
+      }, 1500); // 1.5 seconds delay
     }
   };
 
@@ -115,7 +127,8 @@ const Contact: React.FC = () => {
               {isSubmitted && (
                 <div className="mb-3 p-3 bg-green-50 border border-green-300 rounded-lg flex items-center gap-2">
                   <CheckCircle size={18} className="text-green-600 flex-shrink-0" />
-                  <p className="text-green-700 text-sm">Thank you! Your message has been sent successfully.</p>
+                  {/* Note: The success message will briefly display before navigation */}
+                  <p className="text-green-700 text-sm">Thank you! Your message has been sent successfully. Redirecting...</p>
                 </div>
               )}
 

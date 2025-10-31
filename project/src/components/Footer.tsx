@@ -30,7 +30,7 @@ const Footer: React.FC = () => {
       instagramUrl: "YOUR_TEST_INSTA_URL",
     },
     Hyderabad: {
-      phone: "+91 9000000000",
+      phone:"+91 9606999081/82/83/84/85",
       email: "info.hyderabad@kushiservices.in",
       address: "Some Hyderabad Address, Telangana 500001",
       whatsappNumber: "YOUR_TEST_WHATSAPP_NUMBER",
