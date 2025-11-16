@@ -1,0 +1,74 @@
+/* --------------------------------------------------
+   📱 GLOBAL MEDIA QUERIES (Added as requested)
+-------------------------------------------------- */
+
+@media (max-width: 640px) {      /* MOBILE */
+  .mobile-hidden { display: none !important; }
+  .mobile-block { display: block !important; }
+  .mobile-center { text-align: center !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {   /* TABLETS */
+  .tab-hidden { display: none !important; }
+  .tab-block { display: block !important; }
+}
+
+@media (min-width: 1025px) {    /* DESKTOP */
+  .desktop-hidden { display: none !important; }
+  .desktop-block { display: block !important; }
+}
+
+/* -------------------------------------------------- */
+/*                TAILWIND IMPORTS                    */
+/* -------------------------------------------------- */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --------------------------------------------------
+   🌐 General Scrollbar Settings
+-------------------------------------------------- */
+
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+
+/* --------------------------------------------------
+   ⚙️ Animations
+-------------------------------------------------- */
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+/* --------------------------------------------------
+    ⭐ Elfsight Google Reviews Fix
+-------------------------------------------------- */
+
+/* Removes unwanted bottom white space */
+.elfsight-app-fbc5a718-3c29-414c-8710-06d622eca56c {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hides Elfsight invisible placeholders / tracking iframes */
+body > div[style*="height"],
+body > iframe[title*="Elfsight"] {
+  display: none !important;
+}
+
+/* Smooth color transition from Reviews section to footer */
+.google-reviews-blend {
+  background: linear-gradient(180deg, #ffffff 0%, #111827 100%);
+}
