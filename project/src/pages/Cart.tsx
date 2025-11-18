@@ -371,7 +371,7 @@ const Cart: React.FC = () => {
           className="inline-flex items-center gap-2 text-peach-600 hover:text-peach-700 font-medium mb-6 bg-white px-4 py-2 rounded-lg shadow-md border border-peach-200"
         >
           <ArrowLeft size={20} />
-          Continue Shopping
+          Continue Booking
         </Link>
  
         <div className="text-center mb-6">

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 // Removed useTheme, Moon, Sun imports as App Preferences (Dark Mode toggle) is gone
 import axios from "axios";
+import Global_API_BASE from "../services/GlobalConstants";
  
 interface Admin {
   adminId: number;
@@ -54,7 +55,7 @@ export function Settings() {
   });
   const fetchUsers = async () => {
     try {
-      const res = await axios.get<Admin[]>("https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/login/all-users");
+      const res = await axios.get<Admin[]>(`${Global_API_BASE}/api/login/all-users`);
       // Exclude the first admin (assuming first admin has adminId = 1)
       const filteredUsers = res.data.filter(user => user.adminId !== 1);
       setUsers(filteredUsers);
@@ -83,7 +84,8 @@ export function Settings() {
     return;
   }
   try {
-    await axios.post("https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/login/add-user",
+    await axios.post(
+        `${Global_API_BASE}/api/login/add-user`,
       {...newUser, phoneNumber: `+91${phone}`},
       {params: { adminId: admin?.adminId } }// current logged-in admin
     );
@@ -100,7 +102,8 @@ export function Settings() {
 const handleDeleteUser = async (adminId: number) => {
   if (!window.confirm("Are you sure you want to delete this user?")) return;
   try {
-    await axios.delete(`https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/login/delete-user/${adminId}`, {
+    await axios.delete(
+        `${Global_API_BASE}/api/login/delete-user/${adminId}`, {
       params: { adminId: admin?.adminId } // current logged-in admin
     });
     alert("✅ User deleted successfully");
@@ -143,11 +146,10 @@ const handleDeleteUser = async (adminId: number) => {
   // ✅ save profile updates
   const handleProfileUpdate = () => {
     if (formData) {
-      axios
-        .put(
-          `https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/login/update/${formData.adminId}`,
-          formData
-        )
+       axios.put(
+      `${Global_API_BASE}/api/login/update/${formData.adminId}`,
+      formData
+    )
         .then((res) => {
           setAdmin(res.data);
           setEditMode(false);
@@ -174,10 +176,9 @@ const handlePasswordChange = () => {
     return;
   }
  
-  axios
-    .put(
-      `https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/login/update-password/${admin.adminId}`,
-      null, // body not needed, params in query
+ axios.put(
+      `${Global_API_BASE}/api/login/update-password/${admin.adminId}`,
+      null,
       {
         params: {
           oldPassword: settings.currentPassword,
@@ -208,8 +209,7 @@ const handlePasswordChange = () => {
   useEffect(() => {
     const email = localStorage.getItem("adminEmail");
     if (email) {
-      axios
-        .get<Admin>(`https://bmytsqa7b3.ap-south-1.awsapprunner.com/api/login/me/${email}`)
+      axios.get<Admin>(`${Global_API_BASE}/api/login/me/${email}`)
         .then((res) => {
           setAdmin(res.data);
           setFormData(res.data);
@@ -525,5 +525,4 @@ const handlePasswordChange = () => {
     </div>
     </div>
   );
-} 
- 
+}
