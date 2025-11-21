@@ -1,0 +1,39 @@
+name: Frontend CI – Build & Validate
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Step 3: Install & Build Customer App
+      - name: Build Customer App
+        run: |
+          cd project
+          npm install
+          npm run build
+
+      # Step 4: Install & Build Admin Dashboard
+      - name: Build Admin Dashboard
+        run: |
+          cd Admin/AdminDashboard
+          npm install
+          npm run build
+
+      # Step 5: Success Message
+      - name: Done
+        run: echo "✅ Frontend build completed successfully"
