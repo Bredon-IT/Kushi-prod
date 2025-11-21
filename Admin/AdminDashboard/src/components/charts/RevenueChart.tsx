@@ -14,7 +14,7 @@ export function RevenueChart() {
     StatisticsService.getStatistics('one-month')
       .then((res) => {
         const labels = res.data.labels || res.data.lables;
-
+ 
         const data = res.data.data;
         const combined = labels.map((label: string, index: number) => ({
           name: label,
@@ -40,4 +40,5 @@ export function RevenueChart() {
   );
 }
  
+  
  

@@ -42,7 +42,7 @@ export default {
         },
       },
 
-      // ✅ ALL KEYFRAMES
+      // 🔥 All Keyframes (Existing + Updated borderMove)
       keyframes: {
         'fade-in': {
           '0%': { opacity: 0, transform: 'translateY(10px)' },
@@ -64,15 +64,27 @@ export default {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+
+        // 🚀 Updated animation effect for border movement
+        borderMove: {
+          "0%": { clipPath: "inset(0 100% 0 0)" },
+          "25%": { clipPath: "inset(0 0 0 0)" },
+          "50%": { clipPath: "inset(0 0 0 0)" },
+          "75%": { clipPath: "inset(0 0 0 0)" },
+          "100%": { clipPath: "inset(0 100% 0 0)" },
+        },
       },
 
-      // ✅ ALL ANIMATIONS
+      // 🔥 All Animations (Existing + borderMove)
       animation: {
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         scroll: 'scroll 20s linear infinite',
         'pulse-slow': 'pulse-slow 3s infinite ease-in-out',
         'marquee-scroll': 'marquee-scroll 30s linear infinite',
+
+        // 🚀 Animate border movement
+        borderMove: 'borderMove 1.2s linear infinite',
       },
 
       screens: {

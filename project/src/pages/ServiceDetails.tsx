@@ -182,7 +182,10 @@ const [activeInclusionTab, setActiveInclusionTab] = useState<"included" | "not_i
 const [showAllBenefitsSummary, setShowAllBenefitsSummary] = useState(false);
 const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 const [visibleBenefitCount, setVisibleBenefitCount] = useState(0);
- 
+
+ useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
 
  //BENEFITS CODE :
 useEffect(() => {
@@ -444,39 +447,7 @@ useEffect(() => {
  
         setServices(filtered);
  
-        // ✅ Auto-open if openDirectly flag OR only one service exists
-
-        const shouldOpenDirectly =
-          location.state?.openDirectly || filtered.length === 1;
- 
-       if (shouldOpenDirectly && filtered.length > 0) {
-
-  const selectedServiceId = location.state?.selectedServiceId;
-  const selectedPkg = location.state?.selectedPackageName;
-
-  // Open the correct service
-  const serviceToOpen = selectedServiceId
-    ? filtered.find(s => s.id === selectedServiceId) || filtered[0]
-    : filtered[0];
-
-  handleCardClick(serviceToOpen);
-
-  // Auto-select package
-  if (selectedPkg && serviceToOpen.service_package) {
-    const pkgList = serviceToOpen.service_package.split(";");
-
-    const match = pkgList.find(p => p.startsWith(selectedPkg));
-    if (match) {
-      const [name, price, description] = match.split(":");
-
-      setTimeout(() => {
-        handlePackageSelect({ name, price, description });
-      }, 150);
-    }
-  }
-}
-
- 
+       
       } catch (err) {
         console.error(err);
         setError("Unable to load services.");
@@ -494,13 +465,7 @@ useEffect(() => {
     );
     setServices(filtered);
  
-    // ✅ Auto-open if openDirectly flag OR only one service exists
-    const shouldOpenDirectly =
-      location.state?.openDirectly || filtered.length === 1;
- 
-    if (shouldOpenDirectly && filtered.length > 0) {
-      handleCardClick(filtered[0]);
-    }
+    
   }
 }, [subcategory, preFetchedServices]);
 // --- End of Updated useEffect ---
@@ -586,6 +551,25 @@ if (selectedService) {
 }, [selectedService]);
  
  
+
+
+// ✅ Open the correct service sent from ServiceList
+useEffect(() => {
+  const selectedServiceId = location.state?.selectedServiceId;
+
+  if (!selectedServiceId) return;          // nothing to open
+  if (selectedService) return;             // already opened
+  if (services.length === 0) return;       // services not loaded yet
+
+  const match = services.find(
+    (s) => s.id.toString() === selectedServiceId.toString()
+  );
+
+  if (match) {
+    handleCardClick(match);  // open correct service
+  }
+}, [services]);
+
  
  
    if (loading) return <div className="p-8 text-center">Loading...</div>;
@@ -1161,6 +1145,8 @@ if (selectedService) {
  
  
             {/* --- Tabs Section --- */}
+            {selectedService && (
+
             <div className="mt-8">
              
               {/* Tab Buttons Container */}
@@ -1565,82 +1551,22 @@ if (selectedService) {
                 </div>
               )}
             </div>
+            )}
+
             {/* --- End of Tabs Section --- */}
 
  
            
           </div>
-        ) : (
-          /* --- Service List View (When selectedService is null) --- */
-         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6 max-w-7xl mx-auto">
-
-  {services.map((service) => (
-    <div
-      key={service.id}
-      onClick={() => handleCardClick(service)}
-     className="bg-white rounded-xl shadow-md overflow-hidden
-             border border-gray-200 transition-all duration-300
-             hover:shadow-xl hover:-translate-y-1 cursor-pointer
-             w-full"   /*WIDTH REDUCED */
-    >
-     
-      <img
-        src={service.image}
-        alt={service.name}
-        className="w-full h-44 object-cover"  /* Same height */
-      />
- 
-      <div className="p-3">
-        <h3 className="text-sm font-bold text-gray-800 leading-tight truncate mb-1">
-          {service.name}
-        </h3>
- 
-        <div className="flex items-center text-[11px] text-gray-600 mb-1">
-          <Star size={11} className="text-yellow-400 fill-yellow-400 mr-1" />
-          <span>{service.rating} ({service.reviews})</span>
-        </div>
- 
-        <p className="text-[12px] text-gray-600 h-8 overflow-hidden mb-1">
-          {service.description}
-        </p>
- 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCardClick(service);
-          }}
-          className="flex items-center gap-1 text-blue-600 text-xs font-semibold hover:underline"
-        >
-          View Details <ArrowRight size={12} />
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
- 
-        )}
+        ) :null}
 
  {/* ✅ Add Google Reviews Section Above Footer */}
 <GoogleReviews />
       
 
 
-{/* --- Back Buttons (End of Page, Right Corner) --- */}
-<div className="px-4 mt-12 mb-8 flex justify-end gap-4">
-  {selectedService && (
-    <button
-            onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                navigate("/services");
-            }}
-            className="flex items-center gap-2 text-navy-700 hover:text-navy-700 font-semibold transition"
-        >
-            <ArrowLeft size={18} />
-            Back to Services
-        </button>
-  )}
  
-</div>
+
  
  </div>
     

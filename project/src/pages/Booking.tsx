@@ -261,6 +261,11 @@ const filteredMiniServices = useMemo(() => {
   ];
  
   // --- Lifecycle and Service Fetching ---
+
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
  
   useEffect(() => {
     // 1. Fetch ALL services immediately on mount (including fetching images)
@@ -382,7 +387,11 @@ useEffect(() => {
     }
  
     setCartItems(currentCart => {
+
       const itemToAdd: CartItem = {
+
+        cartItemId: Date.now().toString() + Math.random().toString().slice(2),
+
         id: service.id,
         name: service.name,
         discountedPrice: service.price,
@@ -402,24 +411,13 @@ useEffect(() => {
       let updatedCart: CartItem[];
  
       if (existingItem) {
-        // If the item already exists, do nothing and show alert
-        if (alertTimeoutRef.current) {
-          clearTimeout(alertTimeoutRef.current);
-        }
-        alertTimeoutRef.current = setTimeout(() => {
-          alert(`${service.name} is already in your booking list.`);
-        }, 50);
+       
         return currentCart;
       } else {
         // If it's new, add it
         updatedCart = [...currentCart, itemToAdd];
        
-        if (alertTimeoutRef.current) {
-          clearTimeout(alertTimeoutRef.current);
-        }
-        alertTimeoutRef.current = setTimeout(() => {
-          alert(`${service.name} added to booking!`);
-        }, 50);
+       
       }
  
       // Update the temporary BOOKING SESSION STORAGE
@@ -452,29 +450,29 @@ useEffect(() => {
     if (!formData.date) newErrors.date = 'Please select a date';
     if (!formData.time) newErrors.time = 'Please select a time';
  
-    const fullName = formData.name.trim();
-    if (!fullName) {
-      newErrors.name = 'Name is required';
-    } else {
-      // Basic validation: must start with a letter and contain only letters and spaces
-      if (!/^[A-Z][a-zA-Z\s]*$/.test(fullName)) {
-        newErrors.name = 'Name should start with a capital letter and only contain letters/spaces.';
-      }
-    }
+   const fullName = formData.name.trim();
+
+if (!fullName) {
+  newErrors.name = "Full name is required";
+} else if (!/^[a-zA-Z\s]+$/.test(fullName)) {
+  newErrors.name = "Name must contain only letters and spaces";
+}
  
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[a-z0-9]+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid. It should start with a lowercase letter or number.';
-    }
+   const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/;
+
+  if (!formData.email.trim()) {
+    newErrors.email = "Email is required";
+  } else if (!emailPattern.test(formData.email.trim())) {
+    newErrors.email = "Enter a valid email address";
+  }
  
-    const phone = formData.phone.trim();
-    const digitsOnly = phone.replace(/\D/g, '');
-    if (!phone) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!(digitsOnly.length === 10)) { // Simplified to strictly 10 digits
-      newErrors.phone = 'Enter a valid 10-digit phone number.';
-    }
+   const digits = formData.phone.replace(/\D/g, "");
+  if (!formData.phone.trim()) {
+    newErrors.phone = "Phone number is required";
+  } else if (!/^\d{10}$/.test(digits)) {
+    newErrors.phone = "Phone number must be exactly 10 digits";
+  }
+
  
     if (!formData.address.trim()) newErrors.address = 'Address is required';
     if (!formData.city.trim()) newErrors.city = 'City is required';
@@ -555,7 +553,7 @@ useEffect(() => {
     });
        
        // Clear temp session
-    localStorage.removeItem(BOOKING_SESSION_KEY);
+   // localStorage.removeItem(BOOKING_SESSION_KEY);
 
   } catch (err) {
     console.error("Booking submission error:", err);
@@ -1168,7 +1166,7 @@ return (
                 type="button"
                 onClick={() => {
                    if (service.category === "Commercial Cleaning Services" || service.category === "Industrial Cleaning Services") {
-                      navigate("/inspection-booking", { state: { service } });
+                      navigate("/inspection-booking", { state: { selectedService: service } });
                          return;
                    }
                  addSimilarServiceToCart(service);

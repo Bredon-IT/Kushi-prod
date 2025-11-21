@@ -61,6 +61,8 @@ const About: React.FC = () => {
     { icon: Users, value: '50+', label: 'Professionals' },
   ];
 
+
+  
   return (
     <div className="bg-white">
 

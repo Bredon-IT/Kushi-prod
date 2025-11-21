@@ -90,6 +90,8 @@ const Blog: React.FC = () => {
     });
   };
 
+  
+
   return (
     <div className="bg-white">
 

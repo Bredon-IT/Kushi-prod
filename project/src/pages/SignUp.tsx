@@ -21,36 +21,57 @@ const SignUp: React.FC = () => {
   const [errors, setErrors] = useState<any>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  // VALIDATION FUNCTION UPDATED
   const validateForm = () => {
     const newErrors: any = {};
-    if (!formData.firstName.trim()) {newErrors.firstName = 'First name is required';
-} else if (!/^[A-Z]/.test(formData.firstName)) {newErrors.firstName = 'First name must start with a capital letter';
 
-}
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    // FIRST NAME - Capital letter
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (!/^[A-Z][a-zA-Z\s]*$/.test(formData.firstName)) {
+      newErrors.firstName = 'First name must start with a capital letter';
+    }
 
-     if (!formData.email.trim()) {newErrors.email = 'Email is required';
-} else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
-newErrors.email = 'Email is invalid';
-}
-if (!formData.phone.trim()) {
-newErrors.phone = 'Phone number is required';
-} else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
- newErrors.phone = 'Phone number must be 10 digits';
- }
-if (!formData.password.trim()) {
-newErrors.password = 'Password is required';
- } else if (formData.password.length < 6) {
-newErrors.password = 'Password must be at least 6 characters';
-}
-if (!formData.confirmPassword.trim()) {
- newErrors.confirmPassword = 'Please confirm your password';
- } else if (formData.password !== formData.confirmPassword) {
-newErrors.confirmPassword = 'Passwords do not match';
-}
- setErrors(newErrors);
-return Object.keys(newErrors).length === 0;
- };
+    // LAST NAME (Optional) – No required validation
+
+    // EMAIL VALIDATION (Gmail, Outlook, Yahoo, Zoho, Business domains)
+    const emailPattern =
+      /^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/;
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!emailPattern.test(formData.email)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+
+    // PHONE — exactly 10 digits
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      newErrors.phone = 'Phone number must be exactly 10 digits';
+    }
+
+    // PASSWORD — 8 chars, 1 capital, 1 number, 1 special char
+    const passwordPattern =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (!passwordPattern.test(formData.password)) {
+      newErrors.password =
+        'Password must be 8+ chars, include 1 capital letter, 1 number, and 1 special character';
+    }
+
+    // CONFIRM PASSWORD
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -189,8 +210,7 @@ return Object.keys(newErrors).length === 0;
                    className="bg-peach-50/50 border-2 border-r-0 rounded-l-xl pl-4 pr-2 py-3 focus:ring-2 focus:ring-peach-500 focus:border-peach-500 transition-all text-navy-700"
                    >
                     <option value="+91">🇮🇳 +91</option>
-                    <option value="+1">🇺🇸 +1</option>
-                     <option value="+44">🇬🇧 +44</option>
+                    
                       {/* Add more country codes as needed */}
                       </select>
                        <input

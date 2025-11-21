@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Phone, Mail, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { useLocationContext } from "../contexts/LocationContext";
@@ -116,6 +116,10 @@ const Contact: React.FC = () => {
       }
     }
   };
+
+  useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

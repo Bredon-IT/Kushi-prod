@@ -1,62 +1,51 @@
 version: 2
-
 frontend:
   phases:
-
-    # Step 1: Install dependencies
     preBuild:
       commands:
-        # Install Customer app dependencies
+        # Install Customer app deps
         - cd project && (npm ci || npm install)
         - cd ..
 
-        # Install Admin Dashboard dependencies
+        # Install Admin app deps
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
-
-    # Step 2: Build both applications
     build:
       commands:
-        # Clean dist folder
         - rm -rf dist && mkdir -p dist
 
-        # Build CUSTOMER app
+        # Build Customer app -> dist/
         - cd project && npm run build
         - cp -r dist/* ../dist/
         - cd ..
 
-        # Build ADMIN app
+        # Build Admin app -> dist/admin/
         - cd Admin/AdminDashboard && npm run build
         - mkdir -p ../../dist/admin
         - cp -r dist/* ../../dist/admin/
         - cd ../..
-
-    # Step 3: Completion message
     postBuild:
       commands:
         - echo "✅ Both Customer & Admin built successfully!"
 
-  # Files to deploy
   artifacts:
     baseDirectory: dist
     files:
       - '**/*'
 
-  # Cache node_modules to speed up builds
   cache:
     paths:
       - project/node_modules
       - Admin/AdminDashboard/node_modules
 
-# Handle React Router URLs (SPA routing fix)
+# ✅ Handle React Router refreshes
 rewrites:
-
-  # Customer app routes
+  # Customer app routing (everything except /admin goes here)
   - source: "</^((?!/admin).*$)/>"
     target: /index.html
     status: 200
 
-  # Admin app routes
+  # Admin app routing
   - source: "/admin/<*>"
     target: /admin/index.html
     status: 200

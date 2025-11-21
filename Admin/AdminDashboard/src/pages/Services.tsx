@@ -484,33 +484,45 @@ export function Services() {
                     <div><b>Subcategory:</b> {service.type}</div>
                   </div>
 
-                  <div className="flex items-center space-x-1 md:space-x-2 flex-wrap gap-1 mt-auto pt-3">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1"
-                      onClick={() => setViewService(service)}
-                    >
-                      <Eye className="h-4 w-4 md:mr-2" />
-                      <span className="hidden md:inline">View</span>
-                    </Button>
+                 <div className="flex items-center gap-2 mt-auto pt-3 flex-nowrap ">
+  <Button
+    size="sm"
+    variant="secondary"
+    onClick={() => setViewService(service)}
+    className="flex-shrink-0"
+  >
+    <Eye className="h-4 w-4 md:mr-2" />
+    <span className="hidden md:inline">View</span>
+  </Button>
 
-                    <Button size="sm" variant="secondary" onClick={() => handleEdit(service)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
+  <Button
+    size="sm"
+    variant="secondary"
+    onClick={() => handleEdit(service)}
+    className="flex-shrink-0"
+  >
+    <Edit className="h-4 w-4" />
+  </Button>
 
-                    <Button
-                      size="sm"
-                      variant={service.available ? "danger" : "success"}
-                      onClick={() => toggleAvailability(service.id, service.available)}
-                    >
-                      {service.available ? "Disable" : "Enable"}
-                    </Button>
+  <Button
+    size="sm"
+    variant={service.available ? "danger" : "success"}
+    onClick={() => toggleAvailability(service.id, service.available)}
+    className="flex-shrink-0"
+  >
+    {service.available ? "Disable" : "Enable"}
+  </Button>
 
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(service.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+  <Button
+    size="sm"
+    variant="danger"
+    onClick={() => handleDelete(service.id)}
+    className="flex-shrink-0"
+  >
+    <Trash2 className="h-4 w-4" />
+  </Button>
+</div>
+                 
                 </CardContent>
               </Card>
             ))}

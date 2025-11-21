@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CreditCard,
@@ -22,6 +22,12 @@ interface PaymentMethod {
 }
 
 const Payment: React.FC = () => {
+
+  useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
+
+
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -63,7 +69,7 @@ const Payment: React.FC = () => {
     { id: 'card', name: 'Credit/Debit Card', icon: CreditCard, description: 'Visa, MasterCard, Amex' },
     { id: 'upi', name: 'UPI / QR Code', icon: Smartphone, description: 'Google Pay, PhonePe, Paytm' },
     { id: 'netbanking', name: 'Net Banking', icon: Building, description: 'All Major Banks' },
-    { id: 'cash', name: 'Cash on Delivery (COD)', icon: Wallet, description: 'Pay during service' },
+    { id: 'cash', name: 'Pay On Service', icon: Wallet, description: 'Pay during service' },
   ];
 
   // ⭐ Handle Pay / Confirm Booking
@@ -110,8 +116,10 @@ const Payment: React.FC = () => {
         localStorage.setItem('kushiUser', JSON.stringify(updatedUser));
       }
 
-      // Clear cart
-      localStorage.removeItem('kushiServicesCart');
+      // Clear cart & booking session
+       localStorage.removeItem('kushiServicesCart');     // remove main cart
+       localStorage.removeItem('kushiBookingSession');   // remove booking page temporary cart
+
 
       setPaymentSuccess(true);
       setIsProcessing(false);
@@ -131,6 +139,8 @@ const Payment: React.FC = () => {
       cartItems?.[0]?.name ||
       cartItems?.[0]?.booking_service_name ||
       'Service';
+
+     
 
     return (
       <div className="bg-white py-2 flex items-center justify-center">

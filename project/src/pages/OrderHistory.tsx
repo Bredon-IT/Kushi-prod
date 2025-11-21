@@ -182,6 +182,13 @@ const OrderHistory: React.FC = () => {
         }
     };
     
+
+    useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
+
+
+
     // Handler for the 'View' button click (navigates to the Order Details page)
     const handleOrderDetailsClick = (orderId: number) => {
         // Navigate to the new detailed order page

@@ -2,21 +2,21 @@ import { Menu, Moon, Sun, User, LogOut } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
- 
+
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
 }
- 
+
 export function Header({ setSidebarOpen }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
- 
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
- 
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-navy-700 via-peach-200 to-peach-300 shadow-lg">
       <div className="flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 md:py-2">
@@ -28,14 +28,14 @@ export function Header({ setSidebarOpen }: HeaderProps) {
           >
             <Menu className="h-6 w-6" />
           </button>
- 
+
           <img
             // FIX APPLIED: Using Vite's BASE_URL to correctly build the path: /admin/KushiKlogo.png
             src={import.meta.env.BASE_URL + "KushiKlogo.png"}
             alt="Kushi Services"
             className="w-14 h-14 md:w-10 md:h-10 shadow-md"
           />
- 
+
           <div className="flex flex-col truncate min-w-0">
             <h1 className="text-white font-bold text-lg md:text-xl lg:text-2xl truncate">
               Kushi Services
@@ -45,7 +45,7 @@ export function Header({ setSidebarOpen }: HeaderProps) {
             </p>
           </div>
         </div>
- 
+
         {/* Right Section: Theme toggle + User info + Logout */}
         <div className="flex items-center space-x-3">
           {/* Theme Toggle */}
@@ -60,7 +60,7 @@ export function Header({ setSidebarOpen }: HeaderProps) {
               <Sun className="h-5 w-5 text-white" />
             )}
           </button>
- 
+
           {/* User Info */}
           <div className="flex items-center space-x-2 md:space-x-3 bg-white/10 backdrop-blur-sm rounded-full px-2 py-1 md:px-3 md:py-2 shadow-lg border border-white/30 hover:bg-white/20 transition-all cursor-pointer">
             <User className="h-6 w-6 black-white" />
@@ -71,7 +71,7 @@ export function Header({ setSidebarOpen }: HeaderProps) {
               <span className="text-black/80 text-xs md:text-sm">Administrator</span>
             </div>
           </div>
- 
+
           {/* Logout */}
           <button
             onClick={handleLogout}
@@ -85,4 +85,3 @@ export function Header({ setSidebarOpen }: HeaderProps) {
     </header>
   );
 }
- 

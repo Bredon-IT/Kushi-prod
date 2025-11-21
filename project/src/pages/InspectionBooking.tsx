@@ -185,6 +185,13 @@ const ModernSelect = ({ label, name, icon: Icon, error, options, ...props }: any
 
 
 const InspectionBooking: React.FC = () => {
+
+
+  useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);  
+
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();

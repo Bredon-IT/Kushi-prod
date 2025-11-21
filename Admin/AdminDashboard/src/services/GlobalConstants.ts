@@ -1,3 +1,7 @@
-const Global_API_BASE = (window as any)._env_?.REACT_APP_API_URL || "";
+//const Global_API_BASE = "https://bmytsqa7b3.ap-south-1.awsapprunner.com";  // backend api url.
+
+const Global_API_BASE = "http://localhost:8082";  // backend api url.
 
 export default Global_API_BASE;
+
+

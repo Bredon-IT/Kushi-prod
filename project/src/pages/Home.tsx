@@ -38,7 +38,13 @@ interface Service {
 
 const HomePage: React.FC = () => { 
   
+ useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
+
  
+
+
   const navigate = useNavigate();
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -257,15 +263,23 @@ useEffect(() => {
 
 
 
+  
+
 /** ---------------------------
   * New function to handle navigation from Top Booked Service card
   ---------------------------- */
 const handleClickTopService = async (topItem: any | string) => {
-  const top = typeof topItem === "string" ? { booking_service_name: topItem } : topItem || {};
+  const top = typeof topItem === "string"
+    ? { booking_service_name: topItem }
+    : topItem || {};
+ 
   const bookingName = (top.booking_service_name || top.service_name || "").trim();
-
-   // helper to build slug from a raw string
-  const deriveRaw = (obj: any) =>
+ 
+  // helper slug function
+  const slugify = (s: string) =>
+    s.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and");
+ 
+  const getRawSubcat = (obj: any) =>
     obj?.booking_service_subcategory ||
     obj?.service_type ||
     obj?.service_category ||
@@ -273,107 +287,142 @@ const handleClickTopService = async (topItem: any | string) => {
     obj?.category ||
     bookingName ||
     "general";
-  const rawSubcategory = deriveRaw(top);
-  const slug = createSlug(String(rawSubcategory));
-
-
-// try robust matches in allServices: by id, exact name, partial name (case-insensitive)
+ 
+  const rawSubcategory = getRawSubcat(top);
+ 
+  // ---- TRY TO FIND MATCH IN CURRENT allServices ----
   let found =
-    allServices.find((s) => String(s.id) === String(top.booking_service_id ?? top.service_id ?? top.id)) ||
-    allServices.find((s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()) ||
-    (bookingName ? allServices.find((s) => s.name.trim().toLowerCase().includes(bookingName.toLowerCase())) : undefined);
-
-  // If not found, try to re-fetch full services list and attempt match again
+    allServices.find(
+      (s) =>
+        String(s.id) ===
+        String(top.booking_service_id ?? top.service_id ?? top.id)
+    ) ||
+    allServices.find(
+      (s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()
+    ) ||
+    (bookingName
+      ? allServices.find((s) =>
+          s.name.trim().toLowerCase().includes(bookingName.toLowerCase())
+        )
+      : undefined);
+ 
+  // ---- If not found, re-fetch ALL services ----
   if (!found) {
     try {
       const res = await fetch(Global_API_BASE + "/api/customers/all-services");
       if (res.ok) {
         const data = await res.json();
-        const mapped: Service[] = (data || [])
-          .filter((item: any) => (item.active ?? "Y").toString().toUpperCase() === "Y")
+ 
+        const mapped: Service[] = data
+          .filter((item: any) =>
+            (item.active ?? "Y").toString().toUpperCase() === "Y"
+          )
           .map((item: any, index: number) => ({
             id: item.service_id?.toString() || index.toString(),
-            name: item.service_name || item.booking_service_name || "Unnamed Service",
-            category: item.service_category || item.category || "General",
-            subcategory: item.service_type || item.subcategory || item.booking_service_subcategory || "",
+            name: item.service_name || item.booking_service_name || "Unnamed",
+            category: item.service_category || item.category || "",
+            subcategory:
+              item.service_type ||
+              item.subcategory ||
+              item.booking_service_subcategory ||
+              "",
             service_package: item.service_package || "",
-            price: Number(item.service_cost ?? item.price ?? item.booking_service_cost ?? 0),
+            price: Number(item.service_cost ?? item.price ?? 0),
             originalPrice: Number(item.originalPrice ?? item.price ?? 0),
             rating: parseFloat(item.rating) || 0,
             reviews: item.rating_count ? String(item.rating_count) : "0",
-           duration: item.duration || "1 hr",
-            image: item.service_image_url
-              ? (String(item.service_image_url).startsWith("http") ? item.service_image_url : `Global_API_BASE${item.service_image_url}`)
-              : item.booking_service_image_url
-              ? (String(item.booking_service_image_url).startsWith("http") ? item.booking_service_image_url :  `Global_API_BASE${item.booking_service_image_url}`)
-              : "/placeholder.jpg",
-            description: item.service_description || item.booking_service_description || item.description || "",
+            duration: item.duration || "1 hr",
+            image:
+              item.service_image_url &&
+              String(item.service_image_url).startsWith("http")
+                ? item.service_image_url
+                : item.service_image_url
+                ? Global_API_BASE + item.service_image_url
+                : "/placeholder.jpg",
+            description:
+              item.service_description ||
+              item.booking_service_description ||
+              "",
             features: item.features ? String(item.features).split(",") : [],
             active: item.active ?? "Y",
             badge: item.badge || "",
-            overview: item.overview || item.service_overview || "",
-            our_process: item.our_process || item.service_process || "",
+            overview: item.overview || "",
+            our_process: item.our_process || "",
             benefits: item.benefits || "",
-            whats_included: item.whats_included || item.whatsIncluded || "",
-            whats_not_included: item.whats_not_included || item.whatsNotIncluded || "",
+            whats_included: item.whats_included || "",
+            whats_not_included: item.whats_not_included || "",
             why_choose_us: item.why_choose_us || "",
             kushi_teamwork: item.kushi_teamwork || "",
             faq: item.faq || "",
           }));
-           // replace local cache and try match again
+ 
         setAllServices(mapped);
+ 
         found =
-          mapped.find((s) => String(s.id) === String(top.booking_service_id ?? top.service_id ?? top.id)) ||
-          mapped.find((s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()) ||
-          (bookingName ? mapped.find((s) => s.name.trim().toLowerCase().includes(bookingName.toLowerCase())) : undefined);
+          mapped.find(
+            (s) =>
+              String(s.id) ===
+              String(top.booking_service_id ?? top.service_id ?? top.id)
+          ) ||
+          mapped.find(
+            (s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()
+          ) ||
+          (bookingName
+            ? mapped.find((s) =>
+                s.name.trim().toLowerCase().includes(bookingName.toLowerCase())
+              )
+            : undefined);
       }
-    } catch (err) {
-      console.warn("Could not re-fetch services for enrichment", err);
-    }
+    } catch {}
   }
- if (found) {
-    // prepare similar services from the (now updated) allServices using slug match
-    const used = found;
-    const subSlug = createSlug(used.subcategory || used.category || used.name);
-    const filteredServices = (allServices.length ? allServices : [used]).filter(
-      (s) => createSlug(s.subcategory || s.category || s.name) === subSlug
-    );
-    navigate(`/services/${subSlug}`, {
-      state: { services: filteredServices.length ? filteredServices : [used], openDirectly: true },
-    });
-    return;
-  }
-   // If still not found, build a full Service object from the top payload and navigate
-  const mappedTop: Service = {
-    id: String(top.service_id ?? top.booking_service_id ?? top.id ?? Date.now()),
-    name: top.booking_service_name || top.service_name || bookingName || "Service",
-    category: top.service_category || top.category || "",
-    subcategory: rawSubcategory,
-    service_package: top.service_package || "",
-    price: Number(top.booking_service_cost ?? top.service_cost ?? top.price ?? 0),
-    originalPrice: Number(top.originalPrice ?? top.price ?? 0),
-    rating: Number(top.rating ?? 0),
-    reviews: top.rating_count ? String(top.rating_count) : "0",
-    duration: top.duration || "1 hr",
-    image:
-      (top.booking_service_image_url || top.service_image_url || top.image) && String((top.booking_service_image_url || top.service_image_url || top.image)).startsWith("http")
-        ? (top.booking_service_image_url || top.service_image_url || top.image)
-        : (top.booking_service_image_url || top.service_image_url)
-        ? `Global_API_BASE${(top.booking_service_image_url || top.service_image_url)}`
-        : "/placeholder.jpg",
-    description: top.booking_service_description || top.service_description || top.description || "",
-    features: top.features ? String(top.features).split(",") : [],
-    active: top.active ?? "Y",
-  };
-    // find similar services by slug in current allServices
-  const similar = allServices.filter(
-    (s) => createSlug(s.subcategory || s.category || s.name) === slug
-  );
-
-  navigate(`/services/${slug}`, {
-    state: { services: similar.length ? similar : [mappedTop], openDirectly: true },
+ 
+  // ---- If still not found → build fallback service object ----
+  const selected: Service =
+    found ||
+    ({
+      id: String(
+        top.service_id ?? top.booking_service_id ?? top.id ?? Date.now()
+      ),
+      name: bookingName || "Service",
+      category: top.service_category || top.category || "",
+      subcategory: rawSubcategory,
+      service_package: top.service_package || "",
+      price: Number(top.price ?? 0),
+      originalPrice: Number(top.originalPrice ?? 0),
+      rating: Number(top.rating ?? 0),
+      reviews: top.rating_count ? String(top.rating_count) : "0",
+      duration: top.duration || "1 hr",
+      image:
+        top.service_image_url && String(top.service_image_url).startsWith("http")
+          ? top.service_image_url
+          : "/placeholder.jpg",
+      description:
+        top.booking_service_description || top.service_description || "",
+      features: top.features ? String(top.features).split(",") : [],
+      active: top.active ?? "Y",
+      badge: "",
+      overview: "",
+      our_process: "",
+      benefits: "",
+      whats_included: "",
+      whats_not_included: "",
+      why_choose_us: "",
+      kushi_teamwork: "",
+      faq: "",
+    } as Service);
+ 
+  // ---- ALWAYS NAVIGATE DIRECTLY TO SERVICE DETAILS ----
+  const subSlug = slugify(selected.subcategory || selected.category || "general");
+  const serviceSlug = slugify(selected.name);
+ 
+  navigate(`/services/${subSlug}/${serviceSlug}`, {
+    state: {
+      services: [selected],        // 🔥 ALWAYS a single service
+      selectedServiceId: selected.id,
+      openDirectly: true,
+    },
   });
-};
+}; 
 
   /** ---------------------------
    * Service Categories
@@ -532,6 +581,9 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     const normalized = normalizeImageUrl(newImage);
     setHeroImage(normalized);
   };
+
+
+
 
 
   return (
@@ -733,14 +785,15 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
               key={index}
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
-              onClick={() =>
-                navigate("/services", { state: { selectedCategory: service.title } })
-              }
+               onClick={() =>
+        navigate(`/services/category/${categorySlug}`, { // <<-- Change /services to /services/category/:categorySlug
+          state: { selectedCategory: service.title }
+        })
+      }
               className="
                 group min-w-[200px] max-w-[200px] flex-shrink-0 rounded-2xl overflow-hidden 
                 shadow-lg border-4 border-peach-300 cursor-pointer bg-white
-                hover:scale-[1.08] hover:border-navy-700 
-                hover:shadow-peachGlow transition-all duration-300
+               
               "
             >
 
@@ -749,14 +802,14 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
                 <img
                   src={service.image}
                   alt={service.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-black/30"></div>
               </div>
 
               {/* Title */}
-              <div className="p-3 text-center bg-white">
-                <h3 className="text-lg font-bold text-navy-700 group-hover:text-peach-300 transition-colors duration-300">
+              <div className="p-1 text-center bg-white">
+                <h3 className="text-sm font-semi-bold text-navy-700 group-hover:text-peach-300 transition-colors duration-300">
                   {service.title}
                 </h3>
               </div>
@@ -772,58 +825,95 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
 
 
-
 {/* 🔹 Top Booked Services Section */}
- <section className="py-2 bg-white w-full">
-        <div className="w-full max-w-[100vw] overflow-hidden">
-          <div className="text-center mb-8 px-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">
-              Top{" "}
-              <span className="bg-gradient-to-r from-peach-300 to-navy-700 bg-clip-text text-transparent">
-                5 Services
-              </span>
-            </h2>
-            <p className="text-base text-navy-600 max-w-xl mx-auto">
-              Our customers love these services the most!
-            </p>
-          </div>
+<section className="py-2 bg-white w-full">
+  <div className="w-full max-w-[100vw] overflow-hidden">
+    <div className="text-center mb-8 px-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">
+        Top{" "}
+        <span className="bg-gradient-to-r from-peach-300 to-navy-700 bg-clip-text text-transparent">
+          5 Services
+        </span>
+      </h2>
+      <p className="text-base text-navy-600 max-w-xl mx-auto">
+        Our customers love these services the most!
+      </p>
+    </div>
 
-    {/* Horizontal Scroll Section */}
-     {topServicesLoading ? (
-            <p className="text-center text-navy-600">Loading top booked services...</p>
-          ) : topServicesError ? (
-            <p className="text-center text-red-600">Error: {topServicesError}</p>
-          ) : topServices.length === 0 ? (
-            <p className="text-center text-navy-600">No top booked services found.</p>
-          ) : (
-            <div className="flex gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full">
-              {topServices.map((service, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleClickTopService(service)}
-                  className="group min-w-[250px] max-w-[250px] sm:min-w-[280px] sm:max-w-[280px] flex-shrink-0 rounded-2xl overflow-hidden shadow-lg border border-peach-300 snap-start bg-white hover:scale-105 transform transition-transform duration-300 cursor-pointer"
-                >
-                  <div className="relative h-44 overflow-hidden">
-                    <img
-               src={service.service_image_url || service.booking_service_image_url || "/logo.png"}
-                      alt={service.booking_service_name || service.service_name}
-                      className="w-full h-full object-cover group-hover:scale-90 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-black/20"></div>
-                  </div>
+    {topServicesLoading ? (
+      <p className="text-center text-navy-600">Loading top booked services...</p>
+    ) : topServicesError ? (
+      <p className="text-center text-red-600">Error: {topServicesError}</p>
+    ) : topServices.length === 0 ? (
+      <p className="text-center text-navy-600">No top booked services found.</p>
+    ) : (
+      <div className="flex gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full">
+        {topServices.map((service, index) => (
+     <div
+  key={index}
+  onClick={() => handleClickTopService(service)}
+  className="
+    group relative flex-shrink-0 snap-start cursor-pointer
+    min-w-[250px] max-w-[250px] sm:min-w-[280px] sm:max-w-[280px]
+    transition-transform duration-500
+  "
+>
+  {/* Hover Ring Wrapper */}
+  <div
+    className="
+      bg-white rounded-2xl shadow-md p-[4px]
+      
+    "
+  >
+    {/* Image Wrapper */}
+    <div className="relative h-[180px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
+      <img
+        src={service.service_image_url || service.booking_service_image_url || '/logo.png'}
+        alt={service.booking_service_name || service.service_name}
+        className="
+          w-full h-full object-cover object-center
+          transition-transform duration-700 ease-out
+          group-hover:scale-150
+        "
+      />
 
-                  <div className="p-2 text-center bg-white">
-                    <h3 className="text-sm font-bold text-navy-700 group-hover:text-peach-500 transition-colors">
-                      {service.booking_service_name || service.service_name}
-                    </h3>
-                    
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Arrow */}
+      <div
+        className="
+          absolute bottom-2 right-2 opacity-0 translate-y-3
+          group-hover:opacity-100 group-hover:translate-y-0
+          transition-all duration-500 z-20
+        "
+      >
+        <span className="bg-white/80 backdrop-blur-md p-2 rounded-full shadow">
+          ➜
+        </span>
+      </div>
+    </div>
+
+    {/* Title */}
+    <div className="py-1 text-center bg-white rounded-b-xl">
+      <h3
+        className="
+          text-sm font-bold text-navy-700
+          group-hover:text-peach-600 group-hover:-translate-y-1
+          transition-transform duration-500
+        "
+      >
+        {service.booking_service_name || service.service_name}
+      </h3>
+    </div>
+  </div>
+</div>
+
+
+
+        ))}
+      </div>
+    )}
+  </div>
+</section>
+
 
 
 {/* Promotions Section (Scrollable Cards) */}

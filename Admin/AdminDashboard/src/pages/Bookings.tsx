@@ -1,4 +1,5 @@
-// --- FULL UPDATED FILE WITH PAYMENT STATUS EDIT SUPPORT ---
+// --- FULL UPDATED FILE (Single Save Status button; discount shows blank when 0) ---
+// File: src/pages/Bookings.tsx
 
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
@@ -11,15 +12,12 @@ import {
   Edit,
   Search,
   Mail,
-  User,
   IndianRupee as RupeeIcon,
   MapPin,
   X,
   UserCheck,
   Calendar,
   Clock,
-  Tag,
-  Phone,
 } from "lucide-react";
 
 /* ------------------------- Utilities / Types ------------------------- */
@@ -63,8 +61,6 @@ interface Booking {
   worker_assign: string[];
   inspection_status?: string;
   site_visit?: string;
-
-  // ⭐ NEW FIELDS ADDED
   paymentMethod?: string;
   paymentStatus?: string;
 }
@@ -96,60 +92,44 @@ const StatusBadge: React.FC<{ status: string; canceledBy?: string }> = ({
   );
 };
 
-const SiteVisitBadge: React.FC<{ status?: string }> = ({ status }) => {
-  const s = (status || "pending").toLowerCase();
-  if (s === "completed")
-    return (
-      <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-md">
-        Completed
-      </span>
-    );
-  if (s === "not completed")
-    return (
-      <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-md">
-        Not Completed
-      </span>
-    );
-  return (
-    <span className="px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded-md">
-      Pending
-    </span>
-  );
-};
-
 /* ------------------------- Edit Modal ------------------------- */
 
 interface EditModalProps {
   booking: Booking;
   onClose: () => void;
-  onUpdateStatus: (
+  onCombinedUpdate: (
     booking: Booking,
     status: string,
     canceledBy?: "customer" | "admin",
-    reason?: string
+    cancellationReason?: string,
+    workers?: string[],
+    discount?: number,
+    paymentStatus?: string
   ) => Promise<void>;
-
-  onAssignWorker: (bookingId: number, workerName: string) => Promise<void>;
-  onSaveDiscount: (bookingId: number, discountAmount: number) => Promise<void>;
-
-  // ⭐ NEW PROP FOR PAYMENT STATUS
-  onUpdatePaymentStatus: (bookingId: number, status: string) => Promise<void>;
+  onAssignWorkerImmediate: (bookingId: number, workerName: string) => Promise<void>;
 }
 
 const EditBookingModal: React.FC<EditModalProps> = ({
   booking,
   onClose,
-  onUpdateStatus,
-  onAssignWorker,
-  onSaveDiscount,
-
-  // New
-  onUpdatePaymentStatus,
+  onCombinedUpdate,
+  onAssignWorkerImmediate,
 }) => {
-  const [discount, setDiscount] = useState<number>(booking.discount ?? 0);
+  // discount as string so it can be blank when 0
+  const [discount, setDiscount] = useState<string>(
+    booking.discount && booking.discount !== 0 ? String(booking.discount) : ""
+  );
+
+  // workerNames is the editable input (comma separated)
   const [workerNames, setWorkerNames] = useState<string>(
     booking.worker_assign?.join(", ") || ""
   );
+
+  // keep a local array of workers to show in UI (initially filled from booking)
+  const [localWorkers, setLocalWorkers] = useState<string[]>(
+    booking.worker_assign ? [...booking.worker_assign] : []
+  );
+
   const [cancelReason, setCancelReason] = useState<string>(
     booking.cancellation_reason || ""
   );
@@ -158,13 +138,13 @@ const EditBookingModal: React.FC<EditModalProps> = ({
   );
   const [saving, setSaving] = useState(false);
 
-  // ⭐ Payment Status local state
-  const [updatedPaymentStatus, setUpdatedPaymentStatus] = useState<
-    "Paid" | "Pending"
-  >((booking.paymentStatus as "Paid" | "Pending") || "Pending");
+  const [paymentStatusSelection, setPaymentStatusSelection] = useState<string>(
+    booking.paymentStatus || "Pending"
+  );
 
   const basePrice = booking.booking_amount ?? 0;
-  const newTotalAmount = Math.max(0, basePrice - (discount ?? 0));
+  const parsedDiscount = discount === "" ? 0 : Number(discount || 0);
+  const newTotalAmount = Math.max(0, basePrice - (isNaN(parsedDiscount) ? 0 : parsedDiscount));
 
   const fullAddress = [
     booking.address_line_1,
@@ -176,43 +156,37 @@ const EditBookingModal: React.FC<EditModalProps> = ({
     .filter(Boolean)
     .join(", ");
 
-  const handleSaveDiscountClick = async () => {
-    const finalDiscount = Math.min(Math.max(discount || 0, 0), basePrice);
-    setSaving(true);
-    try {
-      await onSaveDiscount(booking.booking_id, finalDiscount);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAssignWorkerClick = async () => {
+  // Assign workers locally and optionally call immediate assign API per worker
+  const handleAssignWorkersImmediate = async () => {
     const trimmed = workerNames
       .split(",")
       .map((w) => w.trim())
       .filter(Boolean);
     if (trimmed.length === 0) return;
+
     setSaving(true);
     try {
-      for (const w of trimmed) {
-        await onAssignWorker(booking.booking_id, w);
+      for (const worker of trimmed) {
+        await onAssignWorkerImmediate(booking.booking_id, worker);
       }
+      // merge into localWorkers and clear input
+      setLocalWorkers((prev) => [...prev, ...trimmed]);
+      setWorkerNames("");
+    } catch (err) {
+      console.error("Failed to assign worker(s):", err);
+      alert("Failed to assign some workers. See console for details.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSavePaymentStatus = async () => {
-    setSaving(true);
-    try {
-      await onUpdatePaymentStatus(booking.booking_id, updatedPaymentStatus);
-      alert("Payment status updated successfully.");
-    } finally {
-      setSaving(false);
-    }
+  // Remove local worker from UI (not calling API)
+  const handleRemoveLocalWorker = (idx: number) => {
+    setLocalWorkers((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleStatusSave = async () => {
+  // Single Save Status -> calls all existing APIs + assign workers
+  const handleSaveStatus = async () => {
     const s = statusSelection.toLowerCase();
     if (s === "cancelled" && !cancelReason.trim()) {
       alert("Please provide a cancellation reason before cancelling.");
@@ -221,21 +195,33 @@ const EditBookingModal: React.FC<EditModalProps> = ({
 
     setSaving(true);
     try {
-      await onUpdateStatus(
+      // parse workers from localWorkers (use localWorkers which includes previously assigned + newly added)
+      const workersToSave = [...new Set(localWorkers.map((w) => w.trim()).filter(Boolean))];
+
+      // Call combined update sequence (parent will call separate endpoints)
+      await onCombinedUpdate(
         booking,
         statusSelection,
         s === "cancelled" ? "admin" : undefined,
-        cancelReason.trim() || undefined
+        cancelReason.trim() || undefined,
+        workersToSave,
+        isNaN(parsedDiscount) ? 0 : parsedDiscount,
+        paymentStatusSelection
       );
+
+      // close modal after success
+      onClose();
+    } catch (err) {
+      console.error("Failed to save combined update:", err);
+      alert("Failed to save. See console for details.");
     } finally {
       setSaving(false);
-      onClose();
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 overflow-y-auto">
-      <Card className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl space-y-4">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
@@ -247,18 +233,17 @@ const EditBookingModal: React.FC<EditModalProps> = ({
             </div>
           </div>
 
-          <Button size="icon" variant="ghost" onClick={onClose}>
-            <X className="w-5 h-5 text-gray-500" />
-          </Button>
+          <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100" aria-label="close">
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* LEFT COLUMN */}
+          {/* LEFT */}
           <div className="space-y-4 border-b md:border-b-0 md:border-r pr-6">
             <h3 className="text-md font-semibold">Status & Assignment</h3>
 
-            {/* Booking Status */}
             <div>
               <label className="block text-sm mb-1">Booking Status</label>
               <select
@@ -273,7 +258,6 @@ const EditBookingModal: React.FC<EditModalProps> = ({
               </select>
             </div>
 
-            {/* Cancellation */}
             <div>
               <label className="block text-sm mb-1">Cancellation Reason</label>
               <textarea
@@ -283,102 +267,95 @@ const EditBookingModal: React.FC<EditModalProps> = ({
               />
             </div>
 
-            {/* Worker Assignment */}
             <div>
-              <label className="block text-sm mb-1">
-                Assign Workers (comma separated)
-              </label>
+              <label className="block text-sm mb-1">Assign Workers (comma separated)</label>
               <input
                 value={workerNames}
                 onChange={(e) => setWorkerNames(e.target.value)}
                 className="w-full border px-3 py-2 rounded-lg text-sm"
+                placeholder="e.g. Ravi, Meena"
               />
-              <Button
-                size="sm"
-                className="mt-2"
-                onClick={handleAssignWorkerClick}
-              >
-                Assign Workers
-              </Button>
+              <div className="mt-2 flex gap-2 items-center">
+                <Button size="sm" onClick={handleAssignWorkersImmediate} disabled={saving}>
+                  Assign Workers
+                </Button>
+                <div className="text-xs text-gray-500">{localWorkers.length} assigned</div>
+              </div>
+
+              {/* display local workers */}
+              {localWorkers.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {localWorkers.map((w, i) => (
+                    <div key={i} className="flex items-center justify-between bg-gray-50 px-3 py-1 rounded-md text-sm">
+                      <div>{w}</div>
+                      <button onClick={() => handleRemoveLocalWorker(i)} className="text-xs text-red-600 hover:underline">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT */}
           <div className="space-y-4">
             <h3 className="text-md font-semibold">Pricing & Payment</h3>
 
-            {/* Base Amount */}
             <div>
               <label className="block text-sm mb-1">Base Amount</label>
-              <div className="text-lg font-semibold text-navy-700">
-                ₹{booking.booking_amount}
-              </div>
+              <div className="text-lg font-semibold text-navy-700">₹{booking.booking_amount}</div>
             </div>
 
-            {/* Discount */}
             <div>
               <label className="block text-sm mb-1">Discount (₹)</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <input
                   type="number"
                   value={discount}
-                  onChange={(e) => setDiscount(Number(e.target.value))}
+                  onChange={(e) => setDiscount(e.target.value)}
                   className="w-full border px-3 py-2 rounded-lg"
+                  placeholder=""
                 />
-                <Button size="sm" onClick={handleSaveDiscountClick}>
-                  Save
-                </Button>
+                {/* no separate Save button — discount saved when Save Status is clicked */}
               </div>
+              <div className="text-xs text-gray-500 mt-1">New total: ₹{newTotalAmount.toFixed(2)}</div>
             </div>
 
-            {/* ⭐ PAYMENT METHOD (NON-EDITABLE) */}
             <div>
               <label className="block text-sm mb-1">Payment Method</label>
-              <div className="px-3 py-2 border rounded-lg bg-gray-100 text-sm">
-                {booking.paymentMethod || "N/A"}
-              </div>
+              <div className="px-3 py-2 border rounded-lg bg-gray-100 text-sm">{booking.paymentMethod || "N/A"}</div>
             </div>
 
-            {/* ⭐ PAYMENT STATUS (EDITABLE) */}
             <div>
               <label className="block text-sm mb-1">Payment Status</label>
               <select
-                value={updatedPaymentStatus}
-                onChange={(e) =>
-                  setUpdatedPaymentStatus(
-                    e.target.value as "Paid" | "Pending"
-                  )
-                }
+                value={paymentStatusSelection}
+                onChange={(e) => setPaymentStatusSelection(e.target.value)}
                 className="w-full border px-3 py-2 rounded-lg text-sm"
               >
                 <option value="Pending">Pending</option>
                 <option value="Paid">Paid</option>
               </select>
-
-              <Button
-                size="sm"
-                className="mt-2"
-                onClick={handleSavePaymentStatus}
-              >
-                Save Payment Status
-              </Button>
+              <div className="text-xs text-gray-400 mt-1">Payment status saved when you click "Save Status".</div>
             </div>
 
-            {/* Address */}
             <div className="text-sm text-gray-600">
               <MapPin className="inline w-4 h-4 mr-1" />
               {fullAddress}
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={onClose}>
+              <Button variant="ghost" onClick={onClose} disabled={saving}>
                 Close
               </Button>
-              <Button onClick={handleStatusSave}>Save Status</Button>
+              <Button onClick={handleSaveStatus} disabled={saving}>
+                {saving ? "Saving..." : "Save Status"}
+              </Button>
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
@@ -398,9 +375,7 @@ export function Bookings() {
 
     BookingsAPIService.getAllBookings()
       .then((res: any) => {
-        const valid = (res.data || []).filter(
-          (b: any) => b && b.booking_id
-        );
+        const valid = (res.data || []).filter((b: any) => b && b.booking_id);
 
         const normalized: Booking[] = valid.map((b: any) => ({
           booking_id: b.booking_id,
@@ -424,27 +399,17 @@ export function Bookings() {
           duration: b.duration || "60",
           worker_assign:
             typeof b.worker_assign === "string"
-              ? b.worker_assign
-                  .split(",")
-                  .map((w: string) => w.trim())
+              ? b.worker_assign.split(",").map((w: string) => w.trim())
               : b.worker_assign || [],
-          inspection_status: (
-            b.inspection_status ||
-            b.inspectionStatus ||
-            "pending"
-          ).toLowerCase(),
+          inspection_status: (b.inspection_status || b.inspectionStatus || "pending").toLowerCase(),
           site_visit: (b.site_visit || "pending").toLowerCase(),
-
-          // ⭐ PAYMENT FIELDS ADDED
           paymentMethod: b.paymentMethod || "N/A",
           paymentStatus: b.paymentStatus || "Pending",
         }));
 
         setBookings(normalized.sort((a, b) => b.booking_id - a.booking_id));
       })
-      .catch((err) =>
-        console.error("Failed to fetch bookings:", err)
-      )
+      .catch((err) => console.error("Failed to fetch bookings:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -452,60 +417,134 @@ export function Bookings() {
     fetchBookings();
   }, [fetchBookings]);
 
-  /* ---------------------- UPDATE PAYMENT STATUS ---------------------- */
+  /* ------------------------- Existing API wrappers used by Save Status ------------------------- */
 
-  const updatePaymentStatus = async (
-    bookingId: number,
-    status: string
+  // Update status endpoint (existing)
+  const updateStatusApi = async (bookingId: number, payload: any) => {
+    return axios.put(`${Global_API_BASE}/api/bookings/${bookingId}/status`, payload);
+  };
+
+  // Update discount endpoint (existing)
+  const updateDiscountApi = async (bookingId: number, payload: any) => {
+    return axios.put(`${Global_API_BASE}/api/bookings/${bookingId}/discount`, payload);
+  };
+
+  // Update payment status endpoint (existing)
+  const updatePaymentStatusApi = async (bookingId: number, payload: any) => {
+    return axios.put(`${Global_API_BASE}/api/bookings/${bookingId}/payment-status`, payload);
+  };
+
+  // Assign worker endpoint (existing)
+  const assignWorkerApi = async (bookingId: number, workerName: string) => {
+    return axios.put(`${Global_API_BASE}/api/admin/${bookingId}/assign-worker`, {
+      workername: workerName,
+    });
+  };
+
+  /* ------------------------- Combined update called by Save Status (calls existing APIs) ------------------------- */
+  const handleCombinedUpdate = async (
+    booking: Booking,
+    status: string,
+    canceledBy?: "customer" | "admin",
+    cancellationReason?: string,
+    workers?: string[],
+    discount?: number,
+    paymentStatus?: string
   ) => {
+    // 1) status
     try {
-      await axios.put(
-        `${Global_API_BASE}/api/bookings/${bookingId}/payment-status`,
-        {
-          paymentStatus: status,
-        }
-      );
+      await updateStatusApi(booking.booking_id, {
+        status,
+        canceledBy,
+        cancellationReason,
+      });
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      throw err;
+    }
 
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.booking_id === bookingId
-            ? { ...b, paymentStatus: status }
-            : b
-        )
-      );
+    // 2) discount
+    try {
+      // send discount even if 0 to ensure server knows value
+      await updateDiscountApi(booking.booking_id, {
+        discount: typeof discount === "number" ? discount : 0,
+      });
+    } catch (err) {
+      console.error("Failed to update discount:", err);
+      throw err;
+    }
 
-      if (selectedBooking?.booking_id === bookingId) {
-        setSelectedBooking({
-          ...selectedBooking,
-          paymentStatus: status,
+    // 3) payment status
+    try {
+      if (paymentStatus) {
+        await updatePaymentStatusApi(booking.booking_id, {
+          paymentStatus,
         });
       }
     } catch (err) {
       console.error("Failed to update payment status:", err);
+      throw err;
+    }
+
+    // 4) assign workers (call per worker)
+    if (workers && workers.length > 0) {
+      try {
+        for (const w of workers) {
+          await assignWorkerApi(booking.booking_id, w);
+        }
+      } catch (err) {
+        console.error("Failed to assign worker(s) during combined update:", err);
+        throw err;
+      }
+    }
+
+    // If all succeeded, update local UI state
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.booking_id === booking.booking_id
+          ? {
+              ...b,
+              bookingStatus: status,
+              canceledBy,
+              cancellation_reason: cancellationReason,
+              worker_assign: workers && workers.length ? workers : b.worker_assign,
+              discount: typeof discount === "number" ? discount : b.discount,
+              totalAmount:
+                typeof discount === "number" ? Math.max(0, b.booking_amount - discount) : b.totalAmount,
+              paymentStatus: paymentStatus || b.paymentStatus,
+            }
+          : b
+      )
+    );
+
+    if (selectedBooking?.booking_id === booking.booking_id) {
+      setSelectedBooking((prev) =>
+        prev
+          ? {
+              ...prev,
+              bookingStatus: status,
+              canceledBy,
+              cancellation_reason: cancellationReason,
+              worker_assign: workers && workers.length ? workers : prev.worker_assign,
+              discount: typeof discount === "number" ? discount : prev.discount,
+              totalAmount:
+                typeof discount === "number" ? Math.max(0, prev.booking_amount - discount) : prev.totalAmount,
+              paymentStatus: paymentStatus || prev.paymentStatus,
+            }
+          : prev
+      );
     }
   };
 
-  /* ------------------------- Worker Assignment ------------------------ */
-
-  const handleAssignWorker = async (
-    bookingId: number,
-    workerName: string
-  ) => {
+  /* ------------------------- Immediate assign worker handler (used by Assign Workers button) ------------------------- */
+  const handleAssignWorkerImmediate = async (bookingId: number, workerName: string) => {
     try {
-      await axios.put(
-        Global_API_BASE + `/api/admin/${bookingId}/assign-worker`,
-        {
-          workername: workerName,
-        }
-      );
+      await assignWorkerApi(bookingId, workerName);
 
       setBookings((prev) =>
         prev.map((b) =>
           b.booking_id === bookingId
-            ? {
-                ...b,
-                worker_assign: [...(b.worker_assign || []), workerName],
-              }
+            ? { ...b, worker_assign: [...(b.worker_assign || []), workerName] }
             : b
         )
       );
@@ -513,92 +552,12 @@ export function Bookings() {
       if (selectedBooking?.booking_id === bookingId) {
         setSelectedBooking({
           ...selectedBooking,
-          worker_assign: [
-            ...(selectedBooking.worker_assign || []),
-            workerName,
-          ],
+          worker_assign: [...(selectedBooking.worker_assign || []), workerName],
         });
       }
     } catch (err) {
       console.error("Failed assign worker:", err);
-    }
-  };
-
-  /* ------------------------- Discount Save ------------------------- */
-
-  const handleSaveDiscount = async (
-    bookingId: number,
-    discountAmount: number
-  ) => {
-    try {
-      const res = await axios.put(
-        Global_API_BASE + `/api/bookings/${bookingId}/discount`,
-        {
-          discount: discountAmount,
-        }
-      );
-
-      const updated = res.data;
-
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.booking_id === bookingId
-            ? {
-                ...b,
-                discount: updated.discount,
-                totalAmount: updated.grand_total,
-              }
-            : b
-        )
-      );
-
-      if (selectedBooking?.booking_id === bookingId)
-        setSelectedBooking({
-          ...selectedBooking,
-          discount: updated.discount,
-          totalAmount: updated.grand_total,
-        });
-    } catch (err) {
-      console.error("Failed save discount:", err);
-    }
-  };
-
-  /* ------------------------- Status Update ------------------------- */
-
-  const handleUpdateStatus = async (
-    booking: Booking,
-    status: string,
-    canceledBy?: "customer" | "admin",
-    cancellation_reason?: string
-  ) => {
-    try {
-      await axios.put(
-        Global_API_BASE + `/api/bookings/${booking.booking_id}/status`,
-        {
-          status,
-          canceledBy,
-          cancellationReason: cancellation_reason,
-        }
-      );
-
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.booking_id === booking.booking_id
-            ? { ...b, bookingStatus: status, canceledBy, cancellation_reason }
-            : b
-        )
-      );
-
-      if (selectedBooking?.booking_id === booking.booking_id) {
-        setSelectedBooking({
-          ...selectedBooking,
-          bookingStatus: status,
-          canceledBy,
-          cancellation_reason,
-        });
-      }
-    } catch (err) {
-      console.error("Failed update status:", err);
+      throw err;
     }
   };
 
@@ -609,9 +568,7 @@ export function Bookings() {
     setIsEditModalOpen(true);
   };
 
-  const filteredByStatus = bookings.filter((b) =>
-    filter === "all" ? true : b.bookingStatus === filter
-  );
+  const filteredByStatus = bookings.filter((b) => (filter === "all" ? true : b.bookingStatus === filter));
 
   const filtered = filteredByStatus.filter((b) => {
     const term = searchTerm.toLowerCase();
@@ -632,132 +589,104 @@ export function Bookings() {
 
   return (
     <div className="w-full overflow-x-scroll md:overflow-x-visible scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
-
-      {/* Force width bigger than mobile so scrollbar appears */}
       <div className="min-w-[950px]">
-
-        {/* Original Desktop Content (unchanged) */}
         <div className="px-4 py-6 space-y-6 min-h-screen bg-gray-50">
-
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-navy-700">
-              Booking Dashboard
-        </h1>
-        <p className="text-gray-500 mt-1">
-          All bookings with quick actions (status, workers, discount,
-          payment)
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-xl shadow-md border sticky top-0 z-10">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center w-full sm:w-1/2 relative">
-            <Search className="absolute left-3 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search name, email, phone, or ID"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border"
-            />
+            <h1 className="text-3xl font-bold text-navy-700">Booking Dashboard</h1>
+            <p className="text-gray-500 mt-1">All bookings with quick actions (status, workers, discount, payment)</p>
           </div>
 
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-          >
-            <option value="all">Show All</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Bookings List */}
-      <div className="flex flex-col gap-3">
-        {filtered.length === 0 ? (
-          <div className="text-center p-10 text-gray-500 border-2 border-dashed rounded-xl bg-white shadow-inner">
-            <X className="w-10 h-10 mx-auto mb-2" />
-            <p>No bookings found.</p>
-          </div>
-        ) : (
-          filtered.map((b) => (
-            <Card
-              key={b.booking_id}
-              className="p-4 rounded-xl shadow-lg border-l-4 border-navy-700 bg-white md:flex md:justify-between md:items-center hover:shadow-2xl transition"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-3 flex-grow">
-                <div>
-                  <StatusBadge
-                    status={b.bookingStatus}
-                    canceledBy={b.canceledBy}
-                  />
-                  <div className="font-bold text-lg">{b.customer_name}</div>
-                  <div className="text-xs text-gray-500">
-                    #{b.booking_id}
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  <div className="font-semibold">
-                    {b.booking_service_name}
-                  </div>
-                  <div className="text-xs">
-                    <Calendar className="inline w-3 h-3 mr-1" />
-                    {formatDateForDisplay(b.booking_date)} at{" "}
-                    <Clock className="inline w-3 h-3 mr-1 ml-1" />
-                    {b.booking_time}
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  <UserCheck className="inline w-3 h-3 mr-1 text-green-600" />
-                  {b.worker_assign.length
-                    ? b.worker_assign.join(", ")
-                    : "No workers"}
-                  <div className="mt-1 text-xs text-gray-500">
-                    <RupeeIcon className="inline w-4 h-4 mr-1" />
-                    ₹{b.totalAmount.toFixed(2)}
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-600 hidden sm:block">
-                  <MapPin className="inline w-3 h-3 text-blue-600 mr-1" />
-                  {b.city} - {b.pincode}
-                  <div className="text-xs mt-1">
-                    <Mail className="inline w-3 h-3 mr-1 text-gray-500" />
-                    {b.customer_email}
-                  </div>
-                </div>
+          {/* Filters */}
+          <div className="bg-white p-4 rounded-xl shadow-md border sticky top-0 z-10">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center w-full sm:w-1/2 relative">
+                <Search className="absolute left-3 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search name, email, phone, or ID"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border"
+                />
               </div>
 
-              <Button
-                className="mt-3 sm:mt-0 sm:ml-4 bg-navy-600 hover:bg-navy-700 text-sm py-2 px-4"
-                onClick={() => handleEditClick(b)}
-              >
-                <Edit className="w-4 h-4 mr-2" /> Update
-              </Button>
-            </Card>
-          ))
-        )}
-      </div>
+              <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-4 py-2 border rounded-lg">
+                <option value="all">Show All</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && selectedBooking && (
-        <EditBookingModal
-          booking={selectedBooking}
-          onClose={() => setIsEditModalOpen(false)}
-          onUpdateStatus={handleUpdateStatus}
-          onAssignWorker={handleAssignWorker}
-          onSaveDiscount={handleSaveDiscount}
-          onUpdatePaymentStatus={updatePaymentStatus} // ⭐ Added
-        />
-      )}
-     </div>
+          {/* Bookings List */}
+          <div className="flex flex-col gap-3">
+            {filtered.length === 0 ? (
+              <div className="text-center p-10 text-gray-500 border-2 border-dashed rounded-xl bg-white shadow-inner">
+                <X className="w-10 h-10 mx-auto mb-2" />
+                <p>No bookings found.</p>
+              </div>
+            ) : (
+              filtered.map((b) => (
+                <Card
+                  key={b.booking_id}
+                  className="p-4 rounded-xl shadow-lg border-l-4 border-navy-700 bg-white md:flex md:justify-between md:items-center hover:shadow-2xl transition"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-3 flex-grow">
+                    <div>
+                      <StatusBadge status={b.bookingStatus} canceledBy={b.canceledBy} />
+                      <div className="font-bold text-lg">{b.customer_name}</div>
+                      <div className="text-xs text-gray-500">#{b.booking_id}</div>
+                    </div>
+
+                    <div className="text-sm text-gray-600">
+                      <div className="font-semibold">{b.booking_service_name}</div>
+                      <div className="text-xs">
+                        <Calendar className="inline w-3 h-3 mr-1" />
+                        {formatDateForDisplay(b.booking_date)} at{" "}
+                        <Clock className="inline w-3 h-3 mr-1 ml-1" />
+                        {b.booking_time}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-600">
+                      <UserCheck className="inline w-3 h-3 mr-1 text-green-600" />
+                      {b.worker_assign.length ? b.worker_assign.join(", ") : "No workers"}
+                      <div className="mt-1 text-xs text-gray-500">
+                        <RupeeIcon className="inline w-4 h-4 mr-1" />
+                        ₹{b.totalAmount.toFixed(2)}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-600 hidden sm:block">
+                      <MapPin className="inline w-3 h-3 text-blue-600 mr-1" />
+                      {b.city} - {b.pincode}
+                      <div className="text-xs mt-1">
+                        <Mail className="inline w-3 h-3 mr-1 text-gray-500" />
+                        {b.customer_email}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button className="mt-3 sm:mt-0 sm:ml-4 bg-navy-600 hover:bg-navy-700 text-sm py-2 px-4" onClick={() => handleEditClick(b)}>
+                    <Edit className="w-4 h-4 mr-2" /> Update
+                  </Button>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Edit Modal */}
+          {isEditModalOpen && selectedBooking && (
+            <EditBookingModal
+              booking={selectedBooking}
+              onClose={() => setIsEditModalOpen(false)}
+              onCombinedUpdate={handleCombinedUpdate}
+              onAssignWorkerImmediate={handleAssignWorkerImmediate}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

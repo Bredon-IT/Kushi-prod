@@ -23,6 +23,10 @@ const CustomerGallery: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
+
   // Fetch gallery on mount and every 5 seconds
   useEffect(() => {
     fetchGallery();

@@ -7,10 +7,8 @@ import {
   Search,
   Mail,
   User,
-  IndianRupee,
   MapPin,
   X,
-  Clock,
   CheckCircle,
   Users,
   IndianRupee as RupeeIcon,
@@ -19,6 +17,7 @@ import {
   Phone,
 } from "lucide-react";
 
+// Helper function remains the same
 const formatDateForDisplay = (rawDateString: string | undefined): string => {
   if (!rawDateString || rawDateString === "N/A") return "N/A";
   try {
@@ -50,7 +49,7 @@ interface Booking {
   customer_number: string;
   booking_service_name: string;
   booking_amount: number;
-  totalAmount: number;
+  totalAmount: number; // Represents the calculated Grand Total
   discount: number;
   booking_date: string;
   booking_time: string;
@@ -77,7 +76,7 @@ const InspectionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   else if (s === "pending") colorClass = "bg-yellow-100 text-yellow-700 ring-1 ring-yellow-500";
 
   return (
-   <span
+    <span
       className={`px-3 py-1 text-xs font-semibold rounded-full shadow-sm ${colorClass} uppercase whitespace-nowrap`}
     >
       {s === "confirmed" ? "Inspection Confirmed" : status}
@@ -137,11 +136,12 @@ const EditInspectionModal: React.FC<EditInspectionModalProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
+      // Ensure number fields are parsed correctly, defaulting to 0 if invalid
       [name]: name === "booking_amount" || name === "discount" ? parseFloat(value) || 0 : value,
     }));
   };
 
- const handleSave = async () => {
+  const handleSave = async () => {
     const newBookingStatus = formData.inspection_status === "cancelled" ? "cancelled" : formData.inspection_status;
 
     const updateRequest: InspectionUpdateRequest = {
@@ -157,8 +157,7 @@ const EditInspectionModal: React.FC<EditInspectionModalProps> = ({
     onClose();
   };
 
- const fullAddress = [booking.address_line_1, booking.address_line_2, booking.address_line_3, booking.city, booking.pincode].filter(Boolean).join(", ");
-  const formattedDate = formatDateForDisplay(booking.booking_date);
+  const fullAddress = [booking.address_line_1, booking.address_line_2, booking.address_line_3, booking.city, booking.pincode].filter(Boolean).join(", ");
 
   const canMoveToBookings =
     (formData.inspection_status || "").toLowerCase() === "completed" && (formData.booking_amount ?? 0) > 0;
@@ -243,7 +242,8 @@ const EditInspectionModal: React.FC<EditInspectionModalProps> = ({
                 type="number"
                 name="booking_amount"
                 min="0"
-                value={formData.booking_amount}
+                // Only show empty string if the value is exactly 0 to allow typing
+                value={formData.booking_amount === 0 && !String(formData.booking_amount).length ? "" : formData.booking_amount}
                 onChange={handleChange}
                 className="w-full border border-navy-400 px-3 py-2 rounded-lg text-right font-bold text-base"
               />
@@ -256,7 +256,8 @@ const EditInspectionModal: React.FC<EditInspectionModalProps> = ({
                 name="discount"
                 min="0"
                 max={baseAmount}
-                value={formData.discount}
+                // Only show empty string if the value is exactly 0 to allow typing
+                value={formData.discount === 0 && !String(formData.discount).length ? "" : formData.discount}
                 onChange={handleChange}
                 className="w-full border border-gray-300 px-3 py-2 rounded-lg text-right text-base"
               />
@@ -304,11 +305,12 @@ export function InspectionDashboard() {
 
   const fetchInspections = useCallback(() => {
     setLoading(true);
-    InspectionAPIService.getAllInspections(null)
+    InspectionAPIService.getAllInspections()
       .then((res: any) => {
         const validData = (res.data || []).filter((b: any) => b && b.booking_id);
         const normalized: Booking[] = validData
-          .filter((b: any) => (b.booking_amount ?? 0) === 0) // KEEP: only bookings with zero booking_amount for inspection dashboard
+          // The filter ensures only zero-amount bookings (Inspections) are displayed
+          .filter((b: any) => (b.booking_amount ?? 0) === 0) 
           .map((b: any) => ({
             booking_id: b.booking_id,
             customer_name: b.customer_name,
@@ -316,6 +318,7 @@ export function InspectionDashboard() {
             customer_number: b.customer_number,
             booking_service_name: b.booking_service_name,
             booking_amount: b.booking_amount ?? 0,
+            // Calculate totalAmount (Grand Total) for display
             totalAmount: b.grand_total ?? ((b.booking_amount ?? 0) - (b.discount ?? 0)),
             discount: b.discount ?? 0,
             booking_date: b.booking_date || "N/A",
@@ -365,6 +368,7 @@ export function InspectionDashboard() {
                   ...b,
                   booking_amount: updatedBooking.booking_amount ?? b.booking_amount,
                   discount: updatedBooking.discount ?? b.discount,
+                  // Re-calculate totalAmount after update
                   totalAmount:
                     updatedBooking.grand_total ??
                     ((updatedBooking.booking_amount ?? b.booking_amount) - (updatedBooking.discount ?? b.discount)),
@@ -383,7 +387,8 @@ export function InspectionDashboard() {
                 }
               : b
           )
-          .filter((b) => (b.booking_amount ?? 0) === 0) // KEEP: keep only zero-amount bookings after update
+          // Filter again: If the booking_amount is now > 0, it should be removed from this dashboard
+          .filter((b) => (b.booking_amount ?? 0) === 0) 
       );
     } catch (err) {
       console.error("Failed to update inspection:", err);
@@ -398,7 +403,6 @@ export function InspectionDashboard() {
 
   const handleMoveToBookings = (bookingId: number) => {
     // Remove from current inspection list (client-side only).
-    // If you have an API to move booking to "bookings", call it here.
     setBookings((prev) => prev.filter((b) => b.booking_id !== bookingId));
     setIsEditModalOpen(false);
     setSelectedBooking(null);
@@ -428,7 +432,7 @@ export function InspectionDashboard() {
     <div className="w-full overflow-x-scroll md:overflow-x-visible scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
 
       {/* Make content wider than mobile to force scrolling */}
-      <div className="min-w-[950px]">
+      <div className="min-w-[1050px]"> {/* Increased min-width for the new column */}
 
     <div className="px-4 py-6 space-y-6 min-h-screen bg-gray-50 text-gray-900 md:px-8">
       <div className="text-center">
@@ -445,7 +449,7 @@ export function InspectionDashboard() {
               placeholder="Search by Customer Name, Email, Phone, or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-             className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white shadow-inner"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white shadow-inner"
                 />
           </div>
           <select value={filter} onChange={handleFilterChange} className="px-4 py-2 rounded-lg border border-navy-400 bg-white w-full sm:w-auto font-semibold text-navy-600 shadow-sm">
@@ -467,13 +471,17 @@ export function InspectionDashboard() {
         ) : (
           filtered.map((b, index) => (
             <Card key={b.booking_id || index} className="p-4 rounded-xl shadow-lg border-l-4 border-navy-700 bg-white relative hover:shadow-2xl transition duration-300 md:flex md:justify-between md:items-center">
-              <div className="flex-grow grid grid-cols-1 sm:grid-cols-4 items-center gap-3">
+              {/* Changed grid layout from 4 to 5 columns */}
+              <div className="flex-grow grid grid-cols-1 sm:grid-cols-5 items-center gap-3"> 
+                
+                {/* Column 1: Customer & Status */}
                 <div className="flex flex-col items-start min-w-[120px]">
                   <InspectionStatusBadge status={b.inspection_status} />
                   <div className="font-bold text-lg text-navy-700 mt-1">{b.customer_name}</div>
                   <div className="text-xs text-gray-500">Booking #{b.booking_id}</div>
                 </div>
 
+                {/* Column 2: Service & Date */}
                 <div className="text-sm text-gray-600 space-y-1">
                   <div className="font-semibold">{b.booking_service_name}</div>
                   <div className="flex items-center gap-1.5 text-xs">
@@ -481,6 +489,7 @@ export function InspectionDashboard() {
                   </div>
                 </div>
 
+                {/* Column 3: Site Visit & Workers */}
                 <div className="text-sm text-gray-600 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle className="w-3 h-3 text-green-600" />
@@ -492,6 +501,17 @@ export function InspectionDashboard() {
                   </div>
                 </div>
 
+                {/* NEW Column 4: Grand Total (Booking Amount) */}
+                <div className="text-sm text-gray-600 space-y-1 font-bold">
+                  <div className="text-xs text-gray-500">Booking Grand Total</div>
+                  <div className="flex items-center text-lg text-navy-700">
+                    <RupeeIcon className="w-4 h-4 mr-1" />
+                    {b.totalAmount.toFixed(2)}
+                  </div>
+                </div>
+                {/* End NEW Column */}
+
+                {/* Column 5: Location & Contact */}
                 <div className="text-sm text-gray-600 hidden sm:block">
                   <div className="flex items-start gap-1.5">
                     <MapPin className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -526,8 +546,8 @@ export function InspectionDashboard() {
           onMoveToBookings={handleMoveToBookings}
         />
       )}
-     </div>
       </div>
+       </div>
     </div>
   );
 }

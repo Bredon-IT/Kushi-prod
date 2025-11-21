@@ -58,9 +58,9 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-peach-300 to-navy-700">
           <div className="flex items-center">
             <img
-              src="/kushiservices logo.png"
+              src="/KushiKlogo.png"
               alt="Kushi Services"
-              className="w-10 h-10 object-contain bg-white rounded-lg p-1 shadow-md"
+             className="w-14 h-14 md:w-10 md:h-10 shadow-md"
             />
             <div className="ml-3">
               <h1 className="text-lg font-bold text-white">Kushi Services</h1>

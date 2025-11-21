@@ -8,25 +8,30 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { RevenueChart } from "../components/charts/RevenueChart";
-import { CategoryBookingsChart } from "../components/charts/CategoryBookingsChart";
+import { FinancialRevenueChart } from "../components/charts/FinancialRevenueChart";
+
+import RobotoRegular from "../fonts/Roboto-Regular.ttf";
+
+
 import OverviewService from "../services/OverviewService";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Global_API_BASE from "../services/GlobalConstants";
+ 
+ const loadFontAsBase64 = async (url) => {
+  const response = await fetch(url);
+  const buffer = await response.arrayBuffer();
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
 
-
-
-/*
-  Updated Financial page
-  - Removed Total Expenses card
-  - Moved period filter to top (remains there)
-  - Added a second (compact) period selector above Revenue by Service list
-  - Revenue by Service shows top 5 by default, "See more" toggles remaining items
-  - CSV & PDF export preserved
-*/
-
+ 
 const formatDateForDisplay = (rawDateString?: string) => {
   if (!rawDateString) return "N/A";
   try {
@@ -41,18 +46,18 @@ const formatDateForDisplay = (rawDateString?: string) => {
     return "N/A";
   }
 };
-
+ 
 export function Financial() {
   const [financialStats, setFinancialStats] = useState({
     totalRevenue: 0,
     monthlyIncome: 0,
     profit: 0,
   });
-
+ 
   const [revenueByService, setRevenueByService] = useState<
     { service: string; revenue: number; percentage: number }[]
   >([]);
-
+ 
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<"today" | "month" | "year" | "custom">(
     "month"
@@ -60,53 +65,58 @@ export function Financial() {
   const [customDate, setCustomDate] = useState({ start: "", end: "" });
   const [search, setSearch] = useState("");
   const [showAllServices, setShowAllServices] = useState(false);
-
+ 
   useEffect(() => {
-    let queryParams = "";
-    if (filter === "custom" && customDate.start && customDate.end) {
-      queryParams = `?startDate=${customDate.start}&endDate=${customDate.end}`;
-    } else {
-      queryParams = `?filter=${filter}`;
-    }
+  let queryParams = "";
+  if (filter === "custom" && customDate.start && customDate.end) {
+    queryParams = `?startDate=${customDate.start}&endDate=${customDate.end}`;
+  } else {
+    queryParams = `?filter=${filter}`;
+  }
 
-    setLoading(true);
-    OverviewService.getOverview(queryParams)
-      .then((res: any) => {
-        const data = res.data || {};
-        setFinancialStats((prev) => ({
-          ...prev,
-          totalRevenue: data.totalAmount ?? prev.totalRevenue,
-          monthlyIncome: data.monthlyIncome ?? prev.monthlyIncome,
-          profit: data.profit ?? prev.profit,
-        }));
-      })
-      .catch((err) => console.error("Error fetching financial stats:", err))
-      .finally(() => setLoading(false));
+  setLoading(true);
 
-    axios
-      .get(Global_API_BASE + `/api/admin/revenue-by-service${queryParams}`)
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : [];
-        const validData = data.filter(
-          (s: any) =>
-            (s.serviceName || s.service) &&
-            (s.totalRevenue !== undefined || s.revenue !== undefined)
-        );
-        const total = validData.reduce(
-          (sum, s) => sum + (s.totalRevenue ?? s.revenue ?? 0),
-          0
-        );
-        const formatted = validData
-          .map((s: any) => ({
-            service: s.serviceName ?? s.service,
-            revenue: s.totalRevenue ?? s.revenue ?? 0,
-            percentage: total > 0 ? ((s.totalRevenue ?? s.revenue ?? 0) / total) * 100 : 0,
-          }))
-          .sort((a, b) => b.revenue - a.revenue);
-        setRevenueByService(formatted);
-      })
-      .catch((err) => console.error("Error fetching revenue by service:", err));
-  }, [filter, customDate]);
+  // FINANCIAL: call filtered overview
+  OverviewService.getFinancialOverview(queryParams)
+    .then((res: any) => {
+      const data = res.data || {};
+      setFinancialStats((prev) => ({
+        ...prev,
+        //  totalAmount, monthlyIncome, netProfit
+        totalRevenue: data.totalAmount ?? prev.totalRevenue,
+        monthlyIncome: data.monthlyIncome ?? prev.monthlyIncome,
+        profit: data.netProfit ?? prev.profit,
+      }));
+    })
+    .catch((err) => console.error("Error fetching financial stats:", err))
+    .finally(() => setLoading(false));
+
+  // Revenue by service 
+  axios
+    .get(Global_API_BASE + `/api/admin/revenue-by-service${queryParams}`)
+    .then((res) => {
+      const data = Array.isArray(res.data) ? res.data : [];
+      const validData = data.filter(
+        (s: any) =>
+          (s.serviceName || s.service) &&
+          (s.totalRevenue !== undefined || s.revenue !== undefined)
+      );
+      const total = validData.reduce(
+        (sum, s) => sum + (s.totalRevenue ?? s.revenue ?? 0),
+        0
+      );
+      const formatted = validData
+        .map((s: any) => ({
+          service: s.serviceName ?? s.service,
+          revenue: s.totalRevenue ?? s.revenue ?? 0,
+          percentage:
+            total > 0 ? ((s.totalRevenue ?? s.revenue ?? 0) / total) * 100 : 0,
+        }))
+        .sort((a: any, b: any) => b.revenue - a.revenue);
+      setRevenueByService(formatted);
+    })
+    .catch((err) => console.error("Error fetching revenue by service:", err));
+}, [filter, customDate]);
 
   const handleExportCSV = () => {
     if (!revenueByService.length) {
@@ -133,13 +143,24 @@ export function Financial() {
     link.click();
     document.body.removeChild(link);
   };
-
+ 
   const handleGeneratePDFReport = async () => {
     const doc = new jsPDF();
+ const fontBase64 = await loadFontAsBase64(RobotoRegular);
+
+  // Add to jsPDF
+  doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+
+  // Use the font
+  doc.setFont("Roboto", "normal");
+
+
+
     const margin = 15;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-
+ 
     doc.setDrawColor(0, 0, 0);
     doc.rect(
       margin - 5,
@@ -147,20 +168,20 @@ export function Financial() {
       pageWidth - (margin - 5) * 2,
       pageHeight - (margin - 5) * 2
     );
-
-    doc.setFont("times", "bold");
+ 
+    doc.setFont("Roboto", "bold");
     doc.setFontSize(16);
     doc.text("Kushi Services", pageWidth / 2, margin, { align: "center" });
-
+ 
     doc.setFontSize(10);
-    doc.setFont("times", "normal");
+    doc.setFont("Roboto", "normal");
     doc.text(
       "No 115, GVR Complex, Thambu Chetty Palya Main Rd, Opp. Axis Bank ATM, Bengaluru, Karnataka",
       pageWidth / 2,
       margin + 8,
       { align: "center" }
     );
-
+ 
     const filterText =
       filter === "today"
         ? "Today's Report"
@@ -169,13 +190,13 @@ export function Financial() {
         : filter === "year"
         ? "This Year's Report"
         : `Custom Report (${customDate.start} to ${customDate.end})`;
-
+ 
     doc.setFontSize(12);
-    doc.setFont("times", "bold");
+    doc.setFont("Roboto", "bold");
     doc.text(filterText, pageWidth / 2, margin + 22, { align: "center" });
-
+ 
     doc.setFontSize(11);
-    doc.setFont("times", "normal");
+    doc.setFont("Roboto", "normal");
     let y = margin + 36;
     doc.text(
       `Total Revenue: ₹${financialStats.totalRevenue.toLocaleString("en-IN")}`,
@@ -184,13 +205,13 @@ export function Financial() {
     );
     y += 8;
     doc.text(`Net Profit: ₹${financialStats.profit.toLocaleString("en-IN")}`, margin, y);
-
+ 
     const tableData = revenueByService.map((s) => [
       s.service,
       `${s.revenue.toLocaleString("en-IN")}`,
       `${s.percentage.toFixed(2)}%`,
     ]);
-
+ 
     autoTable(doc, {
       startY: y + 10,
       head: [["Service", "Revenue", "Percentage"]],
@@ -208,7 +229,7 @@ export function Financial() {
       },
       margin: { left: margin, right: margin },
     });
-
+ 
     const footerY = pageHeight - margin + 5;
     doc.setFontSize(10);
     doc.text(
@@ -217,19 +238,19 @@ export function Financial() {
       footerY,
       { align: "center" }
     );
-
+ 
     const dateStr = new Date().toISOString().split("T")[0];
     doc.save(`financial_report_${dateStr}.pdf`);
   };
-
+ 
   // Filtered revenue list by search
   const filteredRevenue = revenueByService.filter((r) =>
     r.service.toLowerCase().includes(search.trim().toLowerCase())
   );
-
+ 
   const topServices = filteredRevenue.slice(0, 5);
   const extraServices = filteredRevenue.slice(5);
-
+ 
   return (
     <div className="w-full overflow-x-auto md:overflow-x-visible scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
   <div className="min-w-[950px]">
@@ -243,7 +264,7 @@ export function Financial() {
             <p className="text-sm text-gray-500">Overview, revenue breakdown and exports</p>
           </div>
         </div>
-
+ 
         <div className="flex items-center gap-3">
           <div className="flex items-center border rounded-md overflow-hidden">
             <select
@@ -274,7 +295,7 @@ export function Financial() {
               </div>
             )}
           </div>
-
+ 
           <div className="flex items-center gap-2">
             <Button onClick={handleExportCSV} variant="secondary" disabled={loading}>
               {loading ? "Exporting..." : "Export CSV"}
@@ -283,7 +304,7 @@ export function Financial() {
           </div>
         </div>
       </div>
-
+ 
       {/* Overview cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
@@ -298,7 +319,7 @@ export function Financial() {
             </div>
           </CardContent>
         </Card>
-
+ 
         <Card>
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-lg bg-purple-50">
@@ -311,7 +332,7 @@ export function Financial() {
             </div>
           </CardContent>
         </Card>
-
+ 
         <Card>
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 rounded-lg bg-blue-50">
@@ -329,47 +350,28 @@ export function Financial() {
           </CardContent>
         </Card>
       </div>
-
+ 
       {/* Revenue Trends chart */}
       <Card>
         <CardHeader>
           <h3 className="text-lg font-semibold">Revenue Trends</h3>
         </CardHeader>
         <CardContent>
-          <RevenueChart />
+         <FinancialRevenueChart 
+   filter={filter}
+   startDate={customDate.start}
+   endDate={customDate.end}
+/>
+
         </CardContent>
       </Card>
+ 
+     
 
+ 
+ 
+ 
       
-{/* Category-wise Completed vs Cancelled Bookings */}
-<Card>
-  <CardHeader>
-    <h3 className="text-lg font-semibold">Category-wise Bookings</h3>
-  </CardHeader>
-  <CardContent>
-    <CategoryBookingsChart />
-  </CardContent>
-</Card>
-
-
-
-      {/* Compact period selector above Revenue by Service */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-medium text-gray-700">Period</div>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
-            className="px-3 py-1 border rounded-md text-sm"
-          >
-            <option value="today">Today</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="custom">Custom Date</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -379,15 +381,14 @@ export function Financial() {
               className="pl-10 pr-3 py-2 border rounded-md w-56 text-sm"
             />
           </div>
-        </div>
-      </div>
-
+       
+ 
       {/* Revenue by Service (top 5 + see more) */}
       <Card>
         <CardHeader className="flex items-center justify-between gap-3">
           <h3 className="text-lg font-semibold">Revenue by Service</h3>
         </CardHeader>
-
+ 
         <CardContent>
           <div className="space-y-4">
             {topServices.length === 0 ? (
@@ -410,7 +411,7 @@ export function Financial() {
                     </div>
                   </div>
                 ))}
-
+ 
                 {showAllServices && extraServices.map((service, idx) => (
                   <div key={`extra-${idx}`} className="flex items-center justify-between gap-4 mt-3">
                     <div className="flex-1">
@@ -427,7 +428,7 @@ export function Financial() {
                     </div>
                   </div>
                 ))}
-
+ 
                 {extraServices.length > 0 && (
                   <div className="flex justify-center mt-4">
                     <Button
@@ -448,3 +449,5 @@ export function Financial() {
     </div>
   );
 }
+ 
+ 

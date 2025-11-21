@@ -194,16 +194,18 @@ useEffect(() => {
     fetchTopRatedServices();
   }, []);
 
-  // Fetch Dashboard Overview
+ // Fetch Dashboard Overview
+    // Fetch Dashboard Overview (all-time)
   useEffect(() => {
-    OverviewService.getOverview('all-time')
+    OverviewService.getDashboardOverview()
       .then((res) => {
-        const data = res.data;
+        const data = res.data || {};
+        // backend returns keys: totalAmount, totalBookings, totalCustomers
         setTotalBookings(data.totalBookings || 0);
         setTotalCustomers(data.totalCustomers || 0);
         setTotalAmount(data.totalAmount || 0);
       })
-      .catch((err) => console.error('Error fetching overview:', err));
+      .catch((err) => console.error('Error fetching dashboard overview:', err));
   }, []);
 
   const stats = [

@@ -88,6 +88,7 @@ const StarRatingDisplay: React.FC<{ rating: number }> = ({ rating }) => (
 );
 
 
+
 const OrderDetailPage: React.FC = () => {
     const { bookingId } = useParams<{ bookingId: string }>();
     const { user } = useAuth();
@@ -96,6 +97,11 @@ const OrderDetailPage: React.FC = () => {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+
+    useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
 
     useEffect(() => {
         if (!userEmail || !bookingId) return;
@@ -153,6 +159,8 @@ const OrderDetailPage: React.FC = () => {
     
     // Calculate final amount as a fallback if grand_total is missing
     const finalAmount = order.grand_total ?? (order.totalAmount - (order.discount || 0));
+
+
 
     return (
         <div className="bg-gray-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
