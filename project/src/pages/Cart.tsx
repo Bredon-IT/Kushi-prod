@@ -128,6 +128,8 @@ const getCartFromStorage = (): CartItem[] => {
 };
 
 
+
+
 const hasMultiplePackages = (service: Service) => {
   if (!service.service_package) return false;
   return service.service_package.split(";").length > 1;
@@ -262,7 +264,8 @@ const Cart: React.FC = () => {
   const tax = Math.round(subtotal * 0.18);
   const total = subtotal + tax;
  
- 
+ const totalServiceCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   const cartSubcategories = Array.from(new Set(cart.map(item => item.subcategory)));
   const cartCategories = Array.from(new Set(cart.map(item => item.category)));
  
@@ -313,6 +316,11 @@ const Cart: React.FC = () => {
   };
 
 
+  useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, []);
+
+
  const handleEditCartItem = (cartItem: CartItem, service: Service) => {
   const slug = service.subcategory.toLowerCase().replace(/\s/g, "-");
 
@@ -327,7 +335,7 @@ const Cart: React.FC = () => {
       services: [service],
 
       fromCartEdit: true,  
-      editCartItemId: cartItem.cartItemId,  // ⭐ VERY IMPORTANT!
+      editCartItemId: cartItem.cartItemId,  
     },
   });
 };
@@ -407,11 +415,11 @@ const Cart: React.FC = () => {
       handleEditCartItem(item, service);
     }
   }}
-  className={`bg-white rounded-lg p-3 shadow-sm border transition ${
-    allServices.find(s => s.id === item.id && hasMultiplePackages(s))
-      ? "cursor-pointer hover:shadow-md"
-      : ""
-  }`}
+ className={`bg-white rounded-lg p-3 shadow-sm border border-gray-200 transition-all duration-300 
+  ${allServices.find(s => s.id === item.id && hasMultiplePackages(s))
+    ? "cursor-pointer hover:shadow-xl hover:border-peach-400"
+    : ""}`}
+
 >
 
 
@@ -470,51 +478,88 @@ const Cart: React.FC = () => {
  
  
  
-          {/* Order Summary (lg:col-span-1) */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl p-2 shadow-xl border-2 border-peach-200">
-              <h3 className="text-xl font-semibold text-navy-900 mb-10 text-center">Order Summary</h3>
- 
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between text-navy-700">
-                  <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
-                  <span className="font-medium">₹{subtotal.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between text-navy-700">
-                  <span>GST (18%)</span>
-                  <span className="font-medium">₹{tax.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="border-t-2 border-peach-200 pt-4">
-                  <div className="flex justify-between text-xl font-bold text-navy-900">
-                    <span>Total Amount</span>
-                    <span className="text-peach-600">₹{total.toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
-              </div>
- 
-              <button
-                onClick={handleProceedToBooking}
-                disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-peach-300 to-navy-700 text-white py-4 rounded-xl text-lg font-bold hover:from-navy-700 hover:to-peach-300 transition-all shadow-lg mb-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <div className="animate-spin rounded-full w-4 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    
-                    Proceed to Booking
-                  </>
-                )}
-              </button>
- 
-              <div className="text-center ">
-                <Link to="/services" className="text-peach-300 hover:text-navy-700 font-medium text-sm">
-                  Add More Services
-                </Link>
-              </div>
-            </div>
-          </div>
- 
+      {/* Order Summary (Compact Version – Only Totals & Button) */}
+<div className="lg:col-span-3">
+  <div className="bg-white rounded-2xl p-4">
+
+    {/* Heading */}
+    <h3 className="text-2xl font-semibold text-navy-900 mb-4 text-center">
+      Order Summary
+    </h3>
+
+    {/* Subtotal + GST + Grand Total + Proceed (All in One Row) */}
+    <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-peach-50 p-4 rounded-xl border border-peach-200">
+
+      {/* Left Side: Amounts */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 text-sm text-navy-700">
+
+{/* Total Services */}
+<div className="flex flex-col">
+  <span className="font-medium">Total Services</span>
+  <span className="font-bold">{totalServiceCount}</span>
+</div>
+
+<div className="hidden sm:block w-px h-10 bg-peach-300"></div>
+
+        {/* Subtotal */}
+        <div className="flex flex-col">
+          <span className="font-medium">Subtotal</span>
+          <span className="font-bold">
+            ₹{subtotal.toLocaleString("en-IN")}
+          </span>
+        </div>
+
+        <div className="hidden sm:block w-px h-10 bg-peach-300"></div>
+
+        {/* GST */}
+        <div className="flex flex-col">
+          <span className="font-medium">GST (18%)</span>
+          <span className="font-bold">
+            ₹{tax.toLocaleString("en-IN")}
+          </span>
+        </div>
+
+        <div className="hidden sm:block w-px h-10 bg-peach-300"></div>
+
+        {/* Grand Total */}
+        <div className="flex flex-col">
+          <span className="font-medium">Grand Total</span>
+          <span className="text-navy-700 font-bold text-lg">
+            ₹{total.toLocaleString("en-IN")}
+          </span>
+        </div>
+
+      </div>
+
+      {/* Right Side: Proceed Button */}
+      <button
+        onClick={handleProceedToBooking}
+        disabled={isProcessing}
+        className="bg-peach-300 text-white px-6 py-2 rounded-lg text-base font-semibold 
+                   hover:bg-navy-700 transition-all shadow-md
+                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        {isProcessing ? (
+          <div className="animate-spin rounded-full w-4 border-b-2 border-white"></div>
+        ) : (
+          "Proceed to Book"
+        )}
+      </button>
+    </div>
+
+    {/* Add More Services */}
+    <div className="text-center mt-3">
+      <Link to="/services" className="text-peach-500 hover:text-navy-700 text-sm">
+        Add More Services
+      </Link>
+    </div>
+
+  </div>
+</div>
+
+
+
+         
         </div>
         {/* --- END MAIN GRID LAYOUT --- */}
 </div>
@@ -782,7 +827,7 @@ const Cart: React.FC = () => {
                 onClick={() => {
                
                  if (service.category === "Commercial Cleaning Services" || service.category === "Industrial Cleaning Services") {
-                     navigate("/inspection-booking", { state: { service } });
+                     navigate("/inspection-booking", { state: { selectedService: service } });
                         return;
                   }
  
