@@ -29,6 +29,7 @@ import Gallery from './pages/Gallery';
 import OrderHistory from './pages/OrderHistory';
 import InspectionBooking from './pages/InspectionBooking';
 import OrderDetailPage from './pages/OrderDetailPage';
+import ThankYou from './pages/ThankYou';
 //import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
               <Route path="/forgetpassword" element={<ForgetPassword />} />
               <Route path="/order-details/:bookingId" element={<OrderDetailPage />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/thank-you" element={<ThankYou />} />
 
               
 
