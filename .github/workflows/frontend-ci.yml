@@ -3,7 +3,7 @@ name: Frontend CI – Build & Validate
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build:
