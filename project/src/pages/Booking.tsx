@@ -54,6 +54,8 @@ interface Service {
 // --- CONSTANTS ---
 const MAIN_CART_KEY = "kushiServicesCart";
 const BOOKING_SESSION_KEY = "kushiBookingSession"; // Key for temporary booking items
+const BOOKING_FORM_KEY = "kushiBookingFormData";
+
  
 // --- Mini Services Data (Based on your description) ---
 const MINI_SERVICES_DATA: Service[] = [
@@ -224,7 +226,12 @@ const filteredMiniServices = useMemo(() => {
 }, [cartItems]);
  
  
- 
+ const [popupMessage, setPopupMessage] = useState<string>("");
+const [showPopup, setShowPopup] = useState<boolean>(false);
+
+
+
+
   const appliedPromo = location.state?.appliedPromo || '';
   const promoDiscount = location.state?.promoDiscount || 0;
  
@@ -237,7 +244,11 @@ const filteredMiniServices = useMemo(() => {
   const tax = Math.round(subtotal * 0.18);
   const totalAmount = subtotal + tax - promoDiscount;
  
-  const [formData, setFormData] = useState<BookingForm>({
+  const [formData, setFormData] = useState<BookingForm>(() => {
+  const stored = localStorage.getItem(BOOKING_FORM_KEY);
+  if (stored) return JSON.parse(stored);
+
+  return {
     serviceCategory: cartItems.length ? cartItems[0].category : selectedService?.category || '',
     specificService: cartItems.length ? cartItems.map(i => i.name).join(', ') : selectedService?.name || '',
     date: '',
@@ -249,7 +260,9 @@ const filteredMiniServices = useMemo(() => {
     city: user?.city || '',
     pincode: user?.pincode || '',
     specialRequests: ''
-  });
+  };
+});
+
   const [errors, setErrors] = useState<any>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -261,6 +274,12 @@ const filteredMiniServices = useMemo(() => {
   ];
  
   // --- Lifecycle and Service Fetching ---
+useEffect(() => {
+  localStorage.setItem(BOOKING_FORM_KEY, JSON.stringify(formData));
+}, [formData]);
+useEffect(() => {
+  localStorage.setItem(BOOKING_SESSION_KEY, JSON.stringify(cartItems));
+}, [cartItems]);
 
 
   useEffect(() => {
@@ -488,58 +507,64 @@ if (!fullName) {
   };
  
  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
- 
-    if (!validateForm()) return;
-    if (cartItems.length === 0) {
-      alert("Please add at least one service to your booking.");
-      return;
-    }
- 
-    setIsLoading(true);
-    try {
-      const bookingData = {
-        customerId: user?.id || null,
-        customerName: formData.name,
-        customerEmail: formData.email,
-        customerNumber: formData.phone,
-        addressLine1: formData.address,
-        addressLine2: '',
-        addressLine3: '',
-        city: formData.city,
-        zipCode: formData.pincode,
-        bookingAmount: subtotal,
-        totalAmount: totalAmount,
-        bookingDate: toISODateTime(formData.date, formData.time),
-        bookingServiceName:
-          formData.specificService || (cartItems.length ? cartItems.map(i => i.name).join(', ') : ''),
-        bookingStatus: "Pending",
-        bookingTime: formData.time,
-        confirmationDate: "",
-        createdBy: "Customer",
-        createdDate: "",
-        paymentMethod: "",
-        paymentStatus: "Unpaid",
-        referenceDetails: "",
-        referenceName: "",
-        remarks: formData.specialRequests,
-        updatedBy: "",
-        updatedDate: "",
-        workerAssign: "",
-        visitList: "",
-        service_id: cartItems.length ? Number(cartItems[0].id) : null,
-        user: null // Placeholder for backend data structure
-      };
- 
-      
-  
-     setIsLoading(false);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-     
-      // Perform navigation after a short delay to allow the user to see the success message
-    
-       // Navigate to payment page with booking data
+  if (!validateForm()) return;
+
+  // 🚫 NEW RULE: Only allow bookings above 1500
+  if (totalAmount <= 1500) {
+    setPopupMessage("Minimum booking amount should be more than ₹1500 to proceed.");
+    setShowPopup(true);
+    setIsLoading(false);
+    return;
+  }
+
+  if (cartItems.length === 0) {
+    setPopupMessage("Please add at least one service to your booking.");
+    setShowPopup(true);
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const bookingData = {
+      customerId: user?.id || null,
+      customerName: formData.name,
+      customerEmail: formData.email,
+      customerNumber: formData.phone,
+      addressLine1: formData.address,
+      addressLine2: '',
+      addressLine3: '',
+      city: formData.city,
+      zipCode: formData.pincode,
+      bookingAmount: subtotal,
+      totalAmount: totalAmount,
+      bookingDate: toISODateTime(formData.date, formData.time),
+      bookingServiceName:
+        formData.specificService ||
+        (cartItems.length ? cartItems.map(i => i.name).join(', ') : ''),
+      bookingStatus: "Pending",
+      bookingTime: formData.time,
+      confirmationDate: "",
+      createdBy: "Customer",
+      createdDate: "",
+      paymentMethod: "",
+      paymentStatus: "Unpaid",
+      referenceDetails: "",
+      referenceName: "",
+      remarks: formData.specialRequests,
+      updatedBy: "",
+      updatedDate: "",
+      workerAssign: "",
+      visitList: "",
+      service_id: cartItems.length ? Number(cartItems[0].id) : null,
+      user: null
+    };
+
+    setIsLoading(false);
+
     navigate("/payment", {
       state: {
         bookingData,
@@ -551,16 +576,17 @@ if (!fullName) {
         promoDiscount
       }
     });
-       
-       // Clear temp session
-   // localStorage.removeItem(BOOKING_SESSION_KEY);
 
   } catch (err) {
     console.error("Booking submission error:", err);
     setIsLoading(false);
-    alert("Failed to proceed. Please try again.");
+
+    setPopupMessage("Failed to proceed. Please try again.");
+    setShowPopup(true);
   }
 };
+
+
 
  
   const getAvailableTimeSlots = () => {
@@ -662,9 +688,9 @@ return (
             {/* Selected Services */}
             {cartItems.length > 0 && (
               <div className="bg-peach-50 rounded-xl p-1 border border-peach-200">
-                <h3 className="font-semibold text-navy-800 mb-2 text-base">
+                <h4 className="font-semibold text-navy-800 mb-2 text-base">
                   Selected Services
-                </h3>
+                </h4>
                 {cartItems.map((item: CartItem) => (
                   <div
                     key={item.id}
@@ -834,6 +860,22 @@ return (
             </div>
           </form>
         </div>
+
+        {showPopup && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white p-5 rounded-2xl shadow-xl w-80 text-center border border-peach-300">
+      <p className="text-gray-800 font-medium mb-4">{popupMessage}</p>
+
+      <button
+        onClick={() => setShowPopup(false)}
+        className="px-4 py-2 bg-peach-500 text-white rounded-lg hover:bg-peach-600 transition"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
+
  
        {/* --- BOOKING SUMMARY (No “Selected Services” Heading, Matches Booking Form Height) --- */}
 <div className="flex-1 bg-white rounded-2xl shadow-md border border-peach-200 overflow-hidden flex flex-col">
@@ -923,7 +965,7 @@ return (
     {/* --- MINI SERVICES SECTION (shows only remaining mini services not in cart) --- */}
    {/* --- MINI SERVICES SECTION (Updated to New Card Design) --- */}
 {cartItems.length > 0 && filteredMiniServices.length > 0 && (
-  <div className="mt-6 mb-1 w-full">
+  <div className="mt-2 mb-8 w-full">
  
     <style>{`
       @keyframes marquee-mini-smooth {
@@ -940,13 +982,13 @@ return (
     `}</style>
  
     <div className="max-w-7xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-navy-900 text-center">
-        <span className="text-peach-600">Mini Services</span>
+      <h2 className="text-2xl font-bold mb-4 text-navy-900 text-center">
+        <span className="text-peach-500">Mini Services</span>
       </h2>
     </div>
  
     {/* Sliding Container */}
-    <div className="mini-marquee-container flex overflow-hidden relative py-4">
+    <div className="mini-marquee-container flex overflow-hidden relative py-1">
       <div className="flex mini-marquee-track" style={{ width: "300%" }}>
        
         {[...filteredMiniServices, ...filteredMiniServices, ...filteredMiniServices].map(
@@ -1007,7 +1049,7 @@ return (
    
     {/* Similar Services */}
     {similarServices.length > 0 && (
-        <div className="mt-6 mb-2 w-full">
+        <div className="mt-2 w-full">
             <style>{`
                 @keyframes marquee-seamless {
                     0% { transform: translateX(0); }
@@ -1029,7 +1071,7 @@ return (
                 </h4>
             </div>
  
-            <div className="marquee-container flex overflow-hidden relative py-4">
+            <div className="marquee-container flex overflow-hidden relative py-1">
                 <div
                     className="flex animate-marquee-seamless hover:pause"
                     // Keep 300% for the original similar services section for a smooth look
@@ -1105,7 +1147,7 @@ return (
   const limitedList = otherServices.slice(0, 20); // safety limit
  
   return (
-    <div className="mt-6 mb-2 w-full">
+    <div className="mt-2 w-full">
      
       {/* Title */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1130,7 +1172,7 @@ return (
       `}</style>
  
       {/* Sliding Container */}
-      <div className="other-services-container overflow-hidden py-4">
+      <div className="other-services-container overflow-hidden py-1">
         <div className="flex other-services-track" style={{ width: "220%" }}>
  
           {[...limitedList, ...limitedList].map((service, index) => (
@@ -1199,9 +1241,9 @@ return (
               to="/cart"
                onClick={() => window.scrollTo(0, 0)}
               className="inline-flex items-center gap-2
-                bg-peach-300 text-navy-700
+                bg-peach-300 text-black-700
                 px-4 py-2 rounded-xl font-bold
-                hover:bg-peach-400 transition-all shadow-lg"
+                hover:bg-gradient-to-r from-peach-300 to-navy-700 transition-all shadow-lg"
             >
               <ArrowLeft size={18} />
               Back to Cart
@@ -1212,9 +1254,9 @@ return (
               to="/services"
               onClick={() => window.scrollTo(0, 0)}
               className="inline-flex items-center gap-2
-                bg-peach-300 text-navy-700
+                bg-peach-300 text-black-700
                 px-4 py-2 rounded-xl font-bold
-                hover:bg-peach-400 hover:border-navy-300 transition-all
+                hover:bg-gradient-to-r from-navy-700 to-peach-300 hover:border-navy-300 transition-all
                 ml-4 shadow-md"
             >
               Browse Services

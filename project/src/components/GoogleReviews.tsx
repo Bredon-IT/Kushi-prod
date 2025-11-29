@@ -1,72 +1,133 @@
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
+import Global_API_BASE from "../services/GlobalConstants";
  
-const GoogleReviews: React.FC = () => {
+export default function GoogleReviews() {
+  const [reviews, setReviews] = useState([]);
+  const [rating] = useState(4.8);
+  const [totalReviews, setTotalReviews] = useState(0);
+ 
   useEffect(() => {
-    // Load Elfsight script
-    if (!document.querySelector('script[src="https://elfsightcdn.com/platform.js"]')) {
-      const script = document.createElement("script");
-      script.src = "https://elfsightcdn.com/platform.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
+    const fetchReviews = async () => {
+      const res = await fetch(Global_API_BASE + "/api/reviews");
+      const data = await res.json();
  
-    // 🛑 Hide Branding inside iframe
-    const iframeCleaner = setInterval(() => {
-      const iframe = document.querySelector('iframe[title="Elfsight"]');
-      if (iframe) {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!iframeDoc) return;
- 
-        const branding = iframeDoc.querySelector(
-          ".eapps-link, .eapps-widget-toolbar, [title*='Free Google Reviews widget']"
-        );
- 
-        if (branding) {
-          branding.style.display = "none";
-          branding.style.visibility = "hidden";
-          branding.style.opacity = "0";
-          console.log("Iframe branding removed 👍");
-          clearInterval(iframeCleaner);
-        }
-      }
-    }, 1200);
- 
-    // 🔥 Remove Branding outside iframe (FREE GOOGLE REVIEWS WIDGET button)
-    const brandingCleaner = setInterval(() => {
-      const brandingEl = document.querySelector(
-        'a[href*="google-reviews-widget"], .eapps-widget-toolbar, .eapps-link'
-      );
-      if (brandingEl) {
-        brandingEl.remove();
-        console.log("External branding removed 🎉");
-        clearInterval(brandingCleaner);
-      }
-    }, 1000);
- 
-    return () => {
-      clearInterval(iframeCleaner);
-      clearInterval(brandingCleaner);
+      const googleReviews = data.result?.reviews || [];
+      setReviews(googleReviews);
+      setTotalReviews(googleReviews.length);
     };
+ 
+    fetchReviews();
   }, []);
  
   return (
-    <section
-      className="bg-white py-4"
-      style={{ overflow: "hidden" }}
-    >
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-4 text-center">
-        <div
-          className="elfsight-app-fbc5a718-3c29-414c-8710-06d622eca56c"
-          data-elfsight-app-lazy
-          style={{
-            marginBottom: 0,
-            paddingBottom: 0,
-            overflow: "hidden",
-          }}
-        ></div>
+    <section className="py-12 bg-[#fff5eb]">
+      <div className="max-w-10xl mx-auto px-4">
+ 
+        {/* ⭐ ROW 1 — CUSTOMER REVIEWS (HORIZONTAL SCROLL, FULL WIDTH) */}
+        <div className="bg-white rounded-2xl shadow-lg border border-peach-200 p-6 mb-10">
+          <h3 className="text-2xl font-bold text-navy-900 mb-4">
+            What People Are Saying
+          </h3>
+ 
+          <div className="overflow-x-auto no-scrollbar">
+            <div className="flex gap-6 pb-4">
+ 
+              {reviews.map((review, index) => (
+                <div
+                  key={index}
+                  className="min-w-[300px] max-w-[300px] bg-white rounded-2xl shadow-md
+                             border border-peach-200 p-6 hover:shadow-xl transition flex-shrink-0"
+                >
+                  {/* Reviewer */}
+                  <div className="flex items-center mb-3">
+                    <img
+                      src={review.profile_photo_url || "/default-user.png"}
+                      className="w-10 h-10 rounded-full border mr-3"
+                      alt={review.author_name}
+                    />
+ 
+                    <div>
+                      <h4 className="font-semibold text-navy-900 text-sm">
+                        {review.author_name}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {review.relative_time_description}
+                      </p>
+                    </div>
+                  </div>
+ 
+                  {/* Rating */}
+                  <div className="flex gap-1 mb-2">
+                    {Array.from({ length: review.rating }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={14}
+                        className="text-yellow-400 fill-yellow-400"
+                      />
+                    ))}
+                  </div>
+ 
+                  {/* Review Text */}
+                  <p className="text-gray-700 text-sm leading-relaxed line-clamp-4">
+                    {review.text}
+                  </p>
+                </div>
+              ))}
+ 
+            </div>
+          </div>
+        </div>
+ 
+        {/* ⭐ ROW 2 — KUSHI SERVICES SUMMARY (ALL IN ONE ROW) */}
+        <div className="bg-white rounded-2xl shadow-lg border border-peach-200 p-6">
+ 
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+ 
+            {/* LEFT — Title */}
+            <h2 className="text-xl font-bold text-navy-900 whitespace-nowrap">
+              Kushi Cleaning Services
+            </h2>
+ 
+            {/* CENTER — Rating */}
+            <div className="flex items-center gap-3">
+              <span className="text-4xl font-bold text-navy-900">{rating}</span>
+ 
+              <div className="flex">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={22}
+                    className={
+                      i < Math.round(rating)
+                        ? "text-yellow-400 fill-yellow-400"
+                        : "text-gray-300"
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+ 
+            {/* BASED ON REVIEWS */}
+            <p className="text-gray-600 text-sm whitespace-nowrap">
+              Based on {totalReviews} Google reviews
+            </p>
+ 
+            {/* BUTTON */}
+            <a
+              href="https://search.google.com/local/writereview?placeid=ChIJ3S9FM6MTrjsRnW-EP3Rwa8Q"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                         px-6 py-2.5 rounded-lg shadow-md transition text-sm whitespace-nowrap"
+            >
+              ✍️ Write a Review
+            </a>
+ 
+          </div>
+        </div>
+ 
       </div>
     </section>
   );
-};
- 
-export default GoogleReviews;
+}

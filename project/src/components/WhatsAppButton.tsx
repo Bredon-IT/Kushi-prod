@@ -3,7 +3,7 @@ import React from "react";
 const WhatsAppButton: React.FC = () => {
   const openWhatsApp = () => {
     window.open(
-      "https://wa.me/919876543210?text=Hello! I would like to inquire about your professional cleaning services.",
+      "https://wa.me/919606999084?text=Hello! I would like to inquire about your professional cleaning services.",
       "_blank"
     );
   };

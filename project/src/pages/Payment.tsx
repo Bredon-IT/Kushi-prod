@@ -12,6 +12,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Global_API_BASE from '../services/GlobalConstants';
+import { initiateRazorpayPayment } from '../services/razorpayService';
+import { 
+  trackPaymentSuccess, 
+  trackPaymentFailure, 
+  trackBookingCompleted 
+} from '../utils/analytics';
+import { 
+  fbTrackPurchase, 
+  fbTrackInitiateCheckout 
+} from '../utils/fbPixel';
 
 interface PaymentMethod {
   id: string;
@@ -45,6 +55,7 @@ const Payment: React.FC = () => {
   const [selectedMethod, setSelectedMethod] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState<string>('');
 
   // ❗ If no booking data
   if (!bookingData) {
@@ -64,11 +75,9 @@ const Payment: React.FC = () => {
     );
   }
 
-  // Payment options (only COD enabled)
+  // Payment options
   const paymentMethods: PaymentMethod[] = [
-    { id: 'card', name: 'Credit/Debit Card', icon: CreditCard, description: 'Visa, MasterCard, Amex' },
-    { id: 'upi', name: 'UPI / QR Code', icon: Smartphone, description: 'Google Pay, PhonePe, Paytm' },
-    { id: 'netbanking', name: 'Net Banking', icon: Building, description: 'All Major Banks' },
+    { id: 'razorpay', name: 'Pay Online', icon: CreditCard, description: 'Cards, UPI, Wallets, NetBanking' },
     { id: 'cash', name: 'Pay On Service', icon: Wallet, description: 'Pay during service' },
   ];
 
@@ -77,30 +86,89 @@ const Payment: React.FC = () => {
     if (!selectedMethod) return;
 
     setIsProcessing(true);
+    setPaymentError('');
 
-    if (selectedMethod !== 'cash') {
-      await new Promise(res => setTimeout(res, 2000));
+    // Track checkout initiation
+    fbTrackInitiateCheckout(Number(totalAmount) || 0);
+
+    try {
+      if (selectedMethod === 'razorpay') {
+        // Razorpay Payment Flow
+        initiateRazorpayPayment({
+          amount: totalAmount || 0,
+          customerName: bookingData.customer_name || user?.firstName + ' ' + user?.lastName || 'Guest',
+          customerEmail: bookingData.customer_email || user?.email || '',
+          customerPhone: bookingData.customer_number || user?.phone || '',
+          bookingData: bookingData,
+          
+          // Success Callback
+          onSuccess: async (response) => {
+            console.log('Payment Success:', response);
+            
+            // Track payment success
+            trackPaymentSuccess(response?.razorpay_payment_id || 'cash', Number(totalAmount) || 0);
+            
+            setIsProcessing(true); // Show processing during save
+            // Save booking with payment details
+            await saveBookingToDB('Paid', response);
+          },
+          
+          // Failure Callback
+          onFailure: (error) => {
+            console.error('Payment Failed:', error);
+            
+            // Track payment failure
+            trackPaymentFailure(error.error || 'Payment failed');
+            
+            setIsProcessing(false);
+            
+            if (error.code === 'USER_CANCELLED') {
+              setPaymentError('Payment cancelled. Please try again.');
+            } else {
+              setPaymentError(error.error || 'Payment failed. Please try again.');
+            }
+          },
+        });
+        
+        // Hide spinner immediately after opening Razorpay modal
+        setIsProcessing(false);
+      } else {
+        // Cash on Delivery
+        await saveBookingToDB('Pending');
+      }
+    } catch (error) {
+      console.error('Payment Error:', error);
+      setIsProcessing(false);
+      setPaymentError('Something went wrong. Please try again.');
     }
-
-    await saveBookingToDB();
   };
 
   // ⭐ Save booking to backend with paymentMethod + paymentStatus
-  const saveBookingToDB = async () => {
+  const saveBookingToDB = async (paymentStatus: string = 'Pending', paymentResponse?: any) => {
     try {
       const response = await fetch(Global_API_BASE + '/api/bookings/newbookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...bookingData,
-          paymentMethod: selectedMethod,
-          paymentStatus: selectedMethod === 'cash' ? 'Pending' : 'Paid'
+          paymentMethod: selectedMethod === 'razorpay' ? 'Online' : 'Cash',
+          paymentStatus: paymentStatus,
+          razorpay_order_id: paymentResponse?.razorpay_order_id || null,
+          razorpay_payment_id: paymentResponse?.razorpay_payment_id || null,
+          razorpay_signature: paymentResponse?.razorpay_signature || null,
         }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save booking');
       }
+
+      const savedBooking = await response.json();
+      const bookingId = savedBooking?.id || savedBooking?.bookingId || 'unknown';
+
+      // Track booking completion
+      trackBookingCompleted(bookingId, Number(totalAmount) || 0);
+      fbTrackPurchase(Number(totalAmount) || 0, bookingId);
 
       // Update user stats
       if (isAuthenticated && user) {
@@ -119,7 +187,7 @@ const Payment: React.FC = () => {
       // Clear cart & booking session
        localStorage.removeItem('kushiServicesCart');     // remove main cart
        localStorage.removeItem('kushiBookingSession');   // remove booking page temporary cart
-
+       localStorage.removeItem('kushiBookingFormData');
 
       setPaymentSuccess(true);
       setIsProcessing(false);
@@ -186,20 +254,18 @@ const Payment: React.FC = () => {
 
               {paymentMethods.map(method => {
                 const IconComp = method.icon;
-                const disabled = method.id !== 'cash';
 
                 return (
                   <div
                     key={method.id}
-                    onClick={() => !disabled && setSelectedMethod(method.id)}
-                    className={`p-4 border rounded-md flex items-center gap-4 relative
-                      ${disabled ? 'bg-gray-100 opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-navy-700'}
-                      ${selectedMethod === method.id ? 'border-navy-700 bg-blue-50' : 'border-gray-300'}
+                    onClick={() => setSelectedMethod(method.id)}
+                    className={`p-4 border rounded-md flex items-center gap-4 relative cursor-pointer hover:border-navy-700 transition-all
+                      ${selectedMethod === method.id ? 'border-navy-700 bg-blue-50 shadow-md' : 'border-gray-300'}
                     `}
                   >
                     <div
                       className={`p-2 rounded-full ${
-                        selectedMethod === method.id && !disabled
+                        selectedMethod === method.id
                           ? 'bg-navy-700 text-white'
                           : 'bg-gray-200 text-gray-600'
                       }`}
@@ -212,19 +278,30 @@ const Payment: React.FC = () => {
                       <p className="text-xs text-gray-500">{method.description}</p>
                     </div>
 
-                    {disabled && (
-                      <span className="absolute right-3 top-3 text-xs px-2 py-1 bg-white border rounded-full">
-                        Unavailable
-                      </span>
+                    {selectedMethod === method.id && (
+                      <CheckCircle className="absolute right-3 top-3 text-green-600" size={20} />
                     )}
                   </div>
                 );
               })}
 
-              {/* COD Notice */}
+              {/* Payment Method Info */}
               {selectedMethod === 'cash' && (
                 <div className="bg-yellow-50 border border-yellow-300 p-3 rounded-md text-sm mt-4">
-                  Pay ₹{Number(totalAmount || 0).toLocaleString('en-IN')} in cash at service time.
+                  <strong>Pay On Service:</strong> Pay ₹{Number(totalAmount || 0).toLocaleString('en-IN')} in cash at service time.
+                </div>
+              )}
+              
+              {selectedMethod === 'razorpay' && (
+                <div className="bg-blue-50 border border-blue-300 p-3 rounded-md text-sm mt-4">
+                  <strong>Secure Online Payment:</strong> Pay via Credit/Debit Card, UPI, Net Banking, or Wallets. Powered by Razorpay.
+                </div>
+              )}
+
+              {/* Error Message */}
+              {paymentError && (
+                <div className="bg-red-50 border border-red-300 p-3 rounded-md text-sm mt-4 text-red-700">
+                  <strong>Error:</strong> {paymentError}
                 </div>
               )}
 
@@ -232,17 +309,19 @@ const Payment: React.FC = () => {
               <button
                 onClick={handlePayment}
                 disabled={!selectedMethod || isProcessing}
-                className="mt-6 w-full bg-navy-700 text-white py-3 rounded-md font-bold shadow-md disabled:opacity-60"
+                className="mt-6 w-full bg-navy-700 text-white py-3 rounded-md font-bold shadow-md hover:bg-navy-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 size={20} className="animate-spin" />
-                    Processing...
+                    {selectedMethod === 'razorpay' ? 'Opening Payment Gateway...' : 'Processing...'}
                   </span>
                 ) : selectedMethod === 'cash' ? (
                   'Confirm Booking (Pay Later)'
+                ) : selectedMethod === 'razorpay' ? (
+                  `Proceed to Pay ₹${Number(totalAmount || 0).toLocaleString('en-IN')}`
                 ) : (
-                  `Pay ₹${Number(totalAmount || 0).toLocaleString('en-IN')}`
+                  'Select Payment Method'
                 )}
               </button>
             </div>

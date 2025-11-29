@@ -117,7 +117,7 @@ const RotatingOffers: React.FC<RotatingOffersProps> = ({ onHeroImageUpdate }) =>
       {/* Scrolling Offers */}
       <div
         ref={containerRef}
-      className="bg-peach-50 border-t border-b border-peach-300 overflow-hidden h-12 w-full relative"
+      className="bg-peach-50 border-t border-b border-peach-300 overflow-hidden h-10 w-full relative"
       >
         {offers.length > 0 ? (
           <div

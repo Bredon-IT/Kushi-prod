@@ -38,14 +38,17 @@ frontend:
       - project/node_modules
       - Admin/AdminDashboard/node_modules
 
-# ✅ Handle React Router refreshes
-rewrites:
-  # Customer app routing (everything except /admin goes here)
-  - source: "</^((?!/admin).*$)/>"
-    target: /index.html
-    status: 200
+# ============================================================
+# ✅ CORRECT REWRITES FOR CSR (PROJECT) + ADMIN
+# ============================================================
 
-  # Admin app routing
+rewrites:
+  # Admin app routing → send all /admin/... requests to admin index.html
   - source: "/admin/<*>"
     target: /admin/index.html
+    status: 200
+
+  # Project app routing → ALL other pages go to project index.html
+  - source: "<*>"
+    target: /index.html
     status: 200

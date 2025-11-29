@@ -1,238 +1,205 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
+import { Menu, X, ShoppingCart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocationContext } from "../contexts/LocationContext";
-
+ 
 const Navbar: React.FC<{ cartItemCount?: number }> = ({ cartItemCount = 0 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(cartItemCount);
-
+  const [isMobileLocationOpen, setIsMobileLocationOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+ 
   const { user, isAuthenticated, logout } = useAuth();
+  const { location: selectedLocation, setLocation } = useLocationContext();
+ 
   const navigate = useNavigate();
   const location = useLocation();
-  const { location: selectedLocation, setLocation } = useLocationContext();
-
-  const navRef = useRef<HTMLElement>(null);
-  const locationDropdownRef = useRef<HTMLDivElement>(null);
+ 
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
-  const mobilePanelRef = useRef<HTMLDivElement>(null);
-
-  const locations = [
-    { name: "Bangalore", image: "/bangalore.png" },
-    { name: "Hyderabad", image: "/Hyderabad.png" },
-  ];
-
+  const locationDropdownRef = useRef<HTMLDivElement>(null);
+ 
+  const [cartCount, setCartCount] = useState(cartItemCount);
+ 
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Services", path: "/services" },
   ];
-
+ 
   const menuItems = [
     { name: "Gallery", path: "/gallery" },
     { name: "Blog", path: "/blog" },
     { name: "About Us", path: "/about" },
     { name: "Contact Us", path: "/contact" },
   ];
-
+ 
+  const locationsList = [
+    { name: "Bangalore", image: "/bangalore.png" },
+    { name: "Hyderabad", image: "/Hyderabad.png" },
+  ];
+ 
   const isActive = (path: string) => location.pathname === path;
-
-  const handleLogout = () => {
-    logout();
-    setIsUserMenuOpen(false);
-    setIsMenuOpen(false);
-    navigate("/signin");
-  };
-
-  const handleLocationSelect = (city: string) => {
-    setLocation(city);
-    setIsLocationOpen(false);
-  };
-
-  // ✅ Scroll to top when navigating between routes
+ 
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem("cartItems") || "[]");
+    setCartCount(cartItemCount || items.length);
+  }, [cartItemCount]);
+ 
+  // Disable background scroll when mobile menu opens
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [isMobileMenuOpen]);
+ 
+  // Close menus on clicking outside
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (isMobileMenuOpen && mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+ 
+      if (isUserMenuOpen && userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+ 
+      if (isLocationOpen && locationDropdownRef.current && !locationDropdownRef.current.contains(e.target as Node)) {
+        setIsLocationOpen(false);
+      }
+    };
+ 
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [isMobileMenuOpen, isUserMenuOpen, isLocationOpen]);
+ 
+  // Scroll shadow effect
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+ 
   const handleNavClick = (path: string) => {
     navigate(path);
     window.scrollTo({ top: 0, behavior: "smooth" });
-    setIsMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsMobileLocationOpen(false);
   };
-
-  // ✅ Update cart count from localStorage
-  useEffect(() => {
-    const updateCart = () => {
-      const items = JSON.parse(localStorage.getItem("cartItems") || "[]");
-      setCartCount(cartItemCount || items.length);
-    };
-    updateCart();
-    window.addEventListener("storage", updateCart);
-    return () => window.removeEventListener("storage", updateCart);
-  }, [cartItemCount]);
-
-  // ✅ Add shadow when scrolling
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // ✅ Handle outside clicks for dropdowns
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (isMenuOpen && mobilePanelRef.current && !mobilePanelRef.current.contains(target))
-        setIsMenuOpen(false);
-      if (isLocationOpen && locationDropdownRef.current && !locationDropdownRef.current.contains(target))
-        setIsLocationOpen(false);
-      if (isUserMenuOpen && userDropdownRef.current && !userDropdownRef.current.contains(target))
-        setIsUserMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isMenuOpen, isLocationOpen, isUserMenuOpen]);
-
+ 
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate("/signin");
+  };
+ 
   return (
     <nav
-      ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-xl" : "bg-white"
+      className={`fixed top-0 left-0 right-0 z-50 bg-white transition-all duration-300 ${
+        isScrolled ? "shadow-xl" : ""
       }`}
     >
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
-        {/* Logo */}
-        <Link
-          to="/"
-          className="flex-shrink-0 flex items-center"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          <img src="/kushilogo.jpg" alt="Logo" className="h-16 w-auto" />
+      <div className="max-w-10xl mx-auto px-3 flex items-center justify-between h-16">
+ 
+        {/* LOGO */}
+        <Link to="/">
+          <img src="/kushilogo.jpg" className="h-16 w-auto" />
         </Link>
-
-        {/* Desktop Menu */}
-        <div className="hidden lg:flex items-center space-x-4">
+ 
+        {/* DESKTOP MENU */}
+        <div className="hidden lg:flex items-center gap-4">
+ 
           {navItems.map((item) => (
             <button
               key={item.name}
               onClick={() => handleNavClick(item.path)}
-              className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${
-                isActive(item.path)
-                  ? "text-peach-300 bg-white shadow-sm"
-                  : "text-navy-700 hover:text-peach-500 hover:white-200"
+              className={`px-3 py-2 text-sm font-semibold ${
+                isActive(item.path) ? "text-peach-300" : "text-navy-700 hover:text-peach-500"
               }`}
             >
               {item.name}
             </button>
           ))}
-
-          {/* Location Dropdown */}
+ 
+          {/* DESKTOP LOCATION */}
           <div className="relative" ref={locationDropdownRef}>
             <button
               onClick={() => setIsLocationOpen(!isLocationOpen)}
-              className="flex items-center gap-2 px-3 py-2 bg-peach-300 rounded-md text-sm font-medium hover:bg-peach-300 shadow-sm transition-colors duration-200"
+              className="px-3 py-2 bg-peach-300 rounded-md text-sm"
             >
-              {selectedLocation || "Select Location"}
-              <ChevronDown
-                size={14}
-                className={isLocationOpen ? "transform rotate-180" : ""}
-              />
+              {selectedLocation || "Location"}
             </button>
+ 
             {isLocationOpen && (
-              <div className="absolute mt-2 w-48 bg-white shadow-xl rounded-lg border border-gray-100 py-2 z-50">
-                {locations.map((city) => (
+              <div className="absolute mt-2 w-48 bg-white shadow-xl rounded-lg border py-2">
+                {locationsList.map((city) => (
                   <button
                     key={city.name}
-                    onClick={() => handleLocationSelect(city.name)}
-                    className="flex items-center justify-between w-full text-left px-4 py-2 text-sm text-navy-700 hover:bg-peach-100 transition-colors duration-200"
+                    onClick={() => {
+                      setLocation(city.name);
+                      setIsLocationOpen(false);
+                    }}
+                    className="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-100"
                   >
-                    <span>{city.name}</span>
-                    <img
-                      src={city.image}
-                      alt={city.name}
-                      className="h-6 w-10 object-cover rounded shadow-inner"
-                    />
+                    {city.name}
+                    <img src={city.image} className="h-6 w-10 rounded" />
                   </button>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Cart */}
-          <Link
-            to="/cart"
-            className="relative p-2 rounded-full text-navy-700 bg-white shadow-md hover:bg-peach-300 hover:text-white transition-colors duration-200"
-          >
+ 
+          {/* CART */}
+          <Link to="/cart" className="relative p-2">
             <ShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                {cartCount}
-              </span>
-            )}
           </Link>
-
-          {/* Book Now */}
+ 
+          {/* DESKTOP BOOK NOW */}
           <Link
             to="/booking"
-            className="px-5 py-2.5 rounded-full text-sm font-bold text-white bg-peach-300 shadow-lg hover:bg-peach-300 transition-colors duration-200"
+            className="px-5 py-2 rounded-full bg-peach-300 text-black font-semi-bold shadow-md hover:bg-gradient-to-r from-peach-300 to-navy-700 transition"
           >
             Book Now
           </Link>
-
-          {/* User Menu */}
+ 
+          {/* DESKTOP USER MENU */}
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-2 px-3 py-2 bg-peach-300 rounded-md text-sm font-medium hover:bg-peach-200 shadow-sm transition-colors duration-200"
+              className="px-3 py-2 bg-peach-300 rounded-md text-sm"
             >
-              {isAuthenticated ? user?.name || "Profile" : "Menu"}
-              <ChevronDown
-                size={14}
-                className={isUserMenuOpen ? "transform rotate-180" : ""}
-              />
+              Menu
             </button>
-
+ 
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-lg border border-gray-100 py-2 z-50">
+              <div className="absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-lg py-2">
                 {menuItems.map((item) => (
                   <Link
                     key={item.name}
-                    to={item.path!}
-                    onClick={() => setIsUserMenuOpen(false)}
-                    className="block px-4 py-2 text-sm text-navy-700 hover:bg-white transition-colors duration-200"
+                    to={item.path}
+                    className="block px-4 py-2 hover:bg-gray-100"
                   >
                     {item.name}
                   </Link>
                 ))}
-                <hr className="my-2 border-gray-200" />
+ 
+                <hr />
+ 
                 {!isAuthenticated ? (
                   <>
-                    <Link
-                      to="/signin"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="block px-4 py-2 text-sm text-navy-700 hover:bg-white transition-colors duration-200"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      to="/signup"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="block px-4 py-2 text-sm text-navy-700 hover:bg-white transition-colors duration-200"
-                    >
-                      Sign Up
-                    </Link>
+                    <Link to="/signin" className="block px-4 py-2 hover:bg-gray-100">Sign In</Link>
+                    <Link to="/signup" className="block px-4 py-2 hover:bg-gray-100">Sign Up</Link>
                   </>
                 ) : (
                   <>
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="block px-4 py-2 text-sm text-navy-700 hover:bg-white transition-colors duration-200"
-                    >
-                      Profile
-                    </Link>
+                    <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition-colors duration-200"
+                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
                     >
                       Logout
                     </button>
@@ -242,155 +209,111 @@ const Navbar: React.FC<{ cartItemCount?: number }> = ({ cartItemCount = 0 }) => 
             )}
           </div>
         </div>
-
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden flex items-center">
-          <Link
-            to="/cart"
-            className="relative p-2 rounded-full text-navy-700 hover:bg-peach-200 mr-2 transition-colors duration-200"
-          >
-            <ShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                {cartCount}
-              </span>
-            )}
+ 
+        {/* MOBILE MENU */}
+        <div className="lg:hidden flex items-center gap-3 relative">
+ 
+          <Link to="/cart" className="relative p-2">
+            <ShoppingCart size={22} />
           </Link>
+ 
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-md text-navy-700 hover:bg-peach-300"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 bg-peach-300 text-white rounded-md"
           >
-            {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-        </div>
-      </div>
-
-      {/* Mobile Sidebar */}
-      {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm">
-          <div
-            ref={mobilePanelRef}
-            className="absolute top-0 right-0 w-64 h-full bg-white shadow-2xl p-4 flex flex-col overflow-y-auto"
-          >
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="p-2 rounded-md text-navy-700 hover:bg-peach-300"
-              >
-                <X size={22} />
-              </button>
-            </div>
-
-            <Link
-              to="/booking"
-              onClick={() => setIsMenuOpen(false)}
-              className="mb-4 text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-peach-300 shadow-lg hover:bg-peach-300 transition-colors duration-200"
+ 
+          {/* MOBILE FLOATING MENU */}
+          {isMobileMenuOpen && (
+            <div
+              ref={mobileMenuRef}
+              className="absolute right-0 top-14 w-64 bg-white shadow-xl rounded-lg border py-3 z-50"
             >
-              Book Now
-            </Link>
-
-            {/* Navigation */}
-            <div className="flex flex-col space-y-2 mb-4">
+              {/* MOBILE BOOK NOW */}
+              <Link
+                to="/booking"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block text-center mx-3 mb-3 px-4 py-3 rounded-full bg-gradient-to-r from-peach-300 to-navy-700 text-black font-semi-bold shadow"
+              >
+                Book Now
+              </Link>
+ 
+              {/* NAV ITEMS */}
               {navItems.map((item) => (
                 <button
                   key={item.name}
                   onClick={() => handleNavClick(item.path)}
-                  className="block px-3 py-2 text-navy-700 hover:bg-peach-100 rounded text-base font-medium"
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   {item.name}
                 </button>
               ))}
-            </div>
-
-            {/* Location Selection */}
-            <div className="mb-4 p-2 bg-white rounded-lg">
-              <p className="text-sm font-bold mb-2 text-navy-700">
-                Current Location: {selectedLocation || "Not Set"}
-              </p>
-              <hr className="my-2 border-gray-200" />
-              <p className="text-xs font-semibold mb-2 text-gray-600">Change City</p>
-              {locations.map((city) => (
-                <button
-                  key={city.name}
-                  onClick={() => {
-                    handleLocationSelect(city.name);
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-navy-700 hover:bg-white rounded transition-colors duration-200"
-                >
-                  <img
-                    src={city.image}
-                    alt={city.name}
-                    className="h-6 w-10 object-cover rounded shadow-inner"
-                  />
-                  <span>{city.name}</span>
-                </button>
-              ))}
-            </div>
-
-            <hr className="my-2 border-gray-200" />
-
-            {/* Other Links */}
-            <div className="flex flex-col space-y-2 mb-4">
+ 
+              {/* MOBILE LOCATION DROPDOWN */}
+              <hr className="my-2" />
+              <button
+                className="px-4 py-2 text-left w-full font-semibold"
+                onClick={() => setIsMobileLocationOpen(!isMobileLocationOpen)}
+              >
+                Location {selectedLocation ? `(${selectedLocation})` : ""}
+              </button>
+ 
+              {isMobileLocationOpen && (
+                <div className="px-4">
+                  {locationsList.map((city) => (
+                    <button
+                      key={city.name}
+                      onClick={() => {
+                        setLocation(city.name);
+                        setIsMobileLocationOpen(false);
+                      }}
+                      className="flex items-center gap-3 py-2 w-full hover:bg-gray-100"
+                    >
+                      <img src={city.image} className="h-6 w-10 rounded" />
+                      {city.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+ 
+              {/* OTHER LINKS */}
+              <hr className="my-2" />
               {menuItems.map((item) => (
                 <Link
                   key={item.name}
-                  to={item.path!}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 text-navy-700 hover:bg-peach-300 rounded text-base font-medium"
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-2 hover:bg-gray-100"
                 >
                   {item.name}
                 </Link>
               ))}
-            </div>
-
-            <hr className="my-2 border-gray-200" />
-
-            {/* Authentication Section */}
-            <div className="flex flex-col space-y-2 mt-4">
+ 
+              {/* AUTH */}
+              <hr className="my-2" />
               {!isAuthenticated ? (
                 <>
-                  <Link
-                    to="/signin"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-3 py-2 text-navy-700 hover:bg-peach-300 rounded text-base font-medium"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/signup"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-3 py-2 text-navy-700 hover:bg-peach-300 rounded text-base font-medium"
-                  >
-                    Sign Up
-                  </Link>
+                  <Link to="/signin" className="block px-4 py-2 hover:bg-gray-100">Sign In</Link>
+                  <Link to="/signup" className="block px-4 py-2 hover:bg-gray-100">Sign Up</Link>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/profile"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-3 py-2 text-navy-700 hover:bg-peach-300 rounded text-base font-medium"
-                  >
-                    Profile
-                  </Link>
+                  <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-100 rounded text-base font-medium"
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
                   >
                     Logout
                   </button>
                 </>
               )}
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </nav>
   );
 };
-
+ 
 export default Navbar;
