@@ -70,18 +70,18 @@ const FeaturesCarousel: React.FC = () => {
   
   return (
     <>
-      <section className="py-8 bg-gradient-to-b from-white to-peach-50">
+      <section className="py-2 bg-gradient-to-b from-white to-peach-50">
         <div className="w-full px-6 lg:px-12 mx-auto max-w-7xl">
           {/* Title Section */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold text-navy-900 mb-3">
+            <h2 className="text-2xl font-bold text-navy-900 mb-3">
               Why Choose{' '}
               <span className="bg-gradient-to-r from-peach-300 to-navy-700 bg-clip-text text-transparent">
                 Kushi Services
               </span>
               ?
             </h2>
-            <p className="text-base sm:text-lg text-navy-700 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-navy-700 max-w-1xl mx-auto leading-relaxed">
               We bring excellence, trust, and innovation to every cleaning task — making your spaces shine.
             </p>
           </div>
@@ -99,7 +99,7 @@ const FeaturesCarousel: React.FC = () => {
                          ${selectedCardId === slide.id ? 'border-navy-700 shadow-2xl scale-[1.03]' : 'border-peach-200 hover:shadow-2xl hover:border-peach-300'} 
                          hover:scale-[1.01]`}
               >
-                <div className="relative h-40 sm:h-48 md:h-56 overflow-hidden">
+                <div className="relative h-32 sm:h-40 md:h-48 overflow-hidden">
                   <img 
                     src={slide.image} 
                     alt={slide.title} 
@@ -113,7 +113,7 @@ const FeaturesCarousel: React.FC = () => {
 
           {/* Text Section Below Carousel */}
           <div className="text-center mt-8 transition-opacity duration-500">
-            <h3 className="text-xl font-semibold text-navy-800">
+            <h3 className="text-lg font-semibold text-navy-800">
               {displayedContent.title}
             </h3>
             <p className="text-lg italic text-navy-600 mt-2 px-4">

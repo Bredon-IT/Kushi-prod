@@ -45,12 +45,25 @@ export function KushiTeamworkCarousel() {
   }, []);
 
   return (
-    <div className="w-full bg-gradient-to-r from-peach-50 to-peach-200 py-8 overflow-hidden text-center">
+    <div
+      className="
+        bg-gradient-to-r 
+        from-peach-50 
+        to-peach-200 
+        py-2 
+        text-center 
+        relative 
+        z-0 
+        overflow-hidden 
+        mt-20   /* ⭐ FIX: pushes carousel below navbar */
+      "
+    >
       {/* Header */}
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-navy-700 mb-4 tracking-tight">
+      <h2 className="text-2xl sm:text-3xl font-bold text-navy-700 mb-4 tracking-tight">
         The Kushi Way: Excellence in 5 Simple Steps
       </h2>
-      <p className="text-base sm:text-lg text-gray-600 mb-10 max-w-4xl mx-auto">
+
+      <p className="text-base sm:text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
         From booking to sparkling clean — our process ensures quality, trust, and satisfaction.
       </p>
 
@@ -104,7 +117,6 @@ export function KushiTeamworkCarousel() {
               transition={{ duration: 0.7, ease: "easeInOut" }}
               onClick={() => setCurrent(index)}
             >
-              {/* Card */}
               <motion.div
                 className={`rounded-2xl overflow-hidden shadow-xl bg-white w-full h-[160px] p-2 flex flex-col justify-center items-center relative ${
                   distance === 0 ? "shadow-peach-300/50" : "shadow-gray-200"
@@ -123,7 +135,6 @@ export function KushiTeamworkCarousel() {
                   {step.step}
                 </div>
 
-                {/* Image */}
                 <img
                   src={step.img}
                   alt={step.title}
@@ -131,7 +142,6 @@ export function KushiTeamworkCarousel() {
                 />
               </motion.div>
 
-              {/* Title */}
               <motion.h3
                 className="mt-4 text-lg font-semibold text-gray-800"
                 animate={{ opacity: distance === 0 ? 1 : 0.6 }}
@@ -143,7 +153,6 @@ export function KushiTeamworkCarousel() {
         })}
       </div>
 
-      {/* Description below carousel */}
       <AnimatePresence mode="wait">
         <motion.p
           key={current}

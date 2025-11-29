@@ -56,7 +56,7 @@ const HomePage: React.FC = () => {
 
 
   const [isHovering, setIsHovering] = useState(false);
-
+  const [stopMarquee, setStopMarquee] = useState(false);
 
    // Top services state + error + loading
   const [topServices, setTopServices] = useState<any[]>([]);
@@ -78,6 +78,36 @@ const HomePage: React.FC = () => {
     // adjust path according to your backend; uploads folder shown as example
     return s.startsWith('/') ? `Global_API_BASE${s}` : `Global_API_BASE/uploads/${s}`;
   };
+
+  // Add near the top with other refs/state
+const scrollRef = useRef<HTMLDivElement | null>(null);
+
+// How many pixels to scroll per arrow click
+const SCROLL_AMOUNT = 320;
+
+const scrollLeft = () => {
+  setStopMarquee(true);
+
+  // resume marquee after 3 seconds
+  setTimeout(() => setStopMarquee(false), 3000);
+
+  scrollRef.current?.scrollBy({
+    left: -SCROLL_AMOUNT,
+    behavior: "smooth",
+  });
+};
+
+const scrollRight = () => {
+  setStopMarquee(true);
+
+  // resume marquee after 3 seconds
+  setTimeout(() => setStopMarquee(false), 3000);
+
+  scrollRef.current?.scrollBy({
+    left: SCROLL_AMOUNT,
+    behavior: "smooth",
+  });
+};
 
 
  useEffect(() => {
@@ -213,9 +243,34 @@ const HomePage: React.FC = () => {
     setSearchTerm("");
     setShowDropdown(false);
  
-    if (item.type === "Category") {
-      navigate("/services");
-    } else if (item.type === "Subcategory") {
+     if (item.type === "Category") {
+  const categoryName = item.name;
+
+  // 1. Get all services under this category
+  const filteredServices = allServices.filter(
+    (s) => s.category.toLowerCase() === categoryName.toLowerCase()
+  );
+
+  // 2. Extract unique subcategories
+  const subcategories = [
+    ...new Set(filteredServices.map((s) => s.subcategory))
+  ];
+
+  // 3. Create slug for URL
+  const categorySlug = categoryName.toLowerCase().replace(/\s+/g, "-");
+
+  // 4. Navigate to subcategory page with data
+  navigate(`/services/category/${categorySlug}`, {
+    state: {
+      selectedCategory: categoryName,
+      subcategories: subcategories,
+      services: filteredServices
+    }
+  });
+
+  return;
+}
+ else if (item.type === "Subcategory") {
       const urlSubcategory = item.subcategory!.toLowerCase().replace(/\s/g, "-");
       const filteredServices = allServices.filter(
         (s) => s.subcategory.toLowerCase() === item.subcategory!.toLowerCase()
@@ -494,8 +549,8 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Packers And Movers',
       description: 'Professional packing and moving services with complete care',
       price: 'Starting ₹6,999',
-      image: 'https://kushiservices.com/wp-content/uploads/2024/07/Blue-and-White-Illustrative-House-Cleaning-Service-Flyer-210-x-140-mm-5-1024x682.png',
-      link: '/services',
+     image: 'https://bharatpackersmover.in/wp-content/uploads/2022/01/Movers-and-packers-e1465470929468-2.jpg',
+    link: '/services',
       gradient: 'from-peach-300 to-navy-700',
       services: ['Home Shifting Services', 'Office Shifting Services']
     }
@@ -507,7 +562,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
   const promotions = [
   {
-    title: 'Get 20% Off Your First Deep Clean!',
+    title: 'Get Offer on Your First Deep Clean!',
     description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
     cta: 'Claim Offer Now',
     image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
@@ -524,22 +579,22 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
   },
   {
     title: 'Marble Polishing Offer',
-    description: 'Get a luxurious shine with our marble polishing services. Flat 15% off for this season!',
+    description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
     cta: 'Book Now',
-    image: 'https://tse2.mm.bing.net/th/id/OIP.KUKqwjbh-0rEW1CB-ftarwHaDe?rs=1&pid=ImgDetMain&o=7&rm=3',
+    image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
     link: '/services',
     gradient: 'from-peach-300/80 to-navy-700/80'
   },
   {
     title: 'Packers & Movers Discount',
-    description: 'Shift your home or office hassle-free! Get ₹1000 off on your first move with us.',
+    description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
     cta: 'Move Now',
-    image: 'https://kushiservices.com/wp-content/uploads/2024/07/Blue-and-White-Illustrative-House-Cleaning-Service-Flyer-210-x-140-mm-5-1024x682.png',
-    link: '/services',
+    image: 'https://bharatpackersmover.in/wp-content/uploads/2022/01/Movers-and-packers-e1465470929468-2.jpg',
+   link: '/services',
     gradient: 'from-navy-700/80 to-peach-300/80'
   },
   {
-    title: 'Get 20% Off Your First Deep Clean!',
+    title: 'Get Offer Your First Deep Clean!',
     description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
     cta: 'Claim Offer Now',
     image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
@@ -556,17 +611,17 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
   },
   {
     title: 'Marble Polishing Offer',
-    description: 'Get a luxurious shine with our marble polishing services. Flat 15% off for this season!',
+    description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
     cta: 'Book Now',
-    image: 'https://tse2.mm.bing.net/th/id/OIP.KUKqwjbh-0rEW1CB-ftarwHaDe?rs=1&pid=ImgDetMain&o=7&rm=3',
-    link: '/services',
+   image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+     link: '/services',
     gradient: 'from-peach-300/80 to-navy-700/80'
   },
   {
     title: 'Packers & Movers Discount',
-    description: 'Shift your home or office hassle-free! Get ₹1000 off on your first move with us.',
+    description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
     cta: 'Move Now',
-    image: 'https://kushiservices.com/wp-content/uploads/2024/07/Blue-and-White-Illustrative-House-Cleaning-Service-Flyer-210-x-140-mm-5-1024x682.png',
+   image: 'https://bharatpackersmover.in/wp-content/uploads/2022/01/Movers-and-packers-e1465470929468-2.jpg',
     link: '/services',
     gradient: 'from-navy-700/80 to-peach-300/80'
   }
@@ -595,7 +650,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
 {/* Hero Section with Auto Background Change and Left-Aligned Content */}
 
-<section className="relative min-h-[4vh] flex flex-col justify-center overflow-hidden bg-gradient-to-r from-peach-300 to-navy-700">
+<section className="relative min-h-[2vh] flex flex-col justify-center overflow-hidden bg-gradient-to-r from-peach-300 to-navy-700">
 
   {/* --- Main Content (Left-Aligned) --- */}
 
@@ -750,7 +805,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 </style>
 
 {/* Service Categories Section */}
-<section className="py-3 bg-white overflow-hidden">
+<section className="py-3 bg-white relative"> {/* relative for arrow positioning */}
   <div className="w-full px-2 sm:px-3 lg:px-4">
 
     {/* Section Header */}
@@ -766,58 +821,93 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       </p>
     </div>
 
-    {/* Looping Scroll Container */}
+    {/* Left Arrow */}
+    <button
+      onClick={scrollLeft}
+      aria-label="Scroll left"
+      className="
+        hidden md:flex items-center justify-center
+        absolute left-2 top-1/2 -translate-y-1/2 z-[999]
+        w-10 h-10 rounded-full shadow-lg bg-white border border-gray-200
+        hover:scale-105 transition
+      "
+    >
+      ❮
+    </button>
+
+    {/* Right Arrow */}
+    <button
+      onClick={scrollRight}
+      aria-label="Scroll right"
+      className="
+        hidden md:flex items-center justify-center
+        absolute right-2 top-1/2 -translate-y-1/2 z-[999]
+        w-10 h-10 rounded-full shadow-lg bg-white border border-gray-200
+        hover:scale-105 transition
+      "
+    >
+      ❯
+    </button>
+
+    {/* Scrollable container (use overflow-x-auto, keep overflow-visible for zoom) */}
     <div
-      className="flex w-full overflow-hidden [mask-image:_linear-gradient(to_right,transparent,white_10%,white_90%,transparent)]"
+      ref={scrollRef}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      className="flex w-full overflow-x-auto overflow-y-visible no-scrollbar space-x-6 py-2"
+      // keep scroll snapping optional:
+      // snap-x snap-mandatory
     >
-
-      {/* Outer wrapper for scroll animation */}
-      <div className={`flex space-x-6 ${isHovering ? '' : 'animate-marquee-scroll'}`}>
-
-        {/* Duplicate for infinite loop */}
+      <div className={`flex space-x-6 ${!isHovering && !stopMarquee ? 'animate-marquee-scroll' : ''}`}>
         {[...serviceCategories, ...serviceCategories].map((service, index) => {
           const categorySlug = createSlug(service.title);
-
           return (
             <div
               key={index}
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
-               onClick={() =>
-        navigate(`/services/category/${categorySlug}`, { // <<-- Change /services to /services/category/:categorySlug
-          state: { selectedCategory: service.title }
-        })
-      }
+              onClick={() =>
+                navigate(`/services/category/${categorySlug}`, {
+                  state: { selectedCategory: service.title }
+                })
+              }
               className="
-                group min-w-[200px] max-w-[200px] flex-shrink-0 rounded-2xl overflow-hidden 
-                shadow-lg border-4 border-peach-300 cursor-pointer bg-white
-               
+                group min-w-[200px] max-w-[200px] flex-shrink-0 rounded-2xl
+                cursor-pointer bg-white shadow-lg border-4 border-peach-300
+                relative overflow-visible transition-transform duration-300 hover:z-[999]
               "
             >
+              {/* Card content container (keeps layout stable) */}
+              <div className="rounded-2xl overflow-visible bg-white">
+                {/* visible image area (keeps original size) */}
+                <div className="relative h-40 w-full rounded-t-2xl overflow-visible">
+                  {/* image: same size normally, but will pop-out on hover */}
+                  <img
+  src={service.image}
+  alt={service.title}
+  className="
+    w-full h-full object-cover rounded-t-2xl
+    transform transition-transform duration-500 ease-out
+    hover:scale-[1.6] hover:-translate-y-6
+    will-change-transform z-30
+  "
+  style={{ transformOrigin: 'center top' }}
+/>
 
-              {/* Image */}
-              <div className="relative h-40 overflow-hidden">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-black/30"></div>
+                  {/* subtle overlay to keep title readable */}
+                  <div className="absolute inset-0 bg-black/12 rounded-t-2xl pointer-events-none"></div>
+                </div>
+
+                {/* Title area */}
+                <div className="p-2 text-center bg-white rounded-b-2xl">
+                  <h3 className="text-sm font-semibold text-navy-700 group-hover:text-peach-300 transition-colors duration-300">
+                    {service.title}
+                  </h3>
+                </div>
               </div>
-
-              {/* Title */}
-              <div className="p-1 text-center bg-white">
-                <h3 className="text-sm font-semi-bold text-navy-700 group-hover:text-peach-300 transition-colors duration-300">
-                  {service.title}
-                </h3>
-              </div>
-
             </div>
           );
         })}
-
       </div>
     </div>
   </div>
@@ -825,11 +915,13 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
 
 
+
+
 {/* 🔹 Top Booked Services Section */}
 <section className="py-2 bg-white w-full">
   <div className="w-full max-w-[100vw] overflow-hidden">
-    <div className="text-center mb-8 px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">
+    <div className="text-center mb-4 px-2">
+      <h2 className="text-2xl sm:text-2xl font-bold text-navy-900 mb-2">
         Top{" "}
         <span className="bg-gradient-to-r from-peach-300 to-navy-700 bg-clip-text text-transparent">
           5 Services
@@ -847,7 +939,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     ) : topServices.length === 0 ? (
       <p className="text-center text-navy-600">No top booked services found.</p>
     ) : (
-      <div className="flex gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full">
+      <div className="flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full">
         {topServices.map((service, index) => (
      <div
   key={index}
@@ -866,7 +958,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     "
   >
     {/* Image Wrapper */}
-    <div className="relative h-[180px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
+    <div className="relative h-[160px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
       <img
         src={service.service_image_url || service.booking_service_image_url || '/logo.png'}
         alt={service.booking_service_name || service.service_name}
@@ -917,31 +1009,31 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
 
 {/* Promotions Section (Scrollable Cards) */}
-<section className="py-4 bg-white">
-  <div className="w-full px-4 sm:px-6 lg:px-8 max-w-10xl mx-auto">
+<section className="py-2 bg-white">
+  <div className="w-full px-2 sm:px-3 lg:px-4 max-w-10xl mx-auto">
     <div className="text-center mb-6">
-      <h2 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">
+      <h2 className="text-2xl sm:text-2xl font-bold text-navy-900 mb-2">
         Special{" "}
         <span className="bg-gradient-to-r from-navy-600 to-navy-700 bg-clip-text text-transparent">
           Promotions & Offers
         </span>
       </h2>
-      <p className="text-base text-navy-600 max-w-2xl mx-auto">
+      <p className="text-base text-navy-600 max-w-1xl mx-auto">
         Take advantage of our limited-time offers and packages for premium services.
       </p>
     </div>
 
     {/* REVISED CONTAINER: Switched from grid to flex for horizontal scrolling */}
-    <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide"> {/* Added space-x-6 for gap and overflow-x-auto for scrolling */}
+    <div className="flex space-x-6 overflow-x-auto pb-4 no-scrollbar"> {/* Added space-x-6 for gap and overflow-x-auto for scrolling */}
       {promotions.map((promo, index) => (
         <Link
           key={index}
           to={promo.link}
           // ADDED CLASSES: min-w-72 ensures a fixed width, flex-shrink-0 stops shrinking
-          className="group relative rounded-2xl overflow-hidden shadow-xl hover:scale-[1.02] transform transition-transform duration-300 min-w-72 flex-shrink-0"
+          className="group relative rounded-2xl overflow-hidden shadow-xl hover:scale-[1.02] transform transition-transform duration-300 min-w-44 flex-shrink-0"
         >
           {/* Image */}
-          <div className="relative h-64 overflow-hidden">
+          <div className="relative h-44 overflow-hidden">
             <img
               src={promo.image}
               alt={promo.title}
@@ -952,13 +1044,13 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
           {/* Content */}
           <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-            <h3 className="text-xl font-bold mb-2 leading-snug">{promo.title}</h3>
-            <p className="text-sm mb-4 opacity-90 line-clamp-2">{promo.description}</p>
+            <h3 className="text-lg font-bold mb-2 leading-snug">{promo.title}</h3>
+            <p className="text-sm mb-2 opacity-50 line-clamp-2">{promo.description}</p>
             <div className="inline-flex items-center gap-2 bg-white text-navy-700 font-bold px-4 py-2 rounded-lg text-sm self-start group-hover:bg-peach-300 transition-colors">
               {promo.cta}
               {/* Assuming ArrowRight is an imported component */}
               <ArrowRight
-                size={16}
+                size={14}
                 className="group-hover:translate-x-1 transition-transform"
               />
             </div>
@@ -984,7 +1076,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
 {/* --- Kushi Teamwork Carousel Section --- */}
 <section className="py-2 bg-white">
-  <div className="w-full px-4 sm:px-6 lg:px-8">
+  <div className="w-full px-2 sm:px-6 lg:px-8">
     <div className="text-center mb-8">
     
     </div>

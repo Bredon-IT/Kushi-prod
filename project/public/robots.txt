@@ -1,0 +1,25 @@
+# robots.txt for Kushi Services
+User-agent: *
+Allow: /
+
+# Disallow private pages
+Disallow: /profile
+Disallow: /orderhistory
+Disallow: /order-details/
+Disallow: /cart
+Disallow: /payment
+Disallow: /booking
+Disallow: /inspection-booking
+
+# Allow essential pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /services
+Allow: /blog
+Allow: /gallery
+Allow: /signin
+Allow: /signup
+
+# Sitemap location
+Sitemap: https://kushiservices.com/sitemap.xml

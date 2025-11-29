@@ -1,13 +1,17 @@
 // App.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
+import { initAnalyticsConfig } from './config/analytics.config';
+import { initRazorpayConfig } from './config/razorpay.config';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import GoBackButton from './components/GoBackButton';
+import AnalyticsTracker from './components/AnalyticsTracker';
 import Home from './pages/Home';
-
+import ThankYou from './pages/ThankYou';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Blog from './pages/Blog';
@@ -29,13 +33,33 @@ import Gallery from './pages/Gallery';
 import OrderHistory from './pages/OrderHistory';
 import InspectionBooking from './pages/InspectionBooking';
 import OrderDetailPage from './pages/OrderDetailPage';
-import ThankYou from './pages/ThankYou';
 //import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
+  // Initialize configurations from backend (AWS Secrets Manager) on app load
+  useEffect(() => {
+    const initConfigs = async () => {
+      try {
+        // Load analytics config (Google Analytics, Facebook Pixel) from AWS SSM
+        await initAnalyticsConfig();
+        
+        // Load Razorpay config from AWS Secrets Manager
+        await initRazorpayConfig();
+        
+        console.log('✅ All configurations initialized successfully');
+      } catch (error) {
+        console.error('❌ Error initializing configurations:', error);
+      }
+    };
+    
+    initConfigs();
+  }, []);
+
   return (
-    <AuthProvider>
-      <LocationProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <LocationProvider>
+          <AnalyticsTracker />
         <div className="min-h-screen bg-orange-50 text-gray-900">
           <Navbar />
           <main className="pt-20">
@@ -70,9 +94,8 @@ function App() {
               <Route path="/forgetpassword" element={<ForgetPassword />} />
               <Route path="/order-details/:bookingId" element={<OrderDetailPage />} />
               <Route path="*" element={<NotFound />} />
-              <Route path="/thank-you" element={<ThankYou />} />
-
-              
+                  <Route path="/thank-you" element={<ThankYou />} />
+               
 
 
 
@@ -89,8 +112,9 @@ function App() {
         {/* <ChatbotWidget /> */}
           
         </div>
-      </LocationProvider>
-    </AuthProvider>
+        </LocationProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 
