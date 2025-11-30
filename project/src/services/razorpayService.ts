@@ -12,6 +12,7 @@ declare global {
 // Load Razorpay Script
 export const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
+    // Check if script already loaded
     if (window.Razorpay) {
       resolve(true);
       return;
@@ -30,16 +31,16 @@ export const createRazorpayOrder = async (amount: number): Promise<any> => {
   try {
     console.log('Creating Razorpay order for amount:', amount);
     console.log('API URL:', `${Global_API_BASE}/api/payment/create-order`);
-
+    
     const requestBody = {
-      amount: Math.round(amount * 100),
+      amount: Math.round(amount * 100), // Convert to paise (smallest currency unit)
       currency: RAZORPAY_CONFIG.CURRENCY,
     };
     console.log('Request body:', requestBody);
 
     const response = await fetch(`${Global_API_BASE}/api/payment/create-order`, {
       method: 'POST',
-      headers: {
+      headers: { 
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -118,14 +119,15 @@ export const initiateRazorpayPayment = async ({
       throw new Error('Failed to load Razorpay SDK');
     }
 
-    // Step 2: Create Order
+    // Step 2: Create Order on Backend
     console.log('Step 2: Creating order...');
     const orderData = await createRazorpayOrder(amount);
     console.log('Order data received:', orderData);
 
     // Step 3: Configure Razorpay Options
     console.log('Step 3: Configuring Razorpay options...');
-
+    
+    // Simplified options matching the working test
     const options: any = {
       key: RAZORPAY_CONFIG.KEY_ID,
       amount: orderData.amount,
@@ -133,55 +135,47 @@ export const initiateRazorpayPayment = async ({
       name: RAZORPAY_CONFIG.MERCHANT_NAME,
       description: 'Service Booking',
       order_id: orderData.id,
-
-      // ⭐ CRITICAL FIX – REQUIRED FOR Razorpay v2 Checkout
+      
       prefill: {
         name: customerName,
         email: customerEmail,
         contact: customerPhone,
       },
-
-      customer: {
-        name: customerName,
-        email: customerEmail,
-        contact: customerPhone,
-      },
-
+      
       theme: {
         color: RAZORPAY_CONFIG.THEME_COLOR,
       },
-
+      
       handler: function (response: any) {
         console.log('Payment handler called with response:', response);
-
+        
+        // Verify payment signature on backend
         verifyPaymentSignature({
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,
-        })
-          .then((isVerified) => {
-            if (isVerified) {
-              onSuccess({
-                ...response,
-                verified: true,
-                order_id: orderData.id,
-              });
-            } else {
-              onFailure({
-                error: 'Payment verification failed',
-                code: 'VERIFICATION_FAILED',
-              });
-            }
-          })
-          .catch((error) => {
-            console.error('Verification error:', error);
+        }).then(isVerified => {
+          if (isVerified) {
+            onSuccess({
+              ...response,
+              verified: true,
+              order_id: orderData.id,
+            });
+          } else {
             onFailure({
               error: 'Payment verification failed',
               code: 'VERIFICATION_FAILED',
             });
+          }
+        }).catch(error => {
+          console.error('Verification error:', error);
+          onFailure({
+            error: 'Payment verification failed',
+            code: 'VERIFICATION_FAILED',
           });
+        });
       },
-
+      
       modal: {
         ondismiss: function () {
           console.log('Payment modal dismissed');
@@ -189,22 +183,22 @@ export const initiateRazorpayPayment = async ({
             error: 'Payment cancelled by user',
             code: 'USER_CANCELLED',
           });
-        },
+        }
       },
     };
-
+    
     console.log('Razorpay options configured:', options);
 
     // Step 4: Open Razorpay Checkout
     console.log('Step 4: Creating Razorpay instance...');
-
-    if (!window.Razorpay) {
+    
+    if (typeof window.Razorpay === 'undefined') {
       throw new Error('Razorpay SDK not loaded');
     }
-
+    
     const rzp = new window.Razorpay(options);
     console.log('Razorpay instance created');
-
+    
     rzp.on('payment.failed', function (response: any) {
       console.error('Payment failed event:', response.error);
       onFailure({
@@ -212,10 +206,50 @@ export const initiateRazorpayPayment = async ({
         code: response.error.code,
       });
     });
-
+    
     console.log('Opening Razorpay modal...');
     rzp.open();
     console.log('Razorpay modal opened');
+    
+    // Force show Razorpay elements after a short delay
+    setTimeout(() => {
+      console.log('Forcing Razorpay elements to be visible...');
+      const elements = document.querySelectorAll('[id*="razorpay"], [class*="razorpay"], iframe[name*="razorpay"]');
+      console.log('Found Razorpay elements:', elements.length);
+      
+      elements.forEach((el: any) => {
+        // Force all visibility styles
+        el.style.setProperty('display', 'block', 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        el.style.setProperty('opacity', '1', 'important');
+        el.style.setProperty('z-index', '2147483647', 'important'); // Max z-index
+        el.style.setProperty('position', 'fixed', 'important');
+        
+        // Center on screen for container
+        if (el.id && el.id.includes('container')) {
+          el.style.setProperty('top', '0px', 'important');
+          el.style.setProperty('left', '0px', 'important');
+          el.style.setProperty('right', '0px', 'important');
+          el.style.setProperty('bottom', '0px', 'important');
+          el.style.setProperty('width', '100vw', 'important');
+          el.style.setProperty('height', '100vh', 'important');
+        }
+        
+        // For backdrop
+        if (el.className && el.className.includes('backdrop')) {
+          el.style.setProperty('background', 'rgba(0, 0, 0, 0.6)', 'important');
+          el.style.setProperty('inset', '0px', 'important');
+        }
+        
+        console.log('Forced visible:', el.tagName, el.id || el.className, {
+          computed: window.getComputedStyle(el).display,
+          offsetTop: el.offsetTop,
+          offsetLeft: el.offsetLeft,
+          clientWidth: el.clientWidth,
+          clientHeight: el.clientHeight
+        });
+      });
+    }, 500);
 
   } catch (error) {
     console.error('Razorpay Payment Error:', error);
@@ -223,7 +257,7 @@ export const initiateRazorpayPayment = async ({
   }
 };
 
-// Get Payment Details (For Order History)
+// Get Payment Details (for order history)
 export const getPaymentDetails = async (paymentId: string): Promise<any> => {
   try {
     const response = await fetch(`${Global_API_BASE}/api/payment/details/${paymentId}`, {
@@ -250,7 +284,7 @@ export const initiateRefund = async (paymentId: string, amount?: number): Promis
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         payment_id: paymentId,
-        amount: amount ? Math.round(amount * 100) : undefined,
+        amount: amount ? Math.round(amount * 100) : undefined, // Partial refund if amount specified
       }),
     });
 
