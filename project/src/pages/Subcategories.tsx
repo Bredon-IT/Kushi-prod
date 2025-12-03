@@ -47,7 +47,7 @@ useEffect(() => {
     const fetchServices = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(Global_API_BASE + "/api/customers/all-services");
+        const response = await fetch(`${Global_API_BASE}/api/customers/all-services`);
         const data = await response.json();
  
         const mapped: Service[] = data
