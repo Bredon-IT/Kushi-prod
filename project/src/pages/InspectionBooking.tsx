@@ -50,7 +50,7 @@ interface InspectionForm {
 // --- Robust BookingAPIService using fetch with tolerant response handling ---
 const BookingAPIService = {
   createBooking: async (payload: any) => {
-    const res = await fetch(`{$Global_API_BASE}/api/bookings/newbookings`, {
+    const res = await fetch(`${Global_API_BASE}/api/bookings/newbookings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
