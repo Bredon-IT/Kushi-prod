@@ -3,11 +3,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Install Customer app deps
         - cd project && (npm ci || npm install)
         - cd ..
-
-        # Install Admin app deps
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
     build:
@@ -26,29 +23,23 @@ frontend:
         - cd ../..
     postBuild:
       commands:
-        - echo "✅ Both Customer & Admin built successfully!"
+        - echo "Build complete"
 
   artifacts:
     baseDirectory: dist
     files:
-      - '**/*'
+      - "**/*"
 
   cache:
     paths:
       - project/node_modules
       - Admin/AdminDashboard/node_modules
 
-# ============================================================
-# ✅ CORRECT REWRITES FOR CSR (PROJECT) + ADMIN
-# ============================================================
-
 rewrites:
-  # Admin app routing → send all /admin/... requests to admin index.html
-  - source: "/admin/<*>"
+  - source: /admin/<*>
     target: /admin/index.html
     status: 200
 
-  # Project app routing → ALL other pages go to project index.html
-  - source: "<*>"
+  - source: /<*>
     target: /index.html
     status: 200
