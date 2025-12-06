@@ -3,11 +3,14 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Install Customer app deps
+        - echo "=== Listing all folders ==="
+        - ls -R .
+
+        - echo "=== Installing Customer App ==="
         - cd project && (npm ci || npm install)
         - cd ..
 
-        # Install Admin app deps
+        - echo "=== Installing Admin App ==="
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
 
@@ -15,12 +18,12 @@ frontend:
       commands:
         - rm -rf dist && mkdir -p dist
 
-        # Build Customer app -> dist/
+        - echo "=== Building Customer App ==="
         - cd project && npm run build
         - cp -r dist/* ../dist/
         - cd ..
 
-        # Build Admin app -> dist/admin/
+        - echo "=== Building Admin App ==="
         - cd Admin/AdminDashboard && npm run build
         - mkdir -p ../../dist/admin
         - cp -r dist/* ../../dist/admin/
@@ -28,22 +31,18 @@ frontend:
 
     postBuild:
       commands:
-        - echo "Build complete"
+        - echo "🎉 Both Customer + Admin Built Successfully!"
 
   artifacts:
     baseDirectory: dist
     files:
       - '**/*'
 
-  cache:
-    paths:
-      - project/node_modules
-      - Admin/AdminDashboard/node_modules
-
 rewrites:
   - source: /admin/<*>
     target: /admin/index.html
     status: 200
+
   - source: /<*>
     target: /index.html
     status: 200
