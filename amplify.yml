@@ -3,37 +3,30 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Install Customer app dependencies
+        # Install Customer app deps
         - cd project && (npm ci || npm install)
         - cd ..
 
-        # Install Admin app dependencies
+        # Install Admin app deps
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
-        
     build:
       commands:
-        # Clean dist folder
         - rm -rf dist && mkdir -p dist
 
-        # ---------------------
-        # Build Customer App
-        # ---------------------
+        # Build Customer app -> dist/
         - cd project && npm run build
         - cp -r dist/* ../dist/
         - cd ..
 
-        # ---------------------
-        # Build Admin App
-        # ---------------------
+        # Build Admin app -> dist/admin/
         - cd Admin/AdminDashboard && npm run build
         - mkdir -p ../../dist/admin
         - cp -r dist/* ../../dist/admin/
         - cd ../..
-
     postBuild:
       commands:
-        - echo "🎉 Both Customer + Admin Built Successfully!"
+        - echo "✅ Both Customer & Admin built successfully!"
 
   artifacts:
     baseDirectory: dist
@@ -46,15 +39,16 @@ frontend:
       - Admin/AdminDashboard/node_modules
 
 # ============================================================
-# 🧭 REWRITE RULES FOR REACT ROUTER SPA (ADMIN + CUSTOMER)
+# ✅ CORRECT REWRITES FOR CSR (PROJECT) + ADMIN
 # ============================================================
+
 rewrites:
-  # Admin dashboard: /admin/... → load admin index.html
+  # Admin app routing → send all /admin/... requests to admin index.html
   - source: "/admin/<*>"
-    target: "/admin/index.html"
+    target: /admin/index.html
     status: 200
 
-  # Customer website: all other routes → load main index.html
+  # Project app routing → ALL other pages go to project index.html
   - source: "<*>"
-    target: "/index.html"
+    target: /index.html
     status: 200
