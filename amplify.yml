@@ -3,27 +3,29 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "=== Listing all folders ==="
-        - ls -R .
-
-        - echo "=== Installing Customer App ==="
+        # Install Customer app dependencies
         - cd project && (npm ci || npm install)
         - cd ..
 
-        - echo "=== Installing Admin App ==="
+        # Install Admin app dependencies
         - cd Admin/AdminDashboard && (npm ci || npm install)
         - cd ../..
-
+        
     build:
       commands:
+        # Clean dist folder
         - rm -rf dist && mkdir -p dist
 
-        - echo "=== Building Customer App ==="
+        # ---------------------
+        # Build Customer App
+        # ---------------------
         - cd project && npm run build
         - cp -r dist/* ../dist/
         - cd ..
 
-        - echo "=== Building Admin App ==="
+        # ---------------------
+        # Build Admin App
+        # ---------------------
         - cd Admin/AdminDashboard && npm run build
         - mkdir -p ../../dist/admin
         - cp -r dist/* ../../dist/admin/
@@ -38,11 +40,21 @@ frontend:
     files:
       - '**/*'
 
+  cache:
+    paths:
+      - project/node_modules
+      - Admin/AdminDashboard/node_modules
+
+# ============================================================
+# 🧭 REWRITE RULES FOR REACT ROUTER SPA (ADMIN + CUSTOMER)
+# ============================================================
 rewrites:
-  - source: /admin/<*>
-    target: /admin/index.html
+  # Admin dashboard: /admin/... → load admin index.html
+  - source: "/admin/<*>"
+    target: "/admin/index.html"
     status: 200
 
-  - source: /<*>
-    target: /index.html
+  # Customer website: all other routes → load main index.html
+  - source: "<*>"
+    target: "/index.html"
     status: 200
