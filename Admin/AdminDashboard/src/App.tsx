@@ -5,11 +5,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/layout/Layout";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
-import Messages from "./pages/Messages.tsx";
-import { InspectionDashboard } from "./pages/InspectionDashboard.tsx";
-
-
-
+import Messages from "./pages/Messages";
+import { InspectionDashboard } from "./pages/InspectionDashboard";
 
 import { Bookings } from "./pages/Bookings";
 import { Customers } from "./pages/Customers";
@@ -17,12 +14,11 @@ import { Services } from "./pages/Services";
 import { Invoices } from "./pages/Invoices";
 import { Financial } from "./pages/Financial";
 import { Settings } from "./pages/Settings";
-
 import Gallery from './pages/Gallery';
 
-
-
-// Separated the routing logic into its own function
+// ------------------------------
+// ROUTES LOGIC
+// ------------------------------
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -32,6 +28,7 @@ function AppRoutes() {
         path="/login"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
+
       <Route
         path="/"
         element={
@@ -42,6 +39,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/bookings"
         element={
@@ -52,6 +50,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/inspection"
         element={
@@ -62,6 +61,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/customers"
         element={
@@ -73,8 +73,9 @@ function AppRoutes() {
         }
       />
 
-      <Route path="/messages" 
-       element={
+      <Route
+        path="/messages"
+        element={
           <ProtectedRoute>
             <Layout>
               <Messages />
@@ -93,6 +94,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/invoices"
         element={
@@ -103,6 +105,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/financial"
         element={
@@ -113,8 +116,10 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="/gallery" 
-       element={
+
+      <Route
+        path="/gallery"
+        element={
           <ProtectedRoute>
             <Layout>
               <Gallery />
@@ -122,8 +127,6 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
-   
 
       <Route
         path="/settings"
@@ -135,21 +138,21 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Unknown route fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
-// Only one App component — wraps everything
+// ------------------------------
+// APP ROOT COMPONENT
+// ------------------------------
 function App(): JSX.Element {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-         
-          
-          <AppRoutes />
-        </Router>
+        <AppRoutes />
       </AuthProvider>
     </ThemeProvider>
   );
