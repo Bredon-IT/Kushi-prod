@@ -1,10 +1,10 @@
 // AWS AppRunner Backend URL (Production)
-//const Global_API_BASE = "https://35ndupeyzs.ap-south-1.awsapprunner.com";
+const Global_API_BASE = "https://35ndupeyzs.ap-south-1.awsapprunner.com";
 
 // Local Development (uncomment for local testing)
 // const Global_API_BASE = "http://localhost:8080";
 
-const Global_API_BASE = "http://localhost:8082";
+//const Global_API_BASE = "http://localhost:8082";
 
 export default Global_API_BASE;
 

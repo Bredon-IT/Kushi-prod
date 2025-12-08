@@ -55,10 +55,10 @@ export const RunningOffersCard: React.FC<RunningOffersCardProps> = ({ onClose })
 
     // 2) If backend returned "/uploads/file.jpg"
     if (s.startsWith("/uploads/"))
-      return `http://localhost:8082${s}`;
+      return `Global_API_BASE${s}`;
 
     // 3) If backend returned only filename → convert to backend URL
-    return `http://localhost:8082/uploads/${s}`;
+    return `Global_API_BASE/${s}`;
   };
 
   // ----------------------
