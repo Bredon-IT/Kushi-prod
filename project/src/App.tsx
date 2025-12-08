@@ -62,7 +62,7 @@ function App() {
           <AnalyticsTracker />
         <div className="min-h-screen bg-orange-50 text-gray-900">
           <Navbar />
-          <main className="pt-20">
+          <main className="pt-16">
             <Routes>
               <Route path="/" element={<Home />} />
             

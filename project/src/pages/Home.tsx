@@ -8,7 +8,7 @@ import { KushiTeamworkCarousel } from '../components/KushiTeamworkCarousel';
 import FeaturesCarousel from '../components/FeaturesCarousel';
 import Global_API_BASE from '../services/GlobalConstants';
 import GoogleReviews from '../components/GoogleReviews';
-
+import SEO from '../components/SEO';
 interface Service {
   id: string;
   name: string;
@@ -494,7 +494,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Residential Cleaning Services',
       description: 'Complete home cleaning solutions with premium eco-friendly products',
       price: 'Starting ₹999',
-      image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+      image: "/ResidentialCleaning.png",
       link: '/services',
       gradient: 'from-peach-300 to-navy-700',
       services: ['Full Home Deep Cleaning Services', 'Kitchen Cleaning Services', 'Bathroom Cleaning Services', 
@@ -507,7 +507,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Commercial Cleaning Services',
       description: 'Professional office and commercial space cleaning services',
       price: 'Starting ₹4,499',
-      image: 'https://rescuemytimecleaningservice.com/wp-content/uploads/2020/11/maid-service-hiring.jpg',
+      image: "/CommercialCleaningServices.png",
       link: '/services',
       gradient: 'from-navy-700 to-peach-300',
       services: ['Office Cleaning Services', 'Office Carpet Cleaning Services', 'Office Chair Cleaning Services', 'Hotel and restaurant cleaning']
@@ -517,7 +517,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Industrial Cleaning Services',
       description: 'Professional office and commercial space cleaning services',
       price: 'Starting ₹4,499',
-      image: 'https://rescuemytimecleaningservice.com/wp-content/uploads/2020/11/maid-service-hiring.jpg',
+      image: "/IndustrialCleaningServices.png",
       link: '/services',
       gradient: 'from-navy-700 to-peach-300',
       services: ['Factory Cleaning Services', 'Warehouse Cleaning Services']
@@ -527,7 +527,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Pest Control Services',
       description: 'Comprehensive pest control solutions for all residential and commercial spaces',
       price: 'Starting ₹1,899',
-      image: 'https://tse1.mm.bing.net/th/id/OIP.I6TQ2G-RhSxGDycIkxX_UAHaDt?rs=1&pid=ImgDetMain&o=7&rm=3',
+      image: "/PestControlServices.png",
       link: '/services',
       gradient: 'from-peach-300 to-navy-700',
       services: ['Cockroach Pest Control ', 'Bedbug Pest Control', 'Termite Treatment ', 'Woodborer Pest Control', 'Rodent Pest Control', 
@@ -538,7 +538,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Marble Polishing Services',
       description: 'Expert cleaning and maintenance for specialized requirements',
       price: 'Starting ₹5,999',
-      image: 'https://tse2.mm.bing.net/th/id/OIP.KUKqwjbh-0rEW1CB-ftarwHaDe?rs=1&pid=ImgDetMain&o=7&rm=3',
+      image: "/MarblePolishingServices.png",
       link: '/services',
       gradient: 'from-navy-700 to-peach-300',
       services: ['Indian Marble Polishing Services', '•	Italian Marble Polishing Services', 'Mosaic Tile Polishing Services']
@@ -549,7 +549,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       title: 'Packers And Movers',
       description: 'Professional packing and moving services with complete care',
       price: 'Starting ₹6,999',
-     image: 'https://bharatpackersmover.in/wp-content/uploads/2022/01/Movers-and-packers-e1465470929468-2.jpg',
+     image: "/Packers&Movers.png",
     link: '/services',
       gradient: 'from-peach-300 to-navy-700',
       services: ['Home Shifting Services', 'Office Shifting Services']
@@ -565,7 +565,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Get Offer on Your First Deep Clean!',
     description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
     cta: 'Claim Offer Now',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+    image: "/ResidentialCleaning.png",
     link: '/services',
     gradient: 'from-peach-300/80 to-navy-700/80'
   },
@@ -573,15 +573,14 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Annual Pest Control Package',
     description: 'Protect your home or office year-round with our comprehensive pest control solutions. Special rates available!',
     cta: 'Learn More',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
-    link: '/services',
+    image:"/CommercialCleaningServices.png",
     gradient: 'from-navy-700/80 to-peach-300/80'
   },
   {
     title: 'Marble Polishing Offer',
     description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
     cta: 'Book Now',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+    image: "/MarblePolishingServices.png",
     link: '/services',
     gradient: 'from-peach-300/80 to-navy-700/80'
   },
@@ -589,7 +588,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Packers & Movers Discount',
     description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
     cta: 'Move Now',
-    image: 'https://bharatpackersmover.in/wp-content/uploads/2022/01/Movers-and-packers-e1465470929468-2.jpg',
+    image: "/Packers&Movers.png",
    link: '/services',
     gradient: 'from-navy-700/80 to-peach-300/80'
   },
@@ -597,7 +596,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Get Offer Your First Deep Clean!',
     description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
     cta: 'Claim Offer Now',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+    image: "/ResidentialCleaning.png",
     link: '/services',
     gradient: 'from-peach-300/80 to-navy-700/80'
   },
@@ -605,7 +604,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Annual Pest Control Package',
     description: 'Protect your home or office year-round with our comprehensive pest control solutions. Special rates available!',
     cta: 'Learn More',
-    image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+    image: "/CommercialCleaningServices.png",
     link: '/services',
     gradient: 'from-navy-700/80 to-peach-300/80'
   },
@@ -613,7 +612,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Marble Polishing Offer',
     description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
     cta: 'Book Now',
-   image: 'https://tse4.mm.bing.net/th/id/OIP.2XIebCebLJVe7iwYKSvD4wHaFD?rs=1&pid=ImgDetMain&o=7&rm=3',
+   image:"/MarblePolishingServices.png",
      link: '/services',
     gradient: 'from-peach-300/80 to-navy-700/80'
   },
@@ -621,7 +620,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     title: 'Packers & Movers Discount',
     description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
     cta: 'Move Now',
-   image: 'https://bharatpackersmover.in/wp-content/uploads/2022/01/Movers-and-packers-e1465470929468-2.jpg',
+   image: "/Packers&Movers.png",
     link: '/services',
     gradient: 'from-navy-700/80 to-peach-300/80'
   }
@@ -643,7 +642,12 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
   return (
     <div>
-
+    <SEO 
+        title="Home Services in Bangalore - Cleaning, Plumbing, Electrical & More"
+        description="Professional home services in Bangalore. Expert cleaning, plumbing, electrical, pest control, and more. Book trusted professionals with instant quotes. Available 24/7."
+        keywords="home services bangalore, cleaning services, plumbing services, electrical services, pest control, AC repair, appliance repair, painting services"
+        url="https://kushiservices.com"
+      />
    {/* Rotating Offers */}
  <RotatingOffers onHeroImageUpdate={handleHeroImageUpdate} />
 
@@ -914,9 +918,6 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 </section>
 
 
-
-
-
 {/* 🔹 Top Booked Services Section */}
 <section className="py-2 bg-white w-full">
   <div className="w-full max-w-[100vw] overflow-hidden">
@@ -939,69 +940,83 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
     ) : topServices.length === 0 ? (
       <p className="text-center text-navy-600">No top booked services found.</p>
     ) : (
-      <div className="flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full">
+      // 👇 REVISED CONTAINER: Ensures full-width 5-column grid on desktop
+      <div className="
+        /* Default for Mobile: Horizontal Scrolling Flex */
+        flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full
+
+        /* Tablet (sm): Show 3 columns, fills available width */
+        sm:grid sm:grid-cols-3 sm:grid-flow-row sm:gap-4 sm:overflow-x-hidden sm:px-4 sm:w-full sm:mx-auto 
+
+        /* Desktop (lg): Show 5 columns, fills available width */
+        lg:grid-cols-5 lg:px-6
+      ">
         {topServices.map((service, index) => (
-     <div
-  key={index}
-  onClick={() => handleClickTopService(service)}
-  className="
-    group relative flex-shrink-0 snap-start cursor-pointer
-    min-w-[250px] max-w-[250px] sm:min-w-[280px] sm:max-w-[280px]
-    transition-transform duration-500
-  "
->
-  {/* Hover Ring Wrapper */}
-  <div
-    className="
-      bg-white rounded-2xl shadow-md p-[4px]
-      
-    "
-  >
-    {/* Image Wrapper */}
-    <div className="relative h-[160px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
-      <img
-        src={service.service_image_url || service.booking_service_image_url || '/logo.png'}
-        alt={service.booking_service_name || service.service_name}
-        className="
-          w-full h-full object-cover object-center
-          transition-transform duration-700 ease-out
-          group-hover:scale-150
-        "
-      />
+          <div
+            key={index}
+            onClick={() => handleClickTopService(service)}
+            className="
+              group relative snap-start cursor-pointer
+              
+              /* Mobile: Keep fixed width for scrolling */
+              flex-shrink-0 min-w-[250px] max-w-[250px]
 
-      {/* Arrow */}
-      <div
-        className="
-          absolute bottom-2 right-2 opacity-0 translate-y-3
-          group-hover:opacity-100 group-hover:translate-y-0
-          transition-all duration-500 z-20
-        "
-      >
-        <span className="bg-white/80 backdrop-blur-md p-2 rounded-full shadow">
-          ➜
-        </span>
-      </div>
-    </div>
+              /* Tablet/Desktop: Allow cards to take up equal column width */
+              sm:min-w-0 sm:max-w-none sm:flex-shrink
+              
+              transition-transform duration-500
+            "
+          >
+            {/* Hover Ring Wrapper */}
+            <div
+              className="
+                bg-white rounded-2xl shadow-md p-[4px]
+                
+              "
+            >
+              {/* Image Wrapper */}
+              <div className="relative h-[160px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
+                <img
+                  src={service.service_image_url || service.booking_service_image_url || '/logo.png'}
+                  alt={service.booking_service_name || service.service_name}
+                  className="
+                    w-full h-full object-cover object-center
+                    transition-transform duration-700 ease-out
+                    group-hover:scale-150
+                  "
+                />
 
-    {/* Title */}
-    <div className="py-1 text-center bg-white rounded-b-xl">
-      <h3
-        className="
-          text-sm font-bold text-navy-700
-          group-hover:text-peach-600 group-hover:-translate-y-1
-          transition-transform duration-500
-        "
-      >
-        {service.booking_service_name || service.service_name}
-      </h3>
-    </div>
-  </div>
-</div>
+                {/* Arrow */}
+                <div
+                  className="
+                    absolute bottom-2 right-2 opacity-0 translate-y-3
+                    group-hover:opacity-100 group-hover:translate-y-0
+                    transition-all duration-500 z-20
+                  "
+                >
+                  <span className="bg-white/80 backdrop-blur-md p-2 rounded-full shadow">
+                    ➜
+                  </span>
+                </div>
+              </div>
 
-
-
+              {/* Title */}
+              <div className="py-1 text-center bg-white rounded-b-xl">
+                <h3
+                  className="
+                    text-sm font-bold text-navy-700
+                    group-hover:text-peach-600 group-hover:-translate-y-1
+                    transition-transform duration-500
+                  "
+                >
+                  {service.booking_service_name || service.service_name}
+                </h3>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
+      
     )}
   </div>
 </section>

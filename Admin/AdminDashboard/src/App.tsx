@@ -20,6 +20,8 @@ import { Settings } from "./pages/Settings";
 
 import Gallery from './pages/Gallery';
 
+import { Toaster } from "react-hot-toast";
+
 
 
 // Separated the routing logic into its own function
@@ -147,6 +149,8 @@ function App(): JSX.Element {
       <AuthProvider>
         <Router>
          
+
+         <Toaster position="top-center" reverseOrder={false} />
           
           <AppRoutes />
         </Router>

@@ -43,31 +43,75 @@ export function Dashboard() {
 
   
 
-  // Fetch Recent Bookings
+ const [currentPage, setCurrentPage] = useState(1);
+const bookingsPerPage = 5;
+// Pagination calculation
+const indexOfLastBooking = currentPage * bookingsPerPage;
+const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
+const currentBookings = recentBookings.slice(indexOfFirstBooking, indexOfLastBooking);
+ 
+const totalPages = Math.ceil(recentBookings.length / bookingsPerPage);
+ 
+   
+ 
   useEffect(() => {
-    const fetchRecentBookings = async () => {
-      try {
-        const res = await axios.get(Global_API_BASE + "/api/admin/recent-bookings");
-        const mapped = res.data.map((item) => ({
-          id: item.booking_id,
-          customerName: item.customer_name,
-          customerEmail: item.customer_email,
-          service: item.booking_service_name,
-          category: item.booking_category,
-          date: item.bookingDate,
-          time: item.booking_time,
-          duration: item.booking_duration,
-          address: item.address_line_1,
-          status: item.bookingStatus?.toLowerCase(),
-          price: item.booking_amount
-        }));
-        setRecentBookings(mapped);
-      } catch (err) {
-        console.error("Error fetching recent bookings:", err);
-      }
-    };
-    fetchRecentBookings();
-  }, []);
+  const handler = (event) => {
+    const u = event.detail;
+ 
+    setRecentBookings(prev =>
+      prev.map(b =>
+        b.id === u.booking_id
+          ? {
+              ...b,
+              status: u.booking_status,
+            }
+          : b
+      )
+    );
+  };
+ 
+  window.addEventListener("bookingUpdatedLive", handler);
+ 
+  return () => window.removeEventListener("bookingUpdatedLive", handler);
+}, []);
+ 
+ 
+ useEffect(() => {
+  const fetchRecentBookings = async () => {
+    try {
+      const res = await axios.get(Global_API_BASE + "/api/admin/all-bookings");
+ 
+      const mapped = res.data.map((item) => ({
+        id: item.booking_id,
+        customerName: item.customer_name,
+        customerEmail: item.customer_email,
+        service: item.booking_service_name,
+        category: item.booking_category,
+        date: item.bookingDate,
+        time: item.booking_time,
+        duration: item.booking_duration,
+        address: item.address_line_1,
+        status: item.bookingStatus?.toLowerCase(),
+        price: item.booking_amount,
+        createdDate: item.created_date
+      }));
+ 
+      const today = new Date().toISOString().split("T")[0];
+ 
+      // Filter + Sort (latest first)
+      const todaysBookings = mapped
+        .filter(b => b.createdDate && b.createdDate.startsWith(today))
+        .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+ 
+      setRecentBookings(todaysBookings);
+    } catch (err) {
+      console.error("Error fetching recent bookings:", err);
+    }
+  };
+ 
+  fetchRecentBookings();
+}, []); 
+
 
   useEffect(() => {
     // Fetch today's bookings count
@@ -233,11 +277,11 @@ useEffect(() => {
       bgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20'
     },
   ];
-
+ 
   const quickStats = [
     { label: "Today's Bookings", value: todayBookings.toString(), icon: Calendar, color: 'text-blue-600' },
     { label: "Pending Approvals", value: pendingApprovals.toString(), icon: Clock, color: 'text-yellow-600' },
-  ];
+  ]; 
 
   const performanceMetrics = [
     { metric: 'Customer Satisfaction', value: '4.8/5', percentage: 96, color: 'bg-green-500' },
@@ -246,59 +290,58 @@ useEffect(() => {
     { metric: 'Staff Efficiency', value: '92%', percentage: 92, color: 'bg-coral-500' }
   ];
 
-  return (
+ return (
     <div className="space-y-1 md:space-y-1 py-1 md:py-1">
       {/* Main Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title} className="transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl border-0 overflow-hidden">
-              <CardContent className="p-3 md:p-4 relative">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center flex-1 min-w-0">
-                    <div className={`p-2 md:p-3 rounded-xl ${stat.bgColor} shadow-inner flex-shrink-0`}>
-                      <Icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color}`} />
-                    </div>
-                    <div className="ml-2 md:ml-3 min-w-0 flex-1">
-                      <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.title}</p>
-                      <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">{stat.value}</p>
-                    </div>
-                  </div>
-                  {stat.change && stat.changeType && (
-                    <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
-                      {stat.changeType === 'increase' ? (
-                        <ArrowUp className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
-                      ) : (
-                        <ArrowDown className="h-3 w-3 md:h-4 md:w-4 text-red-500" />
-                      )}
-                      <span className={`text-xs md:text-sm font-medium ${
-                        stat.changeType === 'increase' ? 'text-green-500' : 'text-red-500'
-                      }`}>
-                        {stat.change}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {quickStats.map((stat, index) => (
-          <Card key={index} className="shadow-md hover:shadow-lg transition-all duration-300 border-0">
-            <CardContent className="p-3 md:p-4 text-center">
-              <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color} mx-auto mb-2`} />
-              <div className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
-              <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 leading-tight">{stat.label}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Top 5 Stats in One Row */}
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+ 
+  {/* Total Bookings */}
+  <Card className="shadow-md hover:shadow-lg transition-all border-0 cursor-pointer">
+    <CardContent className="p-4 text-center">
+      <Calendar className="h-6 w-6 text-primary-600 mx-auto mb-2" />
+      <div className="text-xl font-bold text-gray-900">{totalBookings}</div>
+      <div className="text-sm text-gray-600">Total Bookings</div>
+    </CardContent>
+  </Card>
+ 
+  {/* Total Customers */}
+  <Card className="shadow-md hover:shadow-lg transition-all border-0 cursor-pointer">
+    <CardContent className="p-4 text-center">
+      <Users className="h-6 w-6 text-coral-600 mx-auto mb-2" />
+      <div className="text-xl font-bold text-gray-900">{totalCustomers}</div>
+      <div className="text-sm text-gray-600">Total Customers</div>
+    </CardContent>
+  </Card>
+ 
+  {/* Total Amount */}
+  <Card className="shadow-md hover:shadow-lg transition-all border-0 cursor-pointer">
+    <CardContent className="p-4 text-center">
+      <IndianRupeeIcon className="h-6 w-6 text-green-600 mx-auto mb-2" />
+      <div className="text-xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</div>
+      <div className="text-sm text-gray-600">Total Revenue</div>
+    </CardContent>
+  </Card>
+ 
+  {/* Today's Bookings */}
+  <Card className="shadow-md hover:shadow-lg transition-all border-0 cursor-pointer">
+    <CardContent className="p-4 text-center">
+      <Clock className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+      <div className="text-xl font-bold text-gray-900">{todayBookings}</div>
+      <div className="text-sm text-gray-600">Today's Bookings</div>
+    </CardContent>
+  </Card>
+ 
+  {/* Pending Approvals */}
+  <Card className="shadow-md hover:shadow-lg transition-all border-0 cursor-pointer">
+    <CardContent className="p-4 text-center">
+      <AlertCircle className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
+      <div className="text-xl font-bold text-gray-900">{pendingApprovals}</div>
+      <div className="text-sm text-gray-600">Pending Approvals</div>
+    </CardContent>
+  </Card>
+ 
+</div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
@@ -345,7 +388,7 @@ useEffect(() => {
                 Overview of top-rated services
               </p>
             </div>
-            <Button variant="secondary" size="sm">View All</Button>
+           
           </div>
         </CardHeader>
         <CardContent className="p-3 md:p-4">
@@ -623,12 +666,12 @@ useEffect(() => {
                         alt={service.service_name}
                         className="w-12 h-12 rounded-xl object-cover shadow-md group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-r from-primary-600 to-coral-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                      <div className="absolute -top-1 -right-1 bg-gradient-to-r from-peach-300 to-navy-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                         {index + 1}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors truncate text-sm">
+                      <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-navy-700 transition-colors truncate text-sm">
                         {service.service_name}
                       </h4>
                       <div className="flex items-center space-x-3 mt-1">
@@ -645,7 +688,7 @@ useEffect(() => {
                       <div className="text-xs text-gray-500 mt-1">{service.service_type}</div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <span className="text-base md:text-lg font-bold text-primary-600">
+                      <span className="text-base md:text-lg font-bold text-navy-700">
                         ₹{service.service_cost}
                       </span>
                     </div>
@@ -705,94 +748,174 @@ useEffect(() => {
       </div>
 
       {/* Recent Bookings */}
-      <Card className="shadow-lg border-0 overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-3 md:p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                <Clock className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-green-600" />
-                Recent Bookings
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Latest booking activities</p>
-            </div>
-            <Button variant="secondary" size="sm">View All Bookings</Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 md:p-4">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Customer</th>
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Service</th>
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Date & Time</th>
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Location</th>
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Status</th>
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Amount</th>
-                  <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentBookings.map((booking, index) => (
-                  <tr key={booking.id} className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-800 dark:hover:to-gray-700 transition-all ${index % 2 === 0 ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
-                    <td className="py-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-coral-500 rounded-full flex items-center justify-center shadow-md">
-                          <span className="text-white font-medium text-xs">
-                            {booking.customerName.split(' ').map(n => n[0]).join('')}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white text-sm">{booking.customerName}</div>
-                          <div className="text-xs text-gray-500 flex items-center">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {booking.customerEmail}
-                          </div>
-                        </div>
+<Card className="shadow-lg border-0 overflow-hidden">
+  <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-3 md:p-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+          <Clock className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-green-600" />
+          Recent Bookings (Today)
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Bookings received today</p>
+      </div>
+      {/* Pagination Buttons */}
+    {recentBookings.length > 5 && (
+      <div className="flex items-center space-x-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+        >
+          Prev
+        </Button>
+ 
+        <span className="text-sm font-semibold text-gray-700">
+          Page {currentPage} / {totalPages}
+        </span>
+ 
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    )}
+    </div>
+  </CardHeader>
+ 
+  <CardContent className="p-3 md:p-4">
+ 
+    {/* No Bookings Today Message */}
+    {recentBookings.length === 0 ? (
+      <div className="text-center py-6 text-gray-500 text-sm font-medium">
+        No bookings today
+      </div>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[800px] table-auto">
+          <thead>
+            <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Customer</th>
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Service</th>
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Date & Time</th>
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Location</th>
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Status</th>
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Amount</th>
+              <th className="text-left pb-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Actions</th>
+            </tr>
+          </thead>
+ 
+          <tbody>
+            {currentBookings.map((booking, index) => (
+              <tr
+                key={booking.id}
+                className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-800 dark:hover:to-gray-700 transition-all ${
+                  index % 2 === 0 ? "bg-gray-50/50 dark:bg-gray-800/50" : ""
+                }`}
+              >
+                {/* Customer */}
+                <td className="py-4 px-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-peach-300 to-navy-700 rounded-full flex items-center justify-center shadow-md">
+                      <span className="text-white font-medium text-xs">
+                        {booking.customerName.split(" ").map((n) => n[0]).join("")}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white text-sm">
+                        {booking.customerName}
                       </div>
-                    </td>
-                    <td className="py-3">
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white text-sm">{booking.service}</div>
-                        <div className="text-xs text-gray-500">{booking.category}</div>
+                      <div className="text-xs text-gray-500 flex items-center">
+                        <Mail className="h-3 w-3 mr-1" />
+                        {booking.customerEmail}
                       </div>
-                    </td>
-                    <td className="py-3">
-                      <div className="text-sm text-gray-900 dark:text-white font-medium">{booking.date}</div>
-                      <div className="text-xs text-gray-500">{booking.time} ({booking.duration} min)</div>
-                    </td>
-                    <td className="py-3">
-                      <div className="flex items-center text-sm text-gray-900 dark:text-white">
-                        <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-                        {booking.address}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <Badge variant={
-                        booking.status === 'confirmed' ? 'success' :
-                        booking.status === 'pending' ? 'warning' : 'danger'
-                      } className="font-medium">
-                        {booking.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3 text-base font-bold text-primary-600">₹{booking.price}</td>
-                    <td className="py-3">
-                      <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="secondary" onClick={() => navigate('/bookings')}>
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="danger" onClick={() => console.log('Delete booking', booking.id)}>
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                    </div>
+                  </div>
+                </td>
+ 
+                {/* Service */}
+                <td className="py-4 px-3">
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white text-sm">
+                      {booking.service}
+                    </div>
+                    <div className="text-xs text-gray-500">{booking.category}</div>
+                  </div>
+                </td>
+ 
+                {/* Date & Time */}
+                <td className="py-4 px-3 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    {booking.date?.split("T")[0]}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {new Date(booking.date).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </div>
+                </td>
+ 
+                {/* Location */}
+                <td className="py-4 px-3 max-w-[250px] align-top">
+                  <div className="flex items-start text-sm text-gray-900 dark:text-white">
+                    <MapPin className="h-4 w-4 mr-1 text-gray-400 mt-1 flex-shrink-0" />
+                    <div className="leading-tight break-words whitespace-normal">
+                      {booking.address}
+                    </div>
+                  </div>
+                </td>
+ 
+                {/* Status */}
+                <td className="py-4 px-4 whitespace-nowrap">
+                  <Badge
+                    variant={
+                      booking.status === "confirmed"
+                        ? "success"
+                        : booking.status === "pending"
+                        ? "warning"
+                        : "danger"
+                    }
+                    className="font-medium capitalize"
+                  >
+                    {booking.status}
+                  </Badge>
+                </td>
+ 
+                {/* Amount */}
+                <td className="py-4 px-5 whitespace-nowrap text-base font-bold text-primary-600">
+                  ₹{booking.price}
+                </td>
+ 
+                {/* Actions */}
+                <td className="py-4 px-6 whitespace-nowrap">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                   onClick={() =>
+  navigate("/bookings", {
+    state: { openEdit: true, bookingId: booking.id }   // 👈 pass state
+  })
+}
+ 
+                  >
+                    Edit
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </CardContent>
+</Card>
+ 
 
       {/* Quick Actions Footer */}
       <Card className="shadow-lg border-0 overflow-hidden">
@@ -811,10 +934,7 @@ useEffect(() => {
                 <Wrench className="h-4 w-4" />
                 <span>Add Service</span>
               </Button>
-              <Button variant="secondary" className="flex items-center space-x-2">
-                <FileText className="h-4 w-4" />
-                <span>Generate Report</span>
-              </Button>
+             
               <Button
                 variant="secondary"
                 className="flex items-center space-x-2"

@@ -23,6 +23,34 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* -----------------------------
+   📅 FIX CALENDAR OVERFLOW (ADDED)
+----------------------------- */
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: relative;
+  z-index: 50;          /* Makes calendar icon clickable above containers */
+}
+
+input[type="date"] {
+  position: relative;
+  z-index: 20;          /* Prevents clipping inside flex containers */
+}
+
+::-webkit-datetime-edit-fields-wrapper {
+  position: relative;
+  z-index: 20;
+}
+
+/* Ensure calendar popups inside components do NOT overflow screen */
+.react-datepicker-popper,
+.calendar-popup {
+  z-index: 9999 !important;
+  left: 0 !important;   /* Always open towards left */
+}
+
+/* ----------------------------- */
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -30,3 +58,11 @@ body {
   overflow: hidden;
 }
 
+html {
+  font-size: 14px !important;
+}
+
+body {
+  font-size: 1rem !important;
+  zoom: 0.9;
+}
