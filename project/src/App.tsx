@@ -28,11 +28,29 @@ import { LocationProvider } from "./contexts/LocationContext";
 import Categories from './pages/Categories';
 import Subcategories from './pages/Subcategories';
 import ServiceList from './pages/ServiceList';
-import ServiceDetails from './pages/ServiceDetails';  
+import ServiceDetails from './pages/ServiceDetails';
 import Gallery from './pages/Gallery';
 import OrderHistory from './pages/OrderHistory';
 import InspectionBooking from './pages/InspectionBooking';
 import OrderDetailPage from './pages/OrderDetailPage';
+
+// Admin imports
+import { AdminAuthProvider } from './hooks/admin/useAdminAuth';
+import { AdminThemeProvider } from './hooks/admin/useAdminTheme';
+import { AdminProtectedRoute } from './components/admin/AdminProtectedRoute';
+import { Layout as AdminLayout } from './components/admin/layout/Layout';
+import { AdminLogin } from './pages/admin/AdminLogin';
+import { Dashboard } from './pages/admin/Dashboard';
+import { Bookings } from './pages/admin/Bookings';
+import { Customers } from './pages/admin/Customers';
+import { Services as AdminServices } from './pages/admin/Services';
+import { Invoices } from './pages/admin/Invoices';
+import { Financial } from './pages/admin/Financial';
+import { Settings } from './pages/admin/Settings';
+import AdminMessages from './pages/admin/AdminMessages';
+import { InspectionDashboard } from './pages/admin/InspectionDashboard';
+import AdminGallery from './pages/admin/AdminGallery';
+
 //import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
@@ -42,16 +60,16 @@ function App() {
       try {
         // Load analytics config (Google Analytics, Facebook Pixel) from AWS SSM
         await initAnalyticsConfig();
-        
+
         // Load Razorpay config from AWS Secrets Manager
         await initRazorpayConfig();
-        
+
         console.log('✅ All configurations initialized successfully');
       } catch (error) {
         console.error('❌ Error initializing configurations:', error);
       }
     };
-    
+
     initConfigs();
   }, []);
 
@@ -60,6 +78,7 @@ function App() {
       <AuthProvider>
         <LocationProvider>
           <AnalyticsTracker />
+<<<<<<< Updated upstream
         <div className="min-h-screen bg-orange-50 text-gray-900">
           <Navbar />
           <main className="pt-16">
@@ -96,22 +115,132 @@ function App() {
               <Route path="*" element={<NotFound />} />
                   <Route path="/thank-you" element={<ThankYou />} />
                
+=======
+          <Routes>
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={
+              <AdminAuthProvider>
+                <AdminThemeProvider>
+                  <Routes>
+                    <Route path="login" element={<AdminLogin />} />
+                    <Route path="dashboard" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <Dashboard />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="bookings" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <Bookings />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="inspection" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <InspectionDashboard />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="customers" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <Customers />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="messages" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <AdminMessages />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="services" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <AdminServices />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="invoices" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <Invoices />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="financial" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <Financial />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="gallery" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <AdminGallery />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="settings" element={
+                      <AdminProtectedRoute>
+                        <AdminLayout>
+                          <Settings />
+                        </AdminLayout>
+                      </AdminProtectedRoute>
+                    } />
+                    <Route path="*" element={<AdminLogin />} />
+                  </Routes>
+                </AdminThemeProvider>
+              </AdminAuthProvider>
+            } />
+>>>>>>> Stashed changes
 
-
-
-
-
-
-
-            </Routes>
-           
-          </main>
-          <Footer />
-           <GoBackButton />
-          <WhatsAppButton />
-        {/* <ChatbotWidget /> */}
-          
-        </div>
+            {/* Customer Routes */}
+            <Route path="/*" element={
+              <div className="min-h-screen bg-orange-50 text-gray-900">
+                <Navbar />
+                <main className="pt-20">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogPost />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/signin" element={<SignIn />} />
+                    <Route path="/signup" element={<SignUp />} />
+                    <Route path="/booking" element={<Booking />} />
+                    <Route path="/inspection-booking" element={<InspectionBooking />} />
+                    <Route path="/payment" element={<Payment />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/orderhistory" element={<OrderHistory />} />
+                    {/* 1. Categories */}
+                    <Route path="/services" element={<Categories />} />
+                    {/* 2. Subcategories */}
+                    <Route path="/services/category/:categorySlug" element={<Subcategories />} />
+                    {/* 3. List of services */}
+                    <Route path="/services/:subcategory" element={<ServiceList />} />
+                    {/* 4. Service Details */}
+                    <Route path="/services/:subcategory/:serviceSlug" element={<ServiceDetails />} />
+                    <Route path="/gallery" element={<Gallery />} />
+                    <Route path="/forgetpassword" element={<ForgetPassword />} />
+                    <Route path="/order-details/:bookingId" element={<OrderDetailPage />} />
+                    <Route path="/thank-you" element={<ThankYou />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <Footer />
+                <GoBackButton />
+                <WhatsAppButton />
+                {/* <ChatbotWidget /> */}
+              </div>
+            } />
+          </Routes>
         </LocationProvider>
       </AuthProvider>
     </HelmetProvider>
