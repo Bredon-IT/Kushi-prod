@@ -345,7 +345,7 @@ const Cart: React.FC = () => {
   // --- EMPTY CART VIEW ---
   if (cart.length === 0) {
     return (
-      <div className="bg-white py-2 ">
+      <div className="min-h-[calc(80vh-4rem)] bg-white py-2 flex flex-col justify-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center bg-white rounded-3xl p-6 shadow-xl border-2 border-peach-200">
             <div className="bg-gradient-to-r from-peach-100 to-navy-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
@@ -476,90 +476,84 @@ const Cart: React.FC = () => {
           </div>
  
  
- 
- 
-      {/* Order Summary (Compact Version – Only Totals & Button) */}
+ {/* Order Summary (Single Row Totals) */}
 <div className="lg:col-span-3">
-  <div className="bg-white rounded-2xl p-4">
+ <div className="bg-white rounded-2xl p-4 shadow-xl border border-gray-100">
 
-    {/* Heading */}
-    <h3 className="text-2xl font-semibold text-navy-900 mb-4 text-center">
-      Order Summary
-    </h3>
+ {/* Heading */}
+ <h3 className="text-2xl font-semibold text-navy-900 mb-4 text-center border-b pb-3 border-peach-100">
+ Order Summary
+ </h3>
 
-    {/* Subtotal + GST + Grand Total + Proceed (All in One Row) */}
-    <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-peach-50 p-4 rounded-xl border border-peach-200">
+ {/* MAIN ROW FOR TOTALS AND BUTTON */}
+ <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-peach-50 p-4 rounded-xl border border-peach-200">
 
-      {/* Left Side: Amounts */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 text-sm text-navy-700">
+ {/* LEFT SIDE: All Amounts in a single responsive row (flex-wrap for safety, but primarily a row) */}
+ <div className="flex items-center justify-between w-full md:w-auto md:justify-start gap-4 text-sm text-navy-700">
 
-{/* Total Services */}
-<div className="flex flex-col">
-  <span className="font-medium">Total Services</span>
-  <span className="font-bold">{totalServiceCount}</span>
-</div>
+ {/* Total Services */}
+ <div className="flex flex-col items-center min-w-[50px] text-center">
+ <span className="font-medium text-xs sm:text-sm">Services</span>
+ <span className="text-black font-bold text-lg sm:text-1xl">{totalServiceCount}</span>
+ </div>
 
-<div className="hidden sm:block w-px h-10 bg-peach-300"></div>
+ <div className="w-px h-10 bg-peach-300"></div> {/* Separator */}
 
-        {/* Subtotal */}
-        <div className="flex flex-col">
-          <span className="font-medium">Subtotal</span>
-          <span className="font-bold">
-            ₹{subtotal.toLocaleString("en-IN")}
-          </span>
-        </div>
+ {/* Subtotal */}
+ <div className="flex flex-col items-center min-w-[70px] text-center">
+ <span className="font-medium text-xs sm:text-sm">Subtotal</span>
+ <span className="text-black font-bold text-lg sm:text-1xl">
+ ₹{subtotal.toLocaleString("en-IN")}
+ </span>
+ </div>
 
-        <div className="hidden sm:block w-px h-10 bg-peach-300"></div>
+ <div className="w-px h-10 bg-peach-300"></div> {/* Separator */}
 
-        {/* GST */}
-        <div className="flex flex-col">
-          <span className="font-medium">GST (18%)</span>
-          <span className="font-bold">
-            ₹{tax.toLocaleString("en-IN")}
-          </span>
-        </div>
+ {/* GST */}
+ <div className="flex flex-col items-center min-w-[60px] text-center">
+ <span className="font-medium text-xs sm:text-sm">GST (18%)</span>
+ <span className="text-black font-bold text-lg sm:text-1xl">
+ ₹{tax.toLocaleString("en-IN")}
+ </span>
+ </div>
 
-        <div className="hidden sm:block w-px h-10 bg-peach-300"></div>
+ <div className="w-px h-10 bg-peach-300"></div> {/* Separator */}
 
-        {/* Grand Total */}
-        <div className="flex flex-col">
-          <span className="font-medium">Grand Total</span>
-          <span className="text-navy-700 font-bold text-lg">
-            ₹{total.toLocaleString("en-IN")}
-          </span>
-        </div>
+ {/* Grand Total - Larger and most prominent */}
+ <div className="flex flex-col items-center min-w-[70px] text-center">
+ <span className="font-medium text-xs sm:text-sm text-navy-700">Grand Total</span>
+ <span className="text-black font-bold text-lg sm:text-1xl">
+ ₹{total.toLocaleString("en-IN")}
+ </span>
+ </div>
 
-      </div>
+ </div>
 
-      {/* Right Side: Proceed Button */}
-      <button
-        onClick={handleProceedToBooking}
-        disabled={isProcessing}
-        className="bg-peach-300 text-white px-6 py-2 rounded-lg text-base font-semibold 
-                   hover:bg-navy-700 transition-all shadow-md
-                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-      >
-        {isProcessing ? (
-          <div className="animate-spin rounded-full w-4 border-b-2 border-white"></div>
-        ) : (
-          "Proceed to Book"
-        )}
-      </button>
-    </div>
+ {/* Right Side: Proceed Button - Full width on small screens, fixed width on desktop */}
+ <button
+ onClick={handleProceedToBooking}
+ disabled={isProcessing}
+ className="w-full md:w-auto bg-gradient-to-r from-peach-300 to-navy-700 text-white px-6 py-2 rounded-xl text-lg font-bold 
+                   hover:from-peach-600 hover:to-navy-800 transition-all shadow-lg
+                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+ >
+ {isProcessing ? (
+ <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+ "Proceed to Book"
+ )}
+ </button>
+ </div>
 
-    {/* Add More Services */}
-    <div className="text-center mt-3">
-      <Link to="/services" className="text-peach-500 hover:text-navy-700 text-sm">
-        Add More Services
-      </Link>
-    </div>
+ {/* Add More Services */}
+ <div className="text-center mt-3">
+ <Link to="/services" className="text-navy-700 hover:text-peach-700 text-sm font-medium transition-colors">
+ <span className="border-b border-dashed border-navy-700 pb-0.5">Add More Services</span>
+ </Link>
+ </div>
 
-  </div>
-</div>
-
-
-
-         
+ </div>
+</div>   
         </div>
         {/* --- END MAIN GRID LAYOUT --- */}
 </div>

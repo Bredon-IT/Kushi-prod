@@ -83,19 +83,44 @@ const SignUp: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setErrors({}); // Clear previous errors before submission
 
     try {
+      // 1. Prepare payload with cleaned and constructed phone number
+      const fullPhoneNumber = `${countryCode}${formData.phone.replace(/\D/g, "")}`;
       const payload = {
-        ...formData,
-        phone: `${countryCode}${formData.phone}`,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: fullPhoneNumber, // Send the country code + 10 digits
+        password: formData.password,
+        // confirmPassword is only needed for client-side validation, so you can omit it here 
+        // unless your backend specifically requires it. Removed the comment to clean up the payload.
       };
 
+      // 2. Call the signup function
       const result = await signup(payload as any);
 
-      if (result && (result.ok || result.success)) navigate("/");
-      else setErrors({ email: result?.message || "Signup failed" });
-    } catch {
-      setErrors({ email: "Signup failed. Try again." });
+      if (result && (result.ok || result.success)) {
+        // Success
+        navigate("/");
+      } else {
+        // Failure: Handle specific backend validation errors
+        const errorMessage = result?.message || "Signup failed. Try again.";
+
+        // 3. Check the error message returned from the backend/API
+        if (errorMessage.includes("Email already registered")) {
+          setErrors({ email: errorMessage }); // Set error on email field
+        } else if (errorMessage.includes("Phone number already registered")) {
+          setErrors({ phone: errorMessage }); // Set error on phone field
+        } else {
+          // General error fallback (e.g., server issue, generic failure)
+          setErrors({ email: errorMessage });
+        }
+      }
+    } catch (error) {
+      // Catches network errors or unexpected exceptions
+      setErrors({ email: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
     }

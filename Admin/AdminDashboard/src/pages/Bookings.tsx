@@ -1,12 +1,13 @@
-// --- FULL UPDATED FILE (Single Save Status button; discount shows blank when 0) ---
 // File: src/pages/Bookings.tsx
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
 import BookingsAPIService from "../services/BookingAPIService";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import Global_API_BASE from "../services/GlobalConstants";
+import ReactDOM from "react-dom";
+import { useLocation } from "react-router-dom";
+
 
 import {
   Edit,
@@ -16,18 +17,32 @@ import {
   MapPin,
   X,
   UserCheck,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
 } from "lucide-react";
 
 /* ------------------------- Utilities / Types ------------------------- */
+
+// Safe parse booking_date to Date (returns null if invalid)
+const parseBookingDate = (raw?: string | null) => {
+  if (!raw) return null;
+  if (raw === "N/A" || raw.trim() === "") return null;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) {
+    // try parsing only date portion if format includes time
+    const dateOnly = raw.split("T")[0];
+    const d2 = new Date(dateOnly);
+    if (!isNaN(d2.getTime())) return d2;
+    return null;
+  }
+  return d;
+};
 
 const formatDateForDisplay = (rawDateString: string | undefined): string => {
   if (!rawDateString || rawDateString === "N/A") return "N/A";
   try {
     const date = new Date(rawDateString);
     if (isNaN(date.getTime())) return "N/A (Invalid Date)";
-
     return new Intl.DateTimeFormat("en-IN", {
       year: "numeric",
       month: "short",
@@ -107,6 +122,7 @@ interface EditModalProps {
     paymentStatus?: string
   ) => Promise<void>;
   onAssignWorkerImmediate: (bookingId: number, workerName: string) => Promise<void>;
+ onRemoveWorker: (bookingId: number, workerName: string) => Promise<void>; // <-- ADD THIS
 }
 
 const EditBookingModal: React.FC<EditModalProps> = ({
@@ -114,6 +130,7 @@ const EditBookingModal: React.FC<EditModalProps> = ({
   onClose,
   onCombinedUpdate,
   onAssignWorkerImmediate,
+  onRemoveWorker,
 }) => {
   // discount as string so it can be blank when 0
   const [discount, setDiscount] = useState<string>(
@@ -181,9 +198,22 @@ const EditBookingModal: React.FC<EditModalProps> = ({
   };
 
   // Remove local worker from UI (not calling API)
-  const handleRemoveLocalWorker = (idx: number) => {
-    setLocalWorkers((prev) => prev.filter((_, i) => i !== idx));
-  };
+ const handleRemoveLocalWorker = async (idx: number) => {
+  const workerToRemove = localWorkers[idx];
+  if (!workerToRemove) return;
+
+  setSaving(true);
+
+  try {
+    await onRemoveWorker(booking.booking_id, workerToRemove);
+
+    // Update only local UI inside modal
+    setLocalWorkers(prev => prev.filter((_, i) => i !== idx));
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   // Single Save Status -> calls all existing APIs + assign workers
   const handleSaveStatus = async () => {
@@ -208,6 +238,19 @@ const EditBookingModal: React.FC<EditModalProps> = ({
         isNaN(parsedDiscount) ? 0 : parsedDiscount,
         paymentStatusSelection
       );
+
+       window.dispatchEvent(
+      new CustomEvent("bookingUpdatedLive", {
+        detail: {
+          booking_id: booking.booking_id,
+          booking_status: statusSelection.toLowerCase(),
+          discount: isNaN(parsedDiscount) ? 0 : parsedDiscount,
+          paymentStatus: paymentStatusSelection,
+          workers: workersToSave
+        }
+      })
+    );
+ 
 
       // close modal after success
       onClose();
@@ -360,15 +403,181 @@ const EditBookingModal: React.FC<EditModalProps> = ({
   );
 };
 
-/* ------------------------- Main Bookings Page ------------------------- */
+/* -------------------------
+   CalendarPopup component
+   - simple, dependency-free calendar
+   - supports 'single' (pick a date) and 'month' (pick month-year) modes
+------------------------- */
+
+type CalendarMode = "single" | "month";
+interface CalendarPopupProps {
+  anchorRef?: React.RefObject<HTMLElement>;
+  initialDate?: Date | null;
+  mode?: CalendarMode;
+  onSelect: (d: Date | { month: number; year: number }) => void;
+  onClose: () => void;
+  minDate?: Date | null;
+  maxDate?: Date | null;
+}
+
+const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorRef, initialDate = null, mode = "single", onSelect, onClose, minDate = null, maxDate = null }) => {
+  const [displayMonth, setDisplayMonth] = useState<number>((initialDate || new Date()).getMonth());
+  const [displayYear, setDisplayYear] = useState<number>((initialDate || new Date()).getFullYear());
+  const popupRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node) && !(anchorRef && anchorRef.current && anchorRef.current.contains(e.target as Node))) {
+        onClose();
+      }
+    };
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose, anchorRef]);
+
+  useEffect(() => {
+    if (initialDate) {
+      setDisplayMonth(initialDate.getMonth());
+      setDisplayYear(initialDate.getFullYear());
+    }
+  }, [initialDate]);
+
+  const daysInMonth = (y: number, m: number) => {
+    return new Date(y, m + 1, 0).getDate();
+  };
+
+  const firstDayOfMonth = (y: number, m: number) => {
+    return new Date(y, m, 1).getDay(); // 0 = Sunday
+  };
+
+  const isDisabled = (d: Date) => {
+    if (minDate && d.getTime() < minDate.getTime()) return true;
+    if (maxDate && d.getTime() > maxDate.getTime()) return true;
+    return false;
+  };
+
+  const handlePrev = () => {
+    if (displayMonth === 0) {
+      setDisplayMonth(11);
+      setDisplayYear((y) => y - 1);
+    } else {
+      setDisplayMonth((m) => m - 1);
+    }
+  };
+  const handleNext = () => {
+    if (displayMonth === 11) {
+      setDisplayMonth(0);
+      setDisplayYear((y) => y + 1);
+    } else {
+      setDisplayMonth((m) => m + 1);
+    }
+  };
+
+  // month names
+  const months = [
+    "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  return (
+    <div ref={popupRef} className="absolute z-50 mt-2 right-0 sm:right-auto sm:left-0 bg-white border rounded-lg shadow-lg p-3 w-[320px] max-w-full">
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={handlePrev} className="px-2 py-1 rounded hover:bg-gray-100">{"<"}</button>
+        <div className="text-sm font-semibold">
+          {months[displayMonth]} {displayYear}
+        </div>
+        <button onClick={handleNext} className="px-2 py-1 rounded hover:bg-gray-100">{">"}</button>
+      </div>
+
+      {mode === "month" ? (
+        <div className="grid grid-cols-3 gap-1">
+          {months.map((m, idx) => (
+            <button
+              key={m}
+              className="py-2 rounded hover:bg-gray-100 text-sm"
+              onClick={() => onSelect({ month: idx, year: displayYear })}
+            >
+              {m}
+            </button>
+          ))}
+          <div className="col-span-3 mt-2 flex justify-between items-center">
+            <button className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => { setDisplayYear((y) => y - 1); }}>
+              Prev Year
+            </button>
+            <button className="px-2 py-1 rounded hover:bg-gray-100" onClick={() => { setDisplayYear((y) => y + 1); }}>
+              Next Year
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-7 gap-1 text-xs text-center text-gray-500 mb-1">
+            <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: firstDayOfMonth(displayYear, displayMonth) }).map((_, i) => (
+              <div key={"pad-" + i} />
+            ))}
+
+            {Array.from({ length: daysInMonth(displayYear, displayMonth) }).map((_, i) => {
+              const day = i + 1;
+              const d = new Date(displayYear, displayMonth, day, 12, 0, 0);
+              const disabled = isDisabled(d);
+              return (
+                <button
+                  key={day}
+                  onClick={() => !disabled && onSelect(d)}
+                  className={`py-2 rounded text-sm ${disabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+/* -------------------------
+   Main Bookings Page
+------------------------- */
 
 export function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "confirmed" | "completed" | "cancelled">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+  const location = useLocation();
+const autoBookingId = location.state?.bookingId || null;
+const autoOpenEdit = location.state?.openEdit || false;
+const [hasAutoOpened, setHasAutoOpened] = useState(false);
+ 
+ 
+ 
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+
+  // Date filter state (mirrors Inspection page)
+  type DateFilterOption = "all" | "today" | "yesterday" | "last7" | "thisMonth" | "custom" | "selectDate" | "selectMonth";
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>("all");
+  const [customFrom, setCustomFrom] = useState<string>("");
+  const [customTo, setCustomTo] = useState<string>("");
+
+  // single-date & month selection
+  const [selectedDate, setSelectedDate] = useState<string>(""); // yyyy-mm-dd
+  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
+
+  // calendar popup control
+  const singleDateAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [calendarMode, setCalendarMode] = useState<"single" | "month">("single");
+  const [calendarInitial, setCalendarInitial] = useState<Date | null>(null);
 
   const fetchBookings = useCallback(() => {
     setLoading(true);
@@ -417,6 +626,27 @@ export function Bookings() {
     fetchBookings();
   }, [fetchBookings]);
 
+ 
+  // Auto open edit modal after navigating from Dashboard
+useEffect(() => {
+  if (hasAutoOpened) return;        
+  if (!autoOpenEdit || !autoBookingId) return;
+ 
+  // Wait until bookings are loaded
+  if (bookings.length === 0) return;
+ 
+  const found = bookings.find(b => b.booking_id === autoBookingId);
+ 
+  if (found) {
+    setSelectedBooking(found);
+    setIsEditModalOpen(true);
+     setHasAutoOpened(true);
+  }
+}, [autoOpenEdit, autoBookingId, bookings]); 
+ 
+
+
+
   /* ------------------------- Existing API wrappers used by Save Status ------------------------- */
 
   // Update status endpoint (existing)
@@ -440,6 +670,45 @@ export function Bookings() {
       workername: workerName,
     });
   };
+
+
+  // REMOVE worker endpoint (ADD HERE)
+const removeWorkerApi = async (bookingId: number, workerName: string) => {
+  return axios.put(`${Global_API_BASE}/api/admin/${bookingId}/remove-worker`, {
+    workername: workerName,
+  });
+};
+
+
+const handleRemoveWorker = async (bookingId: number, workerName: string) => {
+  try {
+    await BookingsAPIService.removeWorker(bookingId, workerName);
+
+    // Update UI list
+    setBookings(prev =>
+      prev.map(b =>
+        b.booking_id === bookingId
+          ? { ...b, worker_assign: b.worker_assign.filter(w => w !== workerName) }
+          : b
+      )
+    );
+
+    // Update selected booking if modal is open
+    if (selectedBooking?.booking_id === bookingId) {
+      setSelectedBooking(prev =>
+        prev
+          ? {
+              ...prev,
+              worker_assign: prev.worker_assign.filter(w => w !== workerName),
+            }
+          : prev
+      );
+    }
+  } catch (err) {
+    console.error("Failed to remove worker:", err);
+  }
+};
+
 
   /* ------------------------- Combined update called by Save Status (calls existing APIs) ------------------------- */
   const handleCombinedUpdate = async (
@@ -561,24 +830,176 @@ export function Bookings() {
     }
   };
 
-  /* ------------------------- Render Bookings List ------------------------- */
+  /* -------------------------
+     Filtering pipeline:
+     1. status filter (all / pending / confirmed / completed / cancelled)
+     2. date filter (booking_date)
+     3. search filter (name, email, phone, id)
+  ------------------------- */
 
-  const handleEditClick = (booking: Booking) => {
-    setSelectedBooking(booking);
-    setIsEditModalOpen(true);
+  const filteredByStatus = useMemo(
+    () => bookings.filter((b) => (filter === "all" ? true : b.bookingStatus === filter)),
+    [bookings, filter]
+  );
+
+  const filteredByDate = useMemo(() => {
+    if (dateFilter === "all") return filteredByStatus;
+
+    const now = new Date();
+    const startOfDay = (d: Date) => {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    };
+    const endOfDay = (d: Date) => {
+      const x = new Date(d);
+      x.setHours(23, 59, 59, 999);
+      return x;
+    };
+
+    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const yStart = startOfDay(yesterday);
+    const yEnd = endOfDay(yesterday);
+
+    const last7Start = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6)); // last 7 days inclusive
+
+    const monthStart = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+    const monthEnd = endOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+
+    const inRange = (d: Date | null, s: Date, e: Date) => {
+      if (!d) return false;
+      return d.getTime() >= s.getTime() && d.getTime() <= e.getTime();
+    };
+
+    if (dateFilter === "custom") {
+      if (!customFrom && !customTo) return filteredByStatus;
+      const from = customFrom ? startOfDay(new Date(customFrom)) : new Date(-8640000000000000);
+      const to = customTo ? endOfDay(new Date(customTo)) : new Date(8640000000000000);
+      return filteredByStatus.filter((b) => {
+        const bd = parseBookingDate(b.booking_date);
+        return inRange(bd, from, to);
+      });
+    }
+
+    if (dateFilter === "today") {
+      return filteredByStatus.filter((b) => inRange(parseBookingDate(b.booking_date), todayStart, todayEnd));
+    }
+
+    if (dateFilter === "yesterday") {
+      return filteredByStatus.filter((b) => inRange(parseBookingDate(b.booking_date), yStart, yEnd));
+    }
+
+    if (dateFilter === "last7") {
+      return filteredByStatus.filter((b) => {
+        const bd = parseBookingDate(b.booking_date);
+        return bd ? bd.getTime() >= last7Start.getTime() && bd.getTime() <= todayEnd.getTime() : false;
+      });
+    }
+
+    if (dateFilter === "thisMonth") {
+      return filteredByStatus.filter((b) => inRange(parseBookingDate(b.booking_date), monthStart, monthEnd));
+    }
+
+    if (dateFilter === "selectDate") {
+      if (!selectedDate) return filteredByStatus;
+      const sel = startOfDay(new Date(selectedDate));
+      const selEnd = endOfDay(new Date(selectedDate));
+      return filteredByStatus.filter((b) => inRange(parseBookingDate(b.booking_date), sel, selEnd));
+    }
+
+    if (dateFilter === "selectMonth") {
+      if (!selectedMonth) return filteredByStatus;
+      const { month, year } = selectedMonth;
+      const start = startOfDay(new Date(year, month, 1));
+      const end = endOfDay(new Date(year, month + 1, 0));
+      return filteredByStatus.filter((b) => inRange(parseBookingDate(b.booking_date), start, end));
+    }
+
+    return filteredByStatus;
+  }, [filteredByStatus, dateFilter, customFrom, customTo, selectedDate, selectedMonth]);
+
+  const filtered = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return filteredByDate;
+    return filteredByDate.filter((b) => {
+      return (
+        (b.customer_name || "").toLowerCase().includes(term) ||
+        (b.customer_email || "").toLowerCase().includes(term) ||
+        (b.customer_number || "").toLowerCase().includes(term) ||
+        b.booking_id.toString().includes(term)
+      );
+    });
+  }, [filteredByDate, searchTerm]);
+
+  // pagination derived values
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+  // ensure page within range when filters change
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [totalPages, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, dateFilter, customFrom, customTo, searchTerm, selectedDate, selectedMonth]);
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilter(e.target.value as any);
+    setCurrentPage(1);
   };
 
-  const filteredByStatus = bookings.filter((b) => (filter === "all" ? true : b.bookingStatus === filter));
+  const handleDateFilterChange = (val: DateFilterOption) => {
+    setDateFilter(val);
+    setCurrentPage(1);
+    if (val !== "custom") {
+      setCustomFrom("");
+      setCustomTo("");
+    }
+    if (val !== "selectDate") {
+      setSelectedDate("");
+    }
+    if (val !== "selectMonth") {
+      setSelectedMonth(null);
+    }
+  };
 
-  const filtered = filteredByStatus.filter((b) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (b.customer_name || "").toLowerCase().includes(term) ||
-      (b.customer_email || "").toLowerCase().includes(term) ||
-      (b.customer_number || "").toLowerCase().includes(term) ||
-      b.booking_id.toString().includes(term)
-    );
-  });
+  const handleCustomFromChange = (val: string) => {
+    setCustomFrom(val);
+    setCurrentPage(1);
+  };
+
+  const handleCustomToChange = (val: string) => {
+    setCustomTo(val);
+    setCurrentPage(1);
+  };
+
+  const handleCalendarSelect = (d: Date | { month: number; year: number }) => {
+    if (calendarMode === "single") {
+      if (d instanceof Date) {
+        const iso = d.toISOString().slice(0, 10);
+        setSelectedDate(iso);
+        setDateFilter("selectDate");
+        setCalendarInitial(d);
+        setIsCalendarOpen(false);
+        setCurrentPage(1);
+      }
+    } else {
+      const payload = d as { month: number; year: number };
+      setSelectedMonth(payload);
+      setDateFilter("selectMonth");
+      setIsCalendarOpen(false);
+      setCurrentPage(1);
+    }
+  };
 
   if (loading)
     return (
@@ -610,25 +1031,83 @@ export function Bookings() {
                 />
               </div>
 
-              <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-4 py-2 border rounded-lg">
-                <option value="all">Show All</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <select value={filter} onChange={handleFilterChange} className="px-4 py-2 border rounded-lg">
+                  <option value="all">Show All</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+
+                <select
+                  value={dateFilter}
+                  onChange={(e) => handleDateFilterChange(e.target.value as DateFilterOption)}
+                  className="px-3 py-2 rounded-lg border border-gray-300 bg-white"
+                >
+                  <option value="all">All Dates</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last7">Last 7 Days</option>
+                  <option value="thisMonth">This Month</option>
+                 
+                  <option value="custom">Custom Range</option>
+                </select>
+
+                {dateFilter === "custom" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={customFrom}
+                      onChange={(e) => handleCustomFromChange(e.target.value)}
+                      className="px-2 py-1 border rounded-lg"
+                    />
+                    <span className="text-sm text-gray-500">to</span>
+                    <input
+                      type="date"
+                      value={customTo}
+                      onChange={(e) => handleCustomToChange(e.target.value)}
+                      className="px-2 py-1 border rounded-lg"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Top pagination info and simple prev/next */}
+            {filtered.length > 0 && (
+              <div className="flex justify-between items-center mt-3 text-sm text-gray-600">
+                <div>
+                  Showing{" "}
+                  <span className="font-semibold">{filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span>
+                  –<span className="font-semibold">{Math.min(currentPage * pageSize, filtered.length)}</span>{" "}
+                  of <span className="font-semibold">{filtered.length}</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+                    Previous
+                  </Button>
+                  <div className="text-gray-700">
+                    Page <b>{currentPage}</b> of <b>{totalPages}</b>
+                  </div>
+                  <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bookings List */}
           <div className="flex flex-col gap-3">
-            {filtered.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <div className="text-center p-10 text-gray-500 border-2 border-dashed rounded-xl bg-white shadow-inner">
                 <X className="w-10 h-10 mx-auto mb-2" />
                 <p>No bookings found.</p>
               </div>
             ) : (
-              filtered.map((b) => (
+              paginatedData.map((b) => (
                 <Card
                   key={b.booking_id}
                   className="p-4 rounded-xl shadow-lg border-l-4 border-navy-700 bg-white md:flex md:justify-between md:items-center hover:shadow-2xl transition"
@@ -643,7 +1122,7 @@ export function Bookings() {
                     <div className="text-sm text-gray-600">
                       <div className="font-semibold">{b.booking_service_name}</div>
                       <div className="text-xs">
-                        <Calendar className="inline w-3 h-3 mr-1" />
+                        <CalendarIcon className="inline w-3 h-3 mr-1" />
                         {formatDateForDisplay(b.booking_date)} at{" "}
                         <Clock className="inline w-3 h-3 mr-1 ml-1" />
                         {b.booking_time}
@@ -669,13 +1148,36 @@ export function Bookings() {
                     </div>
                   </div>
 
-                  <Button className="mt-3 sm:mt-0 sm:ml-4 bg-navy-600 hover:bg-navy-700 text-sm py-2 px-4" onClick={() => handleEditClick(b)}>
+                  <Button className="mt-3 sm:mt-0 sm:ml-4 bg-navy-600 hover:bg-navy-700 text-sm py-2 px-4" onClick={() => { setSelectedBooking(b); setIsEditModalOpen(true); }}>
                     <Edit className="w-4 h-4 mr-2" /> Update
                   </Button>
                 </Card>
               ))
             )}
           </div>
+
+          {/* Bottom Pagination (full page numbers) */}
+          {filtered.length > pageSize && (
+            <div className="flex justify-center mt-6 gap-2 flex-wrap">
+              <Button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="px-4 py-2">
+                Previous
+              </Button>
+
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 ${currentPage === i + 1 ? "bg-navy-700 text-white" : ""}`}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+
+              <Button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="px-4 py-2">
+                Next
+              </Button>
+            </div>
+          )}
 
           {/* Edit Modal */}
           {isEditModalOpen && selectedBooking && (
@@ -684,6 +1186,7 @@ export function Bookings() {
               onClose={() => setIsEditModalOpen(false)}
               onCombinedUpdate={handleCombinedUpdate}
               onAssignWorkerImmediate={handleAssignWorkerImmediate}
+              onRemoveWorker={handleRemoveWorker}
             />
           )}
         </div>
@@ -691,3 +1194,5 @@ export function Bookings() {
     </div>
   );
 }
+
+export default Bookings;
