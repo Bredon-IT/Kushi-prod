@@ -61,9 +61,8 @@ const StarRatingDisplay: React.FC<{ rating: number }> = ({ rating }) => (
         {[1, 2, 3, 4, 5].map((star) => (
             <Star
                 key={star}
-                className={`w-4 h-4 transition-colors ${
-                    star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
-                }`}
+                className={`w-4 h-4 transition-colors ${star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
+                    }`}
             />
         ))}
     </div>
@@ -131,7 +130,7 @@ const OrderHistory: React.FC = () => {
             try {
                 setLoading(true);
                 const response = await axios.get(
-                     Global_API_BASE + `/api/auth/bookings/logged-in?email=${userEmail}`,
+                    Global_API_BASE + `/api/auth/bookings/logged-in?email=${userEmail}`,
                     { withCredentials: true }
                 );
                 const normalized = response.data.map((o: any) => ({
@@ -139,8 +138,8 @@ const OrderHistory: React.FC = () => {
                     worker_assign: Array.isArray(o.worker_assign)
                         ? o.worker_assign
                         : o.worker_assign
-                        ? [o.worker_assign]
-                        : [],
+                            ? [o.worker_assign]
+                            : [],
                     canceledBy: o.canceledBy || "",
                     cancellation_reason: o.cancellation_reason || "",
                     services: o.services || [],
@@ -157,7 +156,7 @@ const OrderHistory: React.FC = () => {
     }, [userEmail]);
 
     // --- Handlers ---
-    
+
     // Handler for Card *body* click (navigates to service description/details)
     const handleServiceClick = (order: Order) => {
         if (order.services && order.services.length > 1) {
@@ -167,11 +166,11 @@ const OrderHistory: React.FC = () => {
             // Navigate directly to service details
             const serviceIdentifier =
                 order.services && order.services.length > 0
-                ? (typeof order.services[0] === 'string'
-                    ? order.services[0]
-                    : (order.services[0] as Service).serviceId || (order.services[0] as Service).serviceName
+                    ? (typeof order.services[0] === 'string'
+                        ? order.services[0]
+                        : (order.services[0] as Service).serviceId || (order.services[0] as Service).serviceName
                     )
-                : order.booking_service_name;
+                    : order.booking_service_name;
 
             // Simple sanitation for URL path
             const safeIdentifier = serviceIdentifier.replace(/\s+/g, '-').toLowerCase();
@@ -181,11 +180,11 @@ const OrderHistory: React.FC = () => {
             });
         }
     };
-    
+
 
     useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, []);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
 
 
 
@@ -212,7 +211,7 @@ const OrderHistory: React.FC = () => {
         if (!currentOrder) return;
         try {
             await axios.put(
-                 Global_API_BASE + `/api/auth/bookings/${currentOrder.booking_id}/rating`,
+                Global_API_BASE + `/api/auth/bookings/${currentOrder.booking_id}/rating`,
                 { rating, feedback },
                 { withCredentials: true }
             );
@@ -236,7 +235,7 @@ const OrderHistory: React.FC = () => {
         }
         try {
             await axios.put(
-                 Global_API_BASE + `/api/bookings/${currentOrder.booking_id}/status`,
+                Global_API_BASE + `/api/bookings/${currentOrder.booking_id}/status`,
                 { status: "cancelled", canceledBy: "customer", cancellation_reason: cancelReason },
                 { withCredentials: true }
             );
@@ -287,9 +286,9 @@ const OrderHistory: React.FC = () => {
                 {/* VIBRANT PAGE HEADER */}
                 <div className="bg-gradient-to-r from-peach-300 to-navy-700 p-6 rounded-2xl shadow-xl border-l-8 border-indigo-600/90 flex items-center">
                     <h1 className="text-3xl font-bold text-gray-900">Your Service History </h1>
-                   
 
-                   
+
+
                     <p className="text-gray-500 text-sm ml-4 hidden sm:block">{orders.length} total services found.</p>
                 </div>
 
@@ -317,11 +316,11 @@ const OrderHistory: React.FC = () => {
                                     className="p-0 shadow-lg border border-gray-200 bg-white hover:border-indigo-400 transition-all duration-300 overflow-hidden"
                                 >
                                     {/* MAIN ROW: Service Name, Details, Amount, and Action Button */}
-                                    <div 
+                                    <div
                                         className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 cursor-pointer"
                                         onClick={() => handleServiceClick(order)} // Click the body navigates to Service Details
                                     >
-                                        
+
                                         {/* 1. SERVICE NAME & STATUS (Left) */}
                                         <div className="flex-1 min-w-0 mb-3 sm:mb-0 sm:mr-4">
                                             <div className="flex items-center space-x-2">
@@ -370,7 +369,7 @@ const OrderHistory: React.FC = () => {
                                                     <Button
                                                         variant="danger-outline"
                                                         size="sm"
-                                                        onClick={(e) => { e.stopPropagation(); openCancelModal(order); }}
+                                                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); openCancelModal(order); }}
                                                         className="text-red-600 border-red-300 hover:bg-red-50 font-semibold text-xs flex-shrink-0"
                                                     >
                                                         <Trash2 className="w-3 h-3 mr-1" /> Cancel
@@ -378,13 +377,14 @@ const OrderHistory: React.FC = () => {
                                                 )}
 
                                                 {/* View Details Button - MODIFIED CLICK HANDLER */}
+                                                {/* View Details Button - MODIFIED CLICK HANDLER */}
                                                 <Button
                                                     variant="secondary"
                                                     size="sm"
                                                     className="bg-gray-100 text-gray-600 hover:bg-gray-200 flex-shrink-0"
                                                     // *** MODIFIED CLICK HANDLER ***
-                                                    onClick={(e) => { 
-                                                        e.stopPropagation(); 
+                                                    onClick={(e: React.MouseEvent) => {
+                                                        e.stopPropagation();
                                                         handleOrderDetailsClick(order.booking_id); // Navigate to new Order Details page
                                                     }}
                                                 >
@@ -396,7 +396,7 @@ const OrderHistory: React.FC = () => {
 
                                     {/* FOOTER ROW: Worker/Rating/Action Buttons/Cancellation Info */}
                                     <div className="bg-gray-50 p-3 sm:p-4 border-t border-gray-200 flex flex-wrap justify-between items-center gap-2">
-                                        
+
                                         {/* Worker & Rating Status */}
                                         <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm">
                                             {order.worker_assign && order.worker_assign.length > 0 && (
@@ -436,7 +436,7 @@ const OrderHistory: React.FC = () => {
                                         <div className="flex flex-wrap gap-2 justify-end">
                                             {isCompleted && !order.rating && (
                                                 <Button
-                                                    onClick={(e) => { e.stopPropagation(); openRatingModal(order); }}
+                                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); openRatingModal(order); }}
                                                     size="sm"
                                                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs"
                                                 >
@@ -447,7 +447,7 @@ const OrderHistory: React.FC = () => {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={(e) => { e.stopPropagation(); openRatingModal(order); }}
+                                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); openRatingModal(order); }}
                                                     className="text-indigo-600 border-indigo-300 hover:bg-indigo-50 font-semibold text-xs"
                                                 >
                                                     <MessageSquare className="w-3 h-3 mr-1" /> View Feedback

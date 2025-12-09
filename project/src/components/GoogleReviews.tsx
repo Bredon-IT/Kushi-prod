@@ -1,19 +1,34 @@
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
+import Global_API_BASE from "../services/GlobalConstants";
+
+interface Review {
+  profile_photo_url?: string;
+  author_name: string;
+  relative_time_description: string;
+  rating: number;
+  text: string;
+}
 
 export default function GoogleReviews() {
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [rating] = useState(4.8);
   const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
     const fetchReviews = async () => {
-      const res = await fetch("http://localhost:8082/api/reviews");
-      const data = await res.json();
+      try {
+        const res = await fetch(`${Global_API_BASE}/api/reviews`);
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        const data = await res.json();
 
-      const googleReviews = data.result?.reviews || [];
-      setReviews(googleReviews);
-      setTotalReviews(googleReviews.length);
+        const googleReviews = data.result?.reviews || [];
+        setReviews(googleReviews);
+        setTotalReviews(googleReviews.length);
+      } catch (error) {
+        console.error("Error fetching Google Reviews:", error);
+        // Fallback or mock data could go here
+      }
     };
 
     fetchReviews();
@@ -41,7 +56,14 @@ export default function GoogleReviews() {
                   {/* Reviewer */}
                   <div className="flex items-center mb-3">
                     <img
-                      src={review.profile_photo_url || "/default-user.png"}
+                      src={review.profile_photo_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(review.author_name) + "&background=random"}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== "/lady-avatar.png") {
+                          target.src = "/lady-avatar.png";
+                        }
+                      }}
                       className="w-10 h-10 rounded-full border mr-3"
                       alt={review.author_name}
                     />
