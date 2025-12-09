@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo  } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, User, Phone, Mail, CheckCircle, ArrowLeft, ArrowRight, Star, Wrench, Trash2, Plus } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone, Mail, CheckCircle,ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Star, Wrench, Trash2, Plus } from 'lucide-react';
 import { BookingAPIService } from '../services/BookingAPIService'; // Assuming this service exists
 import { useAuth } from '../contexts/AuthContext'; // Assuming this context exists
 import Global_API_BASE from '../services/GlobalConstants';
@@ -205,6 +205,11 @@ const Booking: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth(); // Assuming useAuth provides user data
+
+  const miniRef = useRef<HTMLDivElement>(null);
+const similarRef = useRef<HTMLDivElement>(null);
+const otherRef = useRef<HTMLDivElement>(null);
+
  
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
  
@@ -381,6 +386,37 @@ useEffect(() => {
   }, [cartItems]);
  
   // --- END: Lifecycle and Service Fetching ---
+
+ useEffect(() => {
+  if (cartItems.length > 0 && filteredMiniServices.length > 0 && miniRef.current) {
+    initScrollPosition(miniRef);
+  }
+}, [cartItems.length, filteredMiniServices.length]);
+
+useEffect(() => {
+  if (similarServices.length > 0 && similarRef.current) {
+    initScrollPosition(similarRef);
+  }
+}, [similarServices.length]);
+
+
+useEffect(() => {
+  if (!otherRef.current) return;
+  if (allServices.length === 0 || cartItems.length === 0) return;
+
+  const cartCategories = new Set(cartItems.map(ci => ci.category));
+  const cartIds = new Set(cartItems.map(ci => ci.id));
+
+  const hasOtherServices = allServices.some(
+    s => !cartCategories.has(s.category) && !cartIds.has(s.id)
+  );
+
+  if (hasOtherServices) {
+    initScrollPosition(otherRef);
+  }
+}, [allServices.length, cartItems.length]);
+
+
  
  const handleRemoveItem = (cartItemId: string) => {
   setCartItems(currentCart => {
@@ -655,7 +691,25 @@ if (!fullName) {
       </div>
     );
   }
- 
+
+  
+ const initScrollPosition = (ref: React.RefObject<HTMLDivElement>) => {
+  if (!ref.current) return;
+
+  // Move scroll to middle so left & right both work immediately
+  ref.current.scrollLeft = ref.current.scrollWidth / 3;
+};
+
+
+
+  const scrollLeft = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: -300, behavior: "smooth" });
+};
+
+const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: 300, behavior: "smooth" });
+};
+
  
 return (
   <div className="bg-white py-2 w-full">
@@ -706,7 +760,7 @@ return (
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-peach-600 font-semibold text-base">
-                        ₹{item.price.toLocaleString("en-IN")}
+                        ₹{Number(item.price || 0).toLocaleString("en-IN")}
                       </span>
                       <button
                         type="button"
@@ -855,7 +909,8 @@ return (
               >
                 {isLoading
                   ? "Processing..."
-                  : `Confirm Booking (₹${totalAmount.toLocaleString("en-IN")})`}
+                  : `Confirm Booking (₹${Number(totalAmount || 0).toLocaleString("en-IN")})
+`}
               </button>
             </div>
           </form>
@@ -910,7 +965,8 @@ return (
               </div>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <span className="text-[16px] font-bold text-peach-700">₹{item.price.toLocaleString("en-IN")}</span>
+              <span className="text-[16px] font-bold text-peach-700">₹{Number(item.price || 0).toLocaleString("en-IN")}
+</span>
               <button
                 type="button"
                 onClick={() => handleRemoveItem(item.cartItemId)}
@@ -939,9 +995,9 @@ return (
 
     {/* Totals Section */}
     <div className="bg-white border border-peach-200 rounded-xl p-3 mb-3 shadow-inner text-base font-medium text-gray-800 space-y-[3px]">
-      <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toLocaleString("en-IN")}</span></div>
-      <div className="flex justify-between text-green-700"><span>Discount</span><span>-₹{promoDiscount.toLocaleString("en-IN")}</span></div>
-      <div className="flex justify-between"><span>GST (18%)</span><span>₹{tax.toLocaleString("en-IN")}</span></div>
+      <div className="flex justify-between"><span>Subtotal</span><span>₹{Number(subtotal || 0).toLocaleString("en-IN")}</span></div>
+      <div className="flex justify-between text-green-700"><span>Discount</span><span>-₹{Number(promoDiscount || 0).toLocaleString("en-IN")}</span></div>
+      <div className="flex justify-between"><span>GST (18%)</span><span>₹{Number(totalAmount || 0).toLocaleString("en-IN")}</span></div>
       <div className="flex justify-between font-semibold border-t border-gray-300 pt-2 text-lg text-navy-900">
         <span>Total</span>
         <span className="text-peach-600 font-extrabold">₹{totalAmount.toLocaleString("en-IN")}</span>
@@ -962,8 +1018,8 @@ return (
  
  
  
-    {/* --- MINI SERVICES SECTION (shows only remaining mini services not in cart) --- */}
-   {/* --- MINI SERVICES SECTION (Updated to New Card Design) --- */}
+   
+   {/* MINI SERVICES SECTION */}
 {cartItems.length > 0 && filteredMiniServices.length > 0 && (
   <div className="mt-2 mb-8 w-full">
  
@@ -988,7 +1044,31 @@ return (
     </div>
  
     {/* Sliding Container */}
-    <div className="mini-marquee-container flex overflow-hidden relative py-1">
+    <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(miniRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(miniRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={miniRef}
+    className="mini-marquee-container flex overflow-hidden relative py-1"
+  >
+
       <div className="flex mini-marquee-track" style={{ width: "300%" }}>
        
         {[...filteredMiniServices, ...filteredMiniServices, ...filteredMiniServices].map(
@@ -1018,7 +1098,7 @@ return (
                 <div className="flex items-center justify-between">
                  
                   <div className="text-xl font-bold text-peach-600">
-                    ₹{service.price.toLocaleString("en-IN")}
+                   ₹{Number(service.price || 0).toLocaleString("en-IN")}
                   </div>
  
                   <button
@@ -1041,6 +1121,7 @@ return (
  
       </div>
     </div>
+  </div>
   </div>
 )}
 {/* --- END MINI SERVICES SECTION --- */}
@@ -1071,7 +1152,31 @@ return (
                 </h4>
             </div>
  
-            <div className="marquee-container flex overflow-hidden relative py-1">
+           <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(similarRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(similarRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={similarRef}
+    className="marquee-container flex overflow-hidden relative py-1"
+  >
+
                 <div
                     className="flex animate-marquee-seamless hover:pause"
                     // Keep 300% for the original similar services section for a smooth look
@@ -1126,6 +1231,7 @@ return (
                 </div>
             </div>
         </div>
+        </div>
     )}
     {/* --- END SIMILAR SERVICES --- */}
  
@@ -1172,7 +1278,31 @@ return (
       `}</style>
  
       {/* Sliding Container */}
-      <div className="other-services-container overflow-hidden py-1">
+    <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(otherRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(otherRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={otherRef}
+    className="other-services-container overflow-hidden py-1"
+  >
+
         <div className="flex other-services-track" style={{ width: "220%" }}>
  
           {[...limitedList, ...limitedList].map((service, index) => (
@@ -1224,7 +1354,7 @@ return (
           ))}
         </div>
       </div>
- 
+ </div>
     </div>
   );
 })()}
