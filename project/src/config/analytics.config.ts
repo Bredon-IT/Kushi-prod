@@ -1,5 +1,8 @@
 // Analytics Configuration
 // Automatically fetches tracking IDs from AWS SSM Parameter Store at runtime
+import Global_API_BASE from "../services/GlobalConstants";
+
+
 
 interface AnalyticsConfig {
   googleAnalyticsId: string;
@@ -16,9 +19,9 @@ const fetchAnalyticsConfig = async (): Promise<AnalyticsConfig> => {
   }
 
   try {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const apiBase = import.meta.env.VITE_API_BASE_URL || Global_API_BASE;
     const response = await fetch(`${apiBase}/api/config/analytics`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch analytics config');
     }
@@ -26,18 +29,18 @@ const fetchAnalyticsConfig = async (): Promise<AnalyticsConfig> => {
     const data = await response.json();
     cachedConfig = {
       googleAnalyticsId: data.googleAnalyticsId || 'G-XXXXXXXXXX',
-      facebookPixelId: data.facebookPixelId || 'YOUR_PIXEL_ID',
+      facebookPixelId: data.facebookPixelId || '2269293163517834',
       isProduction: import.meta.env.MODE === 'production',
     };
 
     return cachedConfig;
   } catch (error) {
     console.warn('Failed to fetch analytics config from SSM, using defaults:', error);
-    
+
     // Fallback to environment variables if SSM fetch fails
     cachedConfig = {
       googleAnalyticsId: import.meta.env.VITE_GA_TRACKING_ID || 'G-XXXXXXXXXX',
-      facebookPixelId: import.meta.env.VITE_FB_PIXEL_ID || 'YOUR_PIXEL_ID',
+      facebookPixelId: import.meta.env.VITE_FB_PIXEL_ID || '2269293163517834',
       isProduction: import.meta.env.MODE === 'production',
     };
 
@@ -61,7 +64,7 @@ export const getAnalyticsConfig = (): AnalyticsConfig => {
     // Return defaults if not initialized yet
     return {
       googleAnalyticsId: import.meta.env.VITE_GA_TRACKING_ID || 'G-XXXXXXXXXX',
-      facebookPixelId: import.meta.env.VITE_FB_PIXEL_ID || 'YOUR_PIXEL_ID',
+      facebookPixelId: import.meta.env.VITE_FB_PIXEL_ID || '2269293163517834',
       isProduction: import.meta.env.MODE === 'production',
     };
   }
