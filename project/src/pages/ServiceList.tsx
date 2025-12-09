@@ -113,7 +113,7 @@ useEffect(() => {
                   </span>
                 </div>
  
-                <p className="text-[12px] text-gray-600 h-8 overflow-hidden mb-1">
+                <p className="text-[10.5px] text-gray-600 h-8 overflow-hidden mb-1">
                   {service.description}
                 </p>
  
