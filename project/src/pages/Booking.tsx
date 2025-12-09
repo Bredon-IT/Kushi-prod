@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, User, Phone, Mail, CheckCircle, ArrowLeft, ArrowRight, Star, Wrench, Trash2, Plus } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone,ChevronLeft, ChevronRight, Mail, CheckCircle, ArrowLeft, ArrowRight, Star, Wrench, Trash2, Plus } from 'lucide-react';
 import { BookingAPIService } from '../services/BookingAPIService'; // Assuming this service exists
 import { useAuth } from '../contexts/AuthContext'; // Assuming this context exists
 import Global_API_BASE from '../services/GlobalConstants';
@@ -208,6 +208,11 @@ const Booking: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth(); // Assuming useAuth provides user data
 
+  const miniRef = useRef<HTMLDivElement>(null);
+const similarRef = useRef<HTMLDivElement>(null);
+const otherRef = useRef<HTMLDivElement>(null);
+
+
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // We read the navigation state once for initialization
@@ -383,6 +388,38 @@ const Booking: React.FC = () => {
   }, [cartItems]);
 
   // --- END: Lifecycle and Service Fetching ---
+
+
+  useEffect(() => {
+  if (cartItems.length > 0 && filteredMiniServices.length > 0 && miniRef.current) {
+    initScrollPosition(miniRef);
+  }
+}, [cartItems.length, filteredMiniServices.length]);
+
+useEffect(() => {
+  if (similarServices.length > 0 && similarRef.current) {
+    initScrollPosition(similarRef);
+  }
+}, [similarServices.length]);
+
+
+useEffect(() => {
+  if (!otherRef.current) return;
+  if (allServices.length === 0 || cartItems.length === 0) return;
+
+  const cartCategories = new Set(cartItems.map(ci => ci.category));
+  const cartIds = new Set(cartItems.map(ci => ci.id));
+
+  const hasOtherServices = allServices.some(
+    s => !cartCategories.has(s.category) && !cartIds.has(s.id)
+  );
+
+  if (hasOtherServices) {
+    initScrollPosition(otherRef);
+  }
+}, [allServices.length, cartItems.length]);
+
+
 
   const handleRemoveItem = (cartItemId: string) => {
     setCartItems(currentCart => {
@@ -657,6 +694,26 @@ const Booking: React.FC = () => {
       </div>
     );
   }
+
+
+   const initScrollPosition = (ref: React.RefObject<HTMLDivElement>) => {
+  if (!ref.current) return;
+
+  // Move scroll to middle so left & right both work immediately
+  ref.current.scrollLeft = ref.current.scrollWidth / 3;
+};
+
+
+
+  const scrollLeft = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: -300, behavior: "smooth" });
+};
+
+const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: 300, behavior: "smooth" });
+};
+
+ 
 
 
   return (
@@ -964,7 +1021,7 @@ const Booking: React.FC = () => {
 
 
 
-      {/* --- MINI SERVICES SECTION (shows only remaining mini services not in cart) --- */}
+      
       {/* --- MINI SERVICES SECTION (Updated to New Card Design) --- */}
       {cartItems.length > 0 && filteredMiniServices.length > 0 && (
         <div className="mt-2 mb-8 w-full">
@@ -990,7 +1047,31 @@ const Booking: React.FC = () => {
           </div>
 
           {/* Sliding Container */}
-          <div className="mini-marquee-container flex overflow-hidden relative py-1">
+         <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(miniRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(miniRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={miniRef}
+    className="mini-marquee-container flex overflow-hidden relative py-1"
+  >
+
             <div className="flex mini-marquee-track" style={{ width: "300%" }}>
 
               {[...filteredMiniServices, ...filteredMiniServices, ...filteredMiniServices].map(
@@ -1044,6 +1125,7 @@ const Booking: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       )}
       {/* --- END MINI SERVICES SECTION --- */}
 
@@ -1073,7 +1155,32 @@ const Booking: React.FC = () => {
             </h4>
           </div>
 
-          <div className="marquee-container flex overflow-hidden relative py-1">
+          <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(similarRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(similarRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={similarRef}
+    className="marquee-container flex overflow-hidden relative py-1"
+  >
+
+
             <div
               className="flex animate-marquee-seamless hover:pause"
               // Keep 300% for the original similar services section for a smooth look
@@ -1128,6 +1235,7 @@ const Booking: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       )}
       {/* --- END SIMILAR SERVICES --- */}
 
@@ -1174,7 +1282,32 @@ const Booking: React.FC = () => {
       `}</style>
 
             {/* Sliding Container */}
-            <div className="other-services-container overflow-hidden py-1">
+            <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(otherRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(otherRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+      bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+      hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={otherRef}
+    className="other-services-container overflow-hidden py-1"
+  >
+
+
               <div className="flex other-services-track" style={{ width: "220%" }}>
 
                 {[...limitedList, ...limitedList].map((service, index) => (
@@ -1226,7 +1359,7 @@ const Booking: React.FC = () => {
                 ))}
               </div>
             </div>
-
+          </div>
           </div>
         );
       })()}

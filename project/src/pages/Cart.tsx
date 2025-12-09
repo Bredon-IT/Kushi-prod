@@ -1,7 +1,7 @@
 // ...existing code...
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useRef} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Minus, Trash2, ShoppingCart, ArrowLeft, Star, Calendar, Clock } from 'lucide-react';
+import { Plus, Minus, Trash2,  ChevronLeft, ChevronRight,ShoppingCart, ArrowLeft, Star, Calendar, Clock } from 'lucide-react';
 import Global_API_BASE from '../services/GlobalConstants';
 
 // --- INTERFACE DEFINITIONS ---
@@ -163,6 +163,11 @@ const Cart: React.FC = () => {
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const miniRef = useRef<HTMLDivElement>(null);
+const similarRef = useRef<HTMLDivElement>(null);
+const otherRef = useRef<HTMLDivElement>(null);
+
+
   // Read More / Read Less state per cart item
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
 
@@ -323,6 +328,28 @@ const Cart: React.FC = () => {
   }, []);
 
 
+  useEffect(() => {
+  if (miniRef.current && mockMiniServices.length > 0) {
+    initScrollPosition(miniRef);
+  }
+}, [mockMiniServices.length]);
+
+useEffect(() => {
+  if (similarRef.current && similarServices.length > 0) {
+    initScrollPosition(similarRef);
+  }
+}, [similarServices.length]);
+
+useEffect(() => {
+  if (otherRef.current && allServices.length > 0) {
+    initScrollPosition(otherRef);
+  }
+}, [allServices.length]);
+
+
+
+
+
   const handleEditCartItem = (cartItem: CartItem, service: Service) => {
     const slug = service.subcategory.toLowerCase().replace(/\s/g, "-");
 
@@ -371,6 +398,25 @@ const Cart: React.FC = () => {
       </div>
     );
   }
+
+
+  const initScrollPosition = (ref: React.RefObject<HTMLDivElement>) => {
+  if (!ref.current) return;
+
+  // ✅ move scroll to middle so left & right both work
+  ref.current.scrollLeft = ref.current.scrollWidth / 3;
+};
+
+
+
+const scrollLeft = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: -300, behavior: "smooth" });
+};
+
+const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: 300, behavior: "smooth" });
+};
+
 
   // --- MAIN CART VIEW ---
   return (
@@ -596,7 +642,31 @@ const Cart: React.FC = () => {
             </div>
 
             {/* Carousel track container */}
-            <div className="marquee-container flex overflow-hidden relative py-4">
+            <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(miniRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+               bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+               hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(miniRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+               bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+               hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={miniRef}
+    className="marquee-container flex overflow-hidden relative py-4"
+  >
+
               {/* Inner container: 300% width for seamless loop */}
               <div className="flex animate-marquee-seamless" style={{ width: '300%' }}>
 
@@ -660,6 +730,7 @@ const Cart: React.FC = () => {
               </div>
             </div>
           </div>
+          </div>
         );
       })()}
       {/* --- END NEW MINI SERVICES SECTION --- */}
@@ -692,7 +763,32 @@ const Cart: React.FC = () => {
           </div>
 
           {/* Carousel track container */}
-          <div className="marquee-container flex overflow-hidden relative py-4">
+          <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(similarRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+               bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+               hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(similarRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+               bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+               hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={similarRef}
+    className="marquee-container flex overflow-hidden relative py-4"
+  >
+
+
 
             {/* Inner container: 300% width for seamless loop */}
             <div className="flex animate-marquee-seamless" style={{ width: '300%' }}>
@@ -746,6 +842,7 @@ const Cart: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       )}
       {/* --- END SIMILAR SERVICES CAROUSEL --- */}
       {/* OTHER SERVICES */}
@@ -787,7 +884,32 @@ const Cart: React.FC = () => {
       `}</style>
 
             {/* Marquee Container */}
-            <div className="other-services-container overflow-hidden py-4">
+            <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(otherRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20
+               bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+               hover:bg-peach-200 transition"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(otherRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20
+               bg-white/90 backdrop-blur rounded-full p-3 shadow-lg
+               hover:bg-peach-200 transition"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div
+    ref={otherRef}
+    className="other-services-container overflow-hidden py-4"
+  >
+
+
               <div className="flex other-services-track" style={{ width: "220%" }}>
 
                 {[...uniqueServices, ...uniqueServices].map((service, idx) => (
@@ -841,6 +963,7 @@ const Cart: React.FC = () => {
               </div>
             </div>
           </div>
+          </div>
         );
       })()}
       {/*  END OTHER SERVICES SECTION  */}
@@ -849,4 +972,3 @@ const Cart: React.FC = () => {
 };
 
 export default Cart;
-
