@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Star,
   ArrowLeft,
+   ChevronLeft, 
+   ChevronRight,
   ArrowRight,
   CheckCircle,
   ShoppingCart,
@@ -150,6 +152,14 @@ const ServiceDetails: React.FC = () => {
   const [loading, setLoading] = useState(!preFetchedServices);
   const [error, setError] = useState<string | null>(null);
   const [packages, setPackages] = useState<{ name: string; price: string; description: string }[]>([]);
+
+  const [selectedPackage, setSelectedPackage] = useState<{
+  name: string;
+  price: string;
+  description: string;
+  isInspection: boolean;
+} | null>(null);
+
  
  const [allServicesList, setAllServicesList] = useState<Service[]>([]);
   const [otherServices, setOtherServices] = useState<Service[]>([]);
@@ -183,9 +193,33 @@ const [showAllBenefitsSummary, setShowAllBenefitsSummary] = useState(false);
 const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 const [visibleBenefitCount, setVisibleBenefitCount] = useState(0);
 
+
+const miniRef = useRef<HTMLDivElement>(null);
+const similarRef = useRef<HTMLDivElement>(null);
+const otherRef = useRef<HTMLDivElement>(null);
+
+
  useEffect(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }, []);
+
+const isInspectionCategory = (category?: string) => {
+  if (!category) return false;
+
+  const normalized = category
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return (
+    normalized === "commercial cleaning services" ||
+    normalized === "industrial cleaning services" ||
+    normalized === "marble polishing services" ||
+    normalized === "packers and movers"
+  );
+};
+
+
 
  //BENEFITS CODE :
 useEffect(() => {
@@ -284,25 +318,29 @@ useEffect(() => {
  
   // --- Event Handlers ---
  
-   const handleBookNow = () => {
+    const handleBookNow = () => {
     if (!selectedService) {
-      // Fallback if no service is selected (shouldn't happen in the detail view)
-      navigate('/booking');
+      navigate("/booking");
       return;
     }
 
-    const isInspectionService = 
-      selectedService.category === "Commercial Cleaning Services" || 
-      selectedService.category === "Industrial Cleaning Services";
+   const isCategoryInspection = isInspectionCategory(selectedService.category);
+
+
+    // 👉 If current package is an inspection/visit, also treat as inspection
+    const isPackageInspection = !!selectedPackage?.isInspection;
+
+    const isInspectionService =
+  isCategoryInspection || isPackageInspection || selectedService.price <= 0;
+
 
     if (isInspectionService) {
-      // Navigate to the inspection booking page
-      navigate('/inspection-booking', { state: { selectedService } });
+      navigate("/inspection-booking", { state: { selectedService } });
     } else {
-      // Navigate to the standard booking page
-      navigate('/booking', { state: { selectedService } });
+      navigate("/booking", { state: { selectedService } });
     }
   };
+
  
   const handleAddToCart = (service: Service) => {
     const cartItem = {
@@ -344,57 +382,98 @@ useEffect(() => {
  
  
   // Function called when user clicks "View Details" on a service card
-  const handleCardClick = (service: Service) => {
-    const pkgs = service.service_package
-      ? service.service_package.split(";").map((pkg) => {
-          const [name, price, description] = pkg.split(":");
-          return {
-            name: name || "",
-            price: price || "",
-            description: description || "",
-          };
-        })
-      : [];
- 
+   const handleCardClick = (service: Service) => {
+
+  // ✅ Force inspection-only for these categories
+ const isInspection = isInspectionCategory(service.category);
+
+if (isInspection) {
+  setPackages([]);
+  setSelectedPackage(null);
+  setSelectedService(service);
+  setActiveTab("overview");
+  setIsContentVisible(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  return;
+}
+
+
+
+
+    const pkgs =
+      service.service_package && service.service_package.trim() !== ""
+        ? service.service_package.split(";").map((pkg) => {
+            const [name, price, description] = pkg.split(":");
+
+            // 👉 Treat as inspection if no numeric price or contains these words
+            const lower = (price || "").toLowerCase();
+            const isInspection =
+              !price ||
+              isNaN(Number(price)) ||
+              lower.includes("inspection") ||
+              lower.includes("visit");
+
+            return {
+              name: name || "",
+              price: price || "",
+              description: description || "",
+              isInspection,
+            };
+          })
+        : [];
+
     setPackages(pkgs);
- 
+
     if (pkgs.length > 0) {
-      const selectedDescription = pkgs[0].description || service.description;
- 
+      const firstPkg = pkgs[0];
+
+      setSelectedPackage(firstPkg);
+
       setSelectedService({
         ...service,
-        name: `${service.name} (${pkgs[0].name})`,
-        price: parseFloat(pkgs[0].price) || service.price,
-        description: selectedDescription,
+        name: `${service.name} (${firstPkg.name})`,
+        price: firstPkg.isInspection ? 0 : Number(firstPkg.price),
+        description: firstPkg.description || service.description,
       });
     } else {
+      // No packages (Commercial / Industrial)
+      setSelectedPackage(null);
       setSelectedService(service);
     }
- 
-    setActiveTab("overview"); // Reset to overview when a new service is selected
-    setIsContentVisible(false); // Keep content hidden when a new service card is clicked
+
+    setActiveTab("overview");
+    setIsContentVisible(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
  
  
-  const handlePackageSelect = (pkg: {
+    const handlePackageSelect = (pkg: {
     name: string;
     price: string;
     description: string;
+    isInspection: boolean;
   }) => {
-    if (selectedService) {
-      const originalService = services.find((s) => s.id === selectedService.id);
-      if (originalService) {
-        const selectedDescription = pkg.description || originalService.description;
-        setSelectedService({
-          ...selectedService,
-          name: `${originalService.name} (${pkg.name})`,
-          price: parseFloat(pkg.price) || originalService.price,
-          description: selectedDescription,
-        });
-      }
-    }
+    if (!selectedService) return;
+
+  if (isInspectionCategory(selectedService.category)) return;
+
+
+    const originalService = services.find(
+      (s) => s.id === selectedService.id
+    );
+    if (!originalService) return;
+
+    setSelectedPackage(pkg);
+
+    setSelectedService({
+      ...selectedService,
+      name: `${originalService.name} (${pkg.name})`,
+      price: pkg.isInspection ? 0 : Number(pkg.price),
+      description: pkg.description || originalService.description,
+    });
   };
+
  
  // --- Data Fetching useEffect (UPDATED: Auto-open single service or when openDirectly is true) ---
 useEffect(() => {
@@ -570,6 +649,26 @@ useEffect(() => {
   }
 }, [services]);
 
+
+useEffect(() => {
+  if (miniRef.current && mockMiniServices.length > 0) {
+    initScrollPosition(miniRef);
+  }
+}, [mockMiniServices.length]);
+
+useEffect(() => {
+  if (similarRef.current && selectedService) {
+    initScrollPosition(similarRef);
+  }
+}, [selectedService]);
+
+
+useEffect(() => {
+  if (otherRef.current && otherSubcategories.length > 0) {
+    initScrollPosition(otherRef);
+  }
+}, [otherSubcategories.length]);
+
  
  
    if (loading) return <div className="p-8 text-center">Loading...</div>;
@@ -585,6 +684,17 @@ useEffect(() => {
   const similarServices = selectedService ? services
     .filter((s) => s.id !== selectedService.id)
     .slice(0, 3) : [];
+
+      const isCommercialOrIndustrial =
+  !!selectedService && isInspectionCategory(selectedService.category);
+
+
+  // 👉 true when current selected package is inspection/visit
+  const isInspectionPackage = !!selectedPackage?.isInspection;
+
+  const hasNoPrice = !selectedService || selectedService.price <= 0;
+
+
  
   const allTabs: { key: TabKey, label: string }[] = [
      { key: "overview", label: "Equipments & Chemicals" },
@@ -602,6 +712,27 @@ useEffect(() => {
         <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
     </div>
 );
+
+const initScrollPosition = (ref: React.RefObject<HTMLDivElement>) => {
+  if (!ref.current) return;
+
+  // ✅ Start from center so left & right work immediately
+  ref.current.scrollLeft = ref.current.scrollWidth / 3;
+};
+
+
+
+const scrollLeft = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: -300, behavior: "smooth" });
+};
+
+const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
+  ref.current?.scrollBy({ left: 300, behavior: "smooth" });
+};
+
+
+
+
 
   return (
     <div className="bg-white w-full">
@@ -640,8 +771,9 @@ useEffect(() => {
                       >
                         <span className="mb-1">{pkg.name}</span>
                         <span className="text-gray-900 font-semibold">
-                          ₹{pkg.price}
-                        </span>
+  {pkg.isInspection ? pkg.price : `₹${pkg.price}`}
+</span>
+
                       </button>
                     ))}
                   </div>
@@ -685,37 +817,40 @@ useEffect(() => {
 
 
  
-                 {!(selectedService.category === "Commercial Cleaning Services" || selectedService.category === "Industrial Cleaning Services") && selectedService.price > 0 && (
-        <div className="my-4">
-            <span className="text-4xl font-bold text-gray-900">
-                ₹{selectedService.price}
-                {selectedService.originalPrice > selectedService.price && selectedService.originalPrice > 0 && (
-                    <span className="text-gray-500 text-lg line-through ml-2">
-                        ₹{selectedService.originalPrice}
-                    </span>
-                )}
-            </span>
-        </div>
-    )}
+                {!isCommercialOrIndustrial && !isInspectionPackage && selectedService.price > 0 && (
+  <div className="my-4">
+    <span className="text-4xl font-bold text-gray-900">
+      ₹{selectedService.price}
+      {selectedService.originalPrice > selectedService.price &&
+        selectedService.originalPrice > 0 && (
+          <span className="text-gray-500 text-lg line-through ml-2">
+            ₹{selectedService.originalPrice}
+          </span>
+        )}
+    </span>
+  </div>
+)}
+
  
                 </div>
  
  
                {/* Buttons: Add to Cart, Book Now, Get Quote */}        
                
-  {/* 3. ALL BUTTONS (NOW BELOW PRICE) */}
+  
     <div className="flex flex-wrap items-center gap-3 mt-2">
     {/* I changed space-x-3 to gap-3 and flex-wrap for better mobile handling with many buttons */}
        
         {/* Add to Cart: Hide for Commercial & Industrial */}
-        {!(selectedService.category === "Commercial Cleaning Services" || selectedService.category === "Industrial Cleaning Services") && (
-            <button
-                onClick={() => handleAddToCart(selectedService)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white rounded-md shadow hover:opacity-90 transition"
-            >
-                <ShoppingCart size={16} /> Add to Cart
-            </button>
-        )}
+       {!isCommercialOrIndustrial && !isInspectionPackage && selectedService.price > 0 && (
+  <button
+    onClick={() => handleAddToCart(selectedService)}
+    className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-green-400 to-green-600 text-white rounded-md shadow hover:opacity-90 transition"
+  >
+    <ShoppingCart size={16} /> Add to Cart
+  </button>
+)}
+
  
         {/* Book Now / Book Inspection */}
         <button
@@ -723,9 +858,11 @@ useEffect(() => {
             className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-md shadow hover:opacity-90 transition"
         >
             <CalendarCheck size={16} />
-            {selectedService.category === "Commercial Cleaning Services" || selectedService.category === "Industrial Cleaning Services"
-                ? "Book Inspection"
-                : "Book Now"}
+            {isCommercialOrIndustrial || isInspectionPackage || hasNoPrice
+  ? "Book Inspection"
+  : "Book Now"}
+
+
         </button>
  
         {/* Get Quote */}
@@ -861,7 +998,27 @@ useEffect(() => {
         </h2>
       </div>
 
-      <div className="mini-marquee-container flex overflow-hidden relative py-4">
+    <div className="relative">
+
+  {/* LEFT ARROW */}
+  <button
+    onClick={() => scrollLeft(miniRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-2"
+  >
+    <ChevronLeft size={22} />
+  </button>
+
+  {/* RIGHT ARROW */}
+  <button
+    onClick={() => scrollRight(miniRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-2"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div ref={miniRef} className="mini-marquee-container flex overflow-hidden py-4">
+   
+
         <div className="flex mini-marquee-track" style={{ width: "300%" }}>
 
           {[...availableMiniServices, ...availableMiniServices, ...availableMiniServices].map(
@@ -945,6 +1102,7 @@ useEffect(() => {
         </div>
       </div>
     </div>
+    </div>
   );
 })()}
 {/* --- END MINI SERVICES SECTION --- */}
@@ -976,7 +1134,24 @@ useEffect(() => {
       </h2>
     </div>
  
-    <div className="marquee-container flex overflow-hidden relative py-2">
+   <div className="relative">
+<button
+  onClick={() => scrollLeft(similarRef)}
+  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-2"
+>
+  <ChevronLeft size={22} />
+</button>
+
+<button
+  onClick={() => scrollRight(similarRef)}
+  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-2"
+>
+  <ChevronRight size={22} />
+</button>
+
+
+  <div ref={similarRef} className="marquee-container flex overflow-hidden relative py-2">
+   
       <div className="flex animate-marquee-seamless" style={{ width: "400%" }}>
  
         {[...similarServices, ...similarServices, ...similarServices, ...similarServices].map((service, index) => (
@@ -1016,7 +1191,7 @@ useEffect(() => {
  
       </div>
     </div>
- 
+ </div>
   </div>
 )}
  
@@ -1048,7 +1223,25 @@ useEffect(() => {
     `}</style>
  
     {/* Slider */}
-    <div className="other-container overflow-hidden py-4">
+    <div className="relative">
+
+  <button
+    onClick={() => scrollLeft(otherRef)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-2"
+  >
+     <ChevronLeft size={22} />
+  </button>
+
+  <button
+    onClick={() => scrollRight(otherRef)}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-2"
+  >
+    <ChevronRight size={22} />
+  </button>
+
+  <div ref={otherRef} className="other-container overflow-hidden py-4">
+    {/* existing sliding code */}
+
       <div className="flex other-services-track"
            style={{ width: "200%" }}>
  
@@ -1140,6 +1333,7 @@ useEffect(() => {
         })}
       </div>
     </div>
+  </div>
   </div>
 )}
  

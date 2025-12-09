@@ -28,11 +28,12 @@ import { LocationProvider } from "./contexts/LocationContext";
 import Categories from './pages/Categories';
 import Subcategories from './pages/Subcategories';
 import ServiceList from './pages/ServiceList';
-import ServiceDetails from './pages/ServiceDetails';  
+import ServiceDetails from './pages/ServiceDetails';
 import Gallery from './pages/Gallery';
 import OrderHistory from './pages/OrderHistory';
 import InspectionBooking from './pages/InspectionBooking';
 import OrderDetailPage from './pages/OrderDetailPage';
+import AdminRoutes from './admin/AdminRoutes';
 //import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
@@ -42,16 +43,16 @@ function App() {
       try {
         // Load analytics config (Google Analytics, Facebook Pixel) from AWS SSM
         await initAnalyticsConfig();
-        
+
         // Load Razorpay config from AWS Secrets Manager
         await initRazorpayConfig();
-        
+
         console.log('✅ All configurations initialized successfully');
       } catch (error) {
         console.error('❌ Error initializing configurations:', error);
       }
     };
-    
+
     initConfigs();
   }, []);
 
@@ -60,58 +61,54 @@ function App() {
       <AuthProvider>
         <LocationProvider>
           <AnalyticsTracker />
-        <div className="min-h-screen bg-orange-50 text-gray-900">
-          <Navbar />
-          <main className="pt-20">
-            <Routes>
-              <Route path="/" element={<Home />} />
-            
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/booking" element={<Booking />} />
-              <Route path="/inspection-booking" element={<InspectionBooking />} />
-              <Route path="/payment" element={<Payment />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/orderhistory" element={<OrderHistory />} />
-             {/* 1. Categories */}
-              <Route path="/services" element={<Categories />} />
- 
-              {/* 2. Subcategories */}
-              <Route path="/services/category/:categorySlug" element={<Subcategories />} />
- 
-              {/* 3. List of services */}
-              <Route path="/services/:subcategory" element={<ServiceList />} />
- 
-              {/* 4. Service Details */}
-              <Route path="/services/:subcategory/:serviceSlug" element={<ServiceDetails />} />
- 
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/forgetpassword" element={<ForgetPassword />} />
-              <Route path="/order-details/:bookingId" element={<OrderDetailPage />} />
-              <Route path="*" element={<NotFound />} />
-                  <Route path="/thank-you" element={<ThankYou />} />
-               
+          <div className="min-h-screen bg-orange-50 text-gray-900">
+            <Navbar />
+            <main className="pt-16">
+              <Routes>
+                <Route path="/" element={<Home />} />
 
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/booking" element={<Booking />} />
+                <Route path="/inspection-booking" element={<InspectionBooking />} />
+                <Route path="/payment" element={<Payment />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/orderhistory" element={<OrderHistory />} />
+                {/* 1. Categories */}
+                <Route path="/services" element={<Categories />} />
 
+                {/* 2. Subcategories */}
+                <Route path="/services/category/:categorySlug" element={<Subcategories />} />
 
+                {/* 3. List of services */}
+                <Route path="/services/:subcategory" element={<ServiceList />} />
 
+                {/* 4. Service Details */}
+                <Route path="/services/:subcategory/:serviceSlug" element={<ServiceDetails />} />
 
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/forgetpassword" element={<ForgetPassword />} />
+                <Route path="/order-details/:bookingId" element={<OrderDetailPage />} />
+                <Route path="/order-details/:bookingId" element={<OrderDetailPage />} />
+                <Route path="*" element={<NotFound />} />
+                <Route path="/thank-you" element={<ThankYou />} />
 
+                {/* Admin Routes */}
+                <Route path="/admin/*" element={<AdminRoutes />} />
+              </Routes>
 
-            </Routes>
-           
-          </main>
-          <Footer />
-           <GoBackButton />
-          <WhatsAppButton />
-        {/* <ChatbotWidget /> */}
-          
-        </div>
+            </main>
+            <Footer />
+            <GoBackButton />
+            <WhatsAppButton />
+            {/* <ChatbotWidget /> */}
+
+          </div>
         </LocationProvider>
       </AuthProvider>
     </HelmetProvider>

@@ -5,7 +5,7 @@
 import Global_API_BASE from '../services/GlobalConstants';
 
 // Runtime configuration - will be loaded from backend API
-let razorpayKeyId: string = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_RkHRDGTuES94mq';
+let razorpayKeyId: string = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RlYEJdBbbNn4Wq';
 
 /**
  * Initialize Razorpay configuration from backend

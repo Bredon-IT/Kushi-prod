@@ -14,3 +14,5 @@ ReactDom.createRoot(document.getElementById("root")!).render(
     </BrowserRouter>
   </StrictMode>
 );
+
+

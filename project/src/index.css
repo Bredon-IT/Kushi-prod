@@ -40,14 +40,13 @@ html, body {
    🌐 General Scrollbar Settings
 -------------------------------------------------- */
  
-/* Hide scrollbar everywhere scrollbar-hide is used */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none !important;
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
- 
-.scrollbar-hide {
-  -ms-overflow-style: none !important;  /* IE, Edge */
-  scrollbar-width: none !important;     /* Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;    /* Firefox */
 }
  
 /* --------------------------------------------------
@@ -99,12 +98,12 @@ body > iframe[title*="Elfsight"] {
   background: linear-gradient(180deg, #ffffff 0%, #111827 100%);
 }
 html {
-font-size: 14px !important; /* change this to 12px or 10px as needed */
+  font-size: 14px !important;  /* change this to 12px or 10px as needed */
 }
  
 body {
-font-size: 1rem !important;
-zoom: 0.9; /* optional: 0.8 = smaller UI, 1.0 = normal */
+  font-size: 1rem !important;
+  zoom: 0.9;  /* optional: 0.8 = smaller UI, 1.0 = normal */
 }
  
  
