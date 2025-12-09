@@ -83,19 +83,44 @@ const SignUp: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setErrors({}); // Clear previous errors before submission
 
     try {
+      // 1. Prepare payload with cleaned and constructed phone number
+      const fullPhoneNumber = `${countryCode}${formData.phone.replace(/\D/g, "")}`;
       const payload = {
-        ...formData,
-        phone: `${countryCode}${formData.phone}`,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: fullPhoneNumber, // Send the country code + 10 digits
+        password: formData.password,
+        // confirmPassword is only needed for client-side validation, so you can omit it here 
+        // unless your backend specifically requires it. Removed the comment to clean up the payload.
       };
 
+      // 2. Call the signup function
       const result = await signup(payload as any);
 
-      if (result && (result.ok || result.success)) navigate("/");
-      else setErrors({ email: result?.message || "Signup failed" });
-    } catch {
-      setErrors({ email: "Signup failed. Try again." });
+      if (result && (result.ok || (result as any).success)) {
+        // Success
+        navigate("/");
+      } else {
+        // Failure: Handle specific backend validation errors
+        const errorMessage = result?.message || "Signup failed. Try again.";
+
+        // 3. Check the error message returned from the backend/API
+        if (errorMessage.includes("Email already registered")) {
+          setErrors({ email: errorMessage }); // Set error on email field
+        } else if (errorMessage.includes("Phone number already registered")) {
+          setErrors({ phone: errorMessage }); // Set error on phone field
+        } else {
+          // General error fallback (e.g., server issue, generic failure)
+          setErrors({ email: errorMessage });
+        }
+      }
+    } catch (error) {
+      // Catches network errors or unexpected exceptions
+      setErrors({ email: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -137,9 +162,8 @@ const SignUp: React.FC = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${
-                    errors.firstName ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${errors.firstName ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="First name"
                 />
               </div>
@@ -156,9 +180,8 @@ const SignUp: React.FC = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${
-                    errors.lastName ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${errors.lastName ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="Last name"
                 />
               </div>
@@ -178,9 +201,8 @@ const SignUp: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${
-                    errors.email ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${errors.email ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -206,9 +228,8 @@ const SignUp: React.FC = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full pl-3 pr-3 py-2 text-sm rounded-r-md border ${
-                    errors.phone ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-3 pr-3 py-2 text-sm rounded-r-md border ${errors.phone ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="10-digit number"
                 />
               </div>
@@ -229,9 +250,8 @@ const SignUp: React.FC = () => {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${
-                    errors.password ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${errors.password ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="Password"
                 />
                 <button
@@ -256,9 +276,8 @@ const SignUp: React.FC = () => {
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${
-                    errors.confirmPassword ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${errors.confirmPassword ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="Confirm"
                 />
                 <button

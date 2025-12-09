@@ -1,0 +1,187 @@
+﻿src/admin/components/charts/BookingChart.tsx(3,31): error TS7016: Could not find a declaration file for module '../../services/StatisticsService'. 'C:/Users/Dell/kushi-new-changes/Kushi-prod/project/src/admin/services/StatisticsService.js' implicitly has an 'any' type.
+src/admin/components/charts/BookingChart.tsx(15,14): error TS7006: Parameter 'res' implicitly has an 'any' type.
+src/admin/components/charts/BookingChart.tsx(23,14): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(2,40): error TS7016: Could not find a declaration file for module '../../services/FinancialStatisticsService'. 'C:/Users/Dell/kushi-new-changes/Kushi-prod/project/src/admin/services/FinancialStatisticsService.js' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(5,41): error TS7031: Binding element 'filter' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(5,49): error TS7031: Binding element 'startDate' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(5,60): error TS7031: Binding element 'endDate' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(18,14): error TS7006: Parameter 'res' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(22,36): error TS7006: Parameter 'label' implicitly has an 'any' type.
+src/admin/components/charts/FinancialRevenueChart.tsx(22,43): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/admin/components/charts/RevenueChart.tsx(3,31): error TS7016: Could not find a declaration file for module '../../services/StatisticsService'. 'C:/Users/Dell/kushi-new-changes/Kushi-prod/project/src/admin/services/StatisticsService.js' implicitly has an 'any' type.
+src/admin/components/charts/RevenueChart.tsx(15,14): error TS7006: Parameter 'res' implicitly has an 'any' type.
+src/admin/components/charts/RevenueChart.tsx(25,14): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/admin/components/RunningOffers.tsx(353,29): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Bookings.tsx(392,23): error TS2322: Type '"ghost"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Bookings.tsx(685,30): error TS2339: Property 'removeWorker' does not exist on type '{ getAllBookings: () => Promise<AxiosResponse<any, any, {}>>; createBooking: (bookingData: any) => Promise<AxiosResponse<any, any, {}>>; ... 4 more ...; assignWorker: (bookingId: number, workerName: string, userRole: string) => Promise<...>; }'.
+src/admin/pages/Customers.tsx(250,11): error TS2322: Type '"destructive"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Dashboard.tsx(11,29): error TS7016: Could not find a declaration file for module '../services/OverviewService'. 'C:/Users/Dell/kushi-new-changes/Kushi-prod/project/src/admin/services/OverviewService.js' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(58,22): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(84,38): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(103,19): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(104,18): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(104,21): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(104,27): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/admin/pages/Dashboard.tsx(104,53): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/admin/pages/Dashboard.tsx(171,31): error TS7006: Parameter 'row' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(178,101): error TS18046: 'err' is of type 'unknown'.
+src/admin/pages/Dashboard.tsx(245,14): error TS7006: Parameter 'res' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(252,15): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/admin/pages/Dashboard.tsx(580,35): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/admin/pages/Dashboard.tsx(580,46): error TS2339: Property 'bookingDate' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(580,61): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/admin/pages/Dashboard.tsx(580,72): error TS2339: Property 'bookingDate' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(588,102): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(590,38): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(592,40): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(597,35): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(599,38): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(601,38): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(611,37): error TS2339: Property 'customer_name' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(611,64): error TS2339: Property 'booking_service_name' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(611,96): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Dashboard.tsx(823,69): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/admin/pages/Financial.tsx(16,29): error TS7016: Could not find a declaration file for module '../services/OverviewService'. 'C:/Users/Dell/kushi-new-changes/Kushi-prod/project/src/admin/services/OverviewService.js' implicitly has an 'any' type.
+src/admin/pages/Financial.tsx(22,34): error TS7006: Parameter 'url' implicitly has an 'any' type.
+src/admin/pages/Financial.tsx(91,13): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/admin/pages/Financial.tsx(436,23): error TS2322: Type '"ghost"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/InspectionDashboard.tsx(194,31): error TS2322: Type '"ghost"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Invoices.tsx(20,18): error TS7016: Could not find a declaration file for module 'papaparse'. 'C:/Users/Dell/kushi-new-changes/Kushi-prod/project/node_modules/papaparse/papaparse.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/papaparse` if it exists or add a new declaration (.d.ts) file containing `declare module 'papaparse';`
+src/admin/pages/Invoices.tsx(27,50): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(27,54): error TS7006: Parameter 'status' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(36,24): error TS7031: Binding element 'status' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(83,36): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(102,9): error TS2345: Argument of type 'Invoice[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'Invoice[]' is not assignable to type 'never[]'.
+    Type 'Invoice' is not assignable to type 'never'.
+src/admin/pages/Invoices.tsx(127,13): error TS2339: Property 'customer_name' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(128,13): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(129,13): error TS2339: Property 'booking_service_name' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(132,30): error TS2339: Property 'bookingDate' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(168,72): error TS2339: Property 'payment_method' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(180,38): error TS2339: Property 'total_amount' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(180,58): error TS2339: Property 'grand_total' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(186,38): error TS2339: Property 'total_amount' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(186,58): error TS2339: Property 'grand_total' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(191,23): error TS7006: Parameter 'dateString' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(204,31): error TS7006: Parameter 'invoice' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(304,22): error TS2339: Property 'lastAutoTable' does not exist on type 'jsPDF'.
+src/admin/pages/Invoices.tsx(353,22): error TS2339: Property 'lastAutoTable' does not exist on type 'jsPDF'.
+src/admin/pages/Invoices.tsx(393,50): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(399,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(400,25): error TS2345: Argument of type '(prev: never[]) => any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type '(prev: never[]) => any[]' is not assignable to type '(prevState: never[]) => never[]'.
+    Type 'any[]' is not assignable to type 'never[]'.
+      Type 'any' is not assignable to type 'never'.
+src/admin/pages/Invoices.tsx(401,21): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/admin/pages/Invoices.tsx(406,25): error TS2345: Argument of type '(prev: never[]) => any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type '(prev: never[]) => any[]' is not assignable to type '(prevState: never[]) => never[]'.
+    Type 'any[]' is not assignable to type 'never[]'.
+      Type 'any' is not assignable to type 'never'.
+src/admin/pages/Invoices.tsx(409,41): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(413,44): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(413,48): error TS7006: Parameter 'newStatus' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(416,21): error TS2345: Argument of type '(prev: never[]) => any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type '(prev: never[]) => any[]' is not assignable to type '(prevState: never[]) => never[]'.
+    Type 'any[]' is not assignable to type 'never[]'.
+      Type 'any' is not assignable to type 'never'.
+src/admin/pages/Invoices.tsx(418,19): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(418,41): error TS2698: Spread types may only be created from object types.
+src/admin/pages/Invoices.tsx(428,21): error TS2345: Argument of type '(prev: never[]) => any[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type '(prev: never[]) => any[]' is not assignable to type '(prevState: never[]) => never[]'.
+    Type 'any[]' is not assignable to type 'never[]'.
+      Type 'any' is not assignable to type 'never'.
+src/admin/pages/Invoices.tsx(430,19): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(430,41): error TS2698: Spread types may only be created from object types.
+src/admin/pages/Invoices.tsx(430,65): error TS2339: Property 'payment_status' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(438,22): error TS7006: Parameter 'invoice' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(451,25): error TS7006: Parameter 'invoice' implicitly has an 'any' type.
+src/admin/pages/Invoices.tsx(466,22): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(467,23): error TS2339: Property 'customer_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(468,17): error TS2339: Property 'customer_name' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(469,18): error TS2339: Property 'customer_email' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(470,18): error TS2339: Property 'customer_number' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(471,20): error TS2339: Property 'booking_service_name' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(472,23): error TS2339: Property 'booking_amount' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(473,21): error TS2339: Property 'discount' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(474,29): error TS2339: Property 'total_amount' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(474,49): error TS2339: Property 'grand_total' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(477,26): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(479,35): error TS2339: Property 'bookingDate' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(518,13): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Invoices.tsx(650,13): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Invoices.tsx(720,47): error TS2339: Property 'bookingStatus' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(725,34): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(727,53): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/admin/pages/Invoices.tsx(727,57): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(736,64): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/admin/pages/Invoices.tsx(736,68): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(737,72): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(741,33): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(744,32): error TS2339: Property 'customer_name' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(747,32): error TS2339: Property 'booking_service_name' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(751,43): error TS2339: Property 'bookingDate' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(755,34): error TS2339: Property 'booking_amount' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(765,42): error TS2339: Property 'payment_status' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(769,63): error TS2339: Property 'booking_id' does not exist on type 'never'.
+src/admin/pages/Invoices.tsx(784,29): error TS2322: Type '"ghost"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Invoices.tsx(793,29): error TS2322: Type '"ghost"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Invoices.tsx(802,29): error TS2322: Type '"ghost"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/admin/pages/Login.tsx(131,23): error TS2322: Type '{ children: string; type: string; className: string; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & ButtonProps'.
+src/admin/pages/Services.tsx(636,27): error TS2322: Type '{ children: string; type: string; variant: "secondary"; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & ButtonProps'.
+src/admin/pages/Services.tsx(645,27): error TS2322: Type '{ children: string; type: string; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & ButtonProps'.
+src/admin/pages/Settings.tsx(474,23): error TS2322: Type '{ children: string; type: string; className: string; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & ButtonProps'.
+src/components/GoogleReviews.tsx(44,35): error TS2339: Property 'profile_photo_url' does not exist on type 'never'.
+src/components/GoogleReviews.tsx(46,35): error TS2339: Property 'author_name' does not exist on type 'never'.
+src/components/GoogleReviews.tsx(51,33): error TS2339: Property 'author_name' does not exist on type 'never'.
+src/components/GoogleReviews.tsx(54,33): error TS2339: Property 'relative_time_description' does not exist on type 'never'.
+src/components/GoogleReviews.tsx(61,50): error TS2339: Property 'rating' does not exist on type 'never'.
+src/components/GoogleReviews.tsx(72,29): error TS2339: Property 'text' does not exist on type 'never'.
+src/components/RotatingOffers.tsx(43,17): error TS2345: Argument of type '{ imageUrl: string | null; id: number; text?: string | undefined; fontFamily?: string | undefined; color?: string | undefined; emoji?: string | undefined; }[]' is not assignable to parameter of type 'SetStateAction<Offer[]>'.
+  Type '{ imageUrl: string | null; id: number; text?: string | undefined; fontFamily?: string | undefined; color?: string | undefined; emoji?: string | undefined; }[]' is not assignable to type 'Offer[]'.
+    Type '{ imageUrl: string | null; id: number; text?: string; fontFamily?: string; color?: string; emoji?: string; }' is not assignable to type 'Offer'.
+      Types of property 'imageUrl' are incompatible.
+        Type 'string | null' is not assignable to type 'string | undefined'.
+          Type 'null' is not assignable to type 'string | undefined'.
+src/components/RotatingOffers.tsx(72,13): error TS2345: Argument of type '() => () => void | 0 | null' is not assignable to parameter of type 'EffectCallback'.
+  Type '() => void | 0 | null' is not assignable to type 'void | Destructor'.
+    Type '() => void | 0 | null' is not assignable to type 'Destructor'.
+      Type 'void | 0 | null' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+        Type 'null' is not assignable to type 'void | { [UNDEFINED_VOID_ONLY]: never; }'.
+src/pages/About.tsx(275,10): error TS2322: Type '{ children: string; jsx: true; global: true; }' is not assignable to type 'DetailedHTMLProps<StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>'.
+  Property 'jsx' does not exist on type 'DetailedHTMLProps<StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>'.
+src/pages/Blog.tsx(201,14): error TS2322: Type '{ children: string; jsx: true; global: true; }' is not assignable to type 'DetailedHTMLProps<StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>'.
+  Property 'jsx' does not exist on type 'DetailedHTMLProps<StyleHTMLAttributes<HTMLStyleElement>, HTMLStyleElement>'.
+src/pages/Booking.tsx(166,26): error TS2339: Property 'cartItemId' does not exist on type 'CartItem'.
+src/pages/Booking.tsx(174,13): error TS2353: Object literal may only specify known properties, and 'cartItemId' does not exist in type 'CartItem'.
+src/pages/Booking.tsx(256,17): error TS2339: Property 'name' does not exist on type 'User'.
+src/pages/Booking.tsx(387,57): error TS2339: Property 'cartItemId' does not exist on type 'CartItem'.
+src/pages/Booking.tsx(412,9): error TS2353: Object literal may only specify known properties, and 'cartItemId' does not exist in type 'CartItem'.
+src/pages/Booking.tsx(713,62): error TS2339: Property 'cartItemId' does not exist on type 'CartItem'.
+src/pages/Booking.tsx(916,54): error TS2339: Property 'cartItemId' does not exist on type 'CartItem'.
+src/pages/Cart.tsx(643,88): error TS2345: Argument of type '{ id: string; name: string; category: string; subcategory: string; price: number; rating: number; reviews: string; duration: string; description: string; image: string; } | { id: string; name: string; ... 7 more ...; duration?: undefined; }' is not assignable to parameter of type 'Service'.
+  Type '{ id: string; name: string; category: string; subcategory: string; price: number; rating: number; reviews: string; description: string; image: string; duration?: undefined; }' is not assignable to type 'Service'.
+    Types of property 'duration' are incompatible.
+      Type 'undefined' is not assignable to type 'string'.
+src/pages/Contact.tsx(128,33): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/pages/Home.tsx(1046,11): error TS2322: Type 'string | undefined' is not assignable to type 'To'.
+  Type 'undefined' is not assignable to type 'To'.
+src/pages/OrderHistory.tsx(371,57): error TS2322: Type '"danger-outline"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/pages/OrderHistory.tsx(373,57): error TS2322: Type '(e: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/pages/OrderHistory.tsx(373,67): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/pages/OrderHistory.tsx(386,53): error TS2322: Type '(e: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/pages/OrderHistory.tsx(386,63): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/pages/OrderHistory.tsx(439,53): error TS2322: Type '(e: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/pages/OrderHistory.tsx(439,63): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/pages/OrderHistory.tsx(448,53): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "danger" | "success" | undefined'.
+src/pages/OrderHistory.tsx(450,53): error TS2322: Type '(e: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/pages/OrderHistory.tsx(450,63): error TS7006: Parameter 'e' implicitly has an 'any' type.

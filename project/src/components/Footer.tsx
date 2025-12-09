@@ -61,30 +61,29 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-gray-900 py-6 border-t border-gray-800">
-      {/* MOBILE HEIGHT FIX + SMALLER FONTS */}
+    <footer className="bg-gray-900 py-20 border-t border-gray-800">
+
+      {/* MOBILE FONT + HEIGHT FIX */}
       <style>{`
         @media (max-width: 639px) {
           footer {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
           }
 
           .footer-title {
-            font-size: 1rem !important;
+            font-size: 1.25rem !important; /* text-xl */
           }
 
           .footer-small {
-            font-size: 0.75rem !important;
-            line-height: 1rem !important;
+            font-size: 0.9rem !important; /* slightly bigger */
+            line-height: 1.3rem !important;
           }
 
-          /* QUICK LINKS + SERVICES in 2-column row */
           .footer-links-mobile {
             display: flex !important;
             justify-content: space-between;
-            width: 100%;
-            gap: 0.5rem;
+            gap: 1rem;
           }
 
           .footer-quick,
@@ -94,37 +93,38 @@ const Footer: React.FC = () => {
 
           .footer-quick a,
           .footer-services a {
-            font-size: 0.75rem !important;
+            font-size: 0.9rem !important;
           }
         }
       `}</style>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* DESKTOP: ALL IN ONE ROW */}
-        <div className="hidden md:flex md:flex-row md:justify-between md:items-start gap-8">
+        {/* DESKTOP VIEW */}
+        <div className="hidden md:flex md:flex-row md:justify-between md:items-start gap-12">
 
-          {/* BRAND */}
+          {/* BRAND SECTION */}
           <div className="w-1/4">
-            <h2 className="text-xl font-bold mb-2 bg-gradient-to-r from-peach-300 to-peach-300 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-peach-300 to-peach-300 bg-clip-text text-transparent">
               Kushi Services - {location}
             </h2>
-            <p className="text-gray-400 text-sm mb-3">
+
+            <p className="text-gray-400 text-base mb-4">
               Premium cleaning and hygiene services in <strong>{location}</strong>.
             </p>
 
-            <div className="flex space-x-4 mt-2">
-              <a href={current.facebookUrl} target="_blank" className="text-gray-400 hover:text-peach-300"><Facebook size={18} /></a>
-              <a href={current.instagramUrl} target="_blank" className="text-gray-400 hover:text-peach-300"><Instagram size={18} /></a>
-              <a href={current.linkedinUrl} target="_blank" className="text-gray-400 hover:text-blue-400"><Linkedin size={18} /></a>
-              <a href={getWhatsAppLink(current.whatsappNumber)} target="_blank" className="text-gray-400 hover:text-green-500"><MessageSquare size={18} /></a>
+            <div className="flex space-x-5 mt-3">
+              <a href={current.facebookUrl} target="_blank" className="text-gray-400 hover:text-peach-300"><Facebook size={20} /></a>
+              <a href={current.instagramUrl} target="_blank" className="text-gray-400 hover:text-peach-300"><Instagram size={20} /></a>
+              <a href={current.linkedinUrl} target="_blank" className="text-gray-400 hover:text-blue-400"><Linkedin size={20} /></a>
+              <a href={getWhatsAppLink(current.whatsappNumber)} target="_blank" className="text-gray-400 hover:text-green-500"><MessageSquare size={20} /></a>
             </div>
           </div>
 
           {/* QUICK LINKS */}
           <div className="w-1/4">
-            <h4 className="text-md font-semibold mb-2 text-white border-b border-gray-700 pb-1">Quick Links</h4>
-            <ul className="space-y-1 text-gray-400 text-sm">
+            <h4 className="text-lg font-bold mb-3 text-white border-b border-gray-700 pb-1">Quick Links</h4>
+            <ul className="space-y-2 text-gray-400 text-base">
               <li><Link to="/" className="hover:text-peach-300">Home</Link></li>
               <li><Link to="/services" className="hover:text-peach-300">Services</Link></li>
               <li><Link to="/about" className="hover:text-peach-300">About Us</Link></li>
@@ -133,10 +133,10 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* SERVICES */}
+          {/* SERVICES SECTION */}
           <div className="w-1/4">
-            <h4 className="text-md font-semibold mb-2 text-white border-b border-gray-700 pb-1">Our Services</h4>
-            <ul className="space-y-1 text-gray-400 text-sm">
+            <h4 className="text-lg font-bold mb-3 text-white border-b border-gray-700 pb-1">Our Services</h4>
+            <ul className="space-y-2 text-gray-400 text-base">
               {serviceLinks.map((serviceName) => (
                 <li key={serviceName}>
                   <Link
@@ -151,40 +151,41 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* CONTACT */}
+          {/* CONTACT INFO */}
           <div className="w-1/4">
-            <h4 className="text-md font-semibold mb-2 text-white border-b border-gray-700 pb-1">
+            <h4 className="text-lg font-bold mb-3 text-white border-b border-gray-700 pb-1">
               Contact Us ({location})
             </h4>
 
-            <div className="space-y-2 text-gray-300 text-sm">
-              <div className="flex items-start gap-2"><Phone size={16} className="text-peach-300 mt-0.5" />{current.phone}</div>
-              <div className="flex items-start gap-2"><Mail size={16} className="text-peach-300 mt-0.5" />{current.email}</div>
+            <div className="space-y-3 text-gray-300 text-base">
+              <div className="flex items-start gap-2"><Phone size={18} className="text-peach-300 mt-1" />{current.phone}</div>
+              <div className="flex items-start gap-2"><Mail size={18} className="text-peach-300 mt-1" />{current.email}</div>
 
               <div className="flex items-start gap-2">
-                <MapPin size={16} className="text-peach-300 mt-0.5" />
-                <div>
-                  <span className="text-xs">{current.address}</span>
-                </div>
+                <MapPin size={18} className="text-peach-300 mt-1" />
+                <span className="text-sm">{current.address}</span>
               </div>
 
               <div className="flex items-start gap-2">
-                <Copyright size={16} className="text-peach-300 mt-0.5" />
-                <span className="text-xs">Kushi Services © {new Date().getFullYear()}</span>
+                <Copyright size={18} className="text-peach-300 mt-1" />
+                <span className="text-sm">Kushi Services © {new Date().getFullYear()}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* MOBILE VERSION */}
-        <div className="md:hidden grid grid-cols-1 gap-4">
+        {/* MOBILE VIEW */}
+        <div className="md:hidden grid grid-cols-1 gap-6 mt-6">
 
           {/* BRAND */}
           <div>
-            <h2 className="footer-title font-bold mb-1 bg-gradient-to-r from-peach-300 to-peach-300 bg-clip-text text-transparent">
+            <h2 className="footer-title font-bold mb-2 bg-gradient-to-r from-peach-300 to-peach-300 bg-clip-text text-transparent">
               Kushi Services - {location}
             </h2>
-            <p className="footer-small text-gray-400 mb-2">Premium cleaning services in <strong>{location}</strong>.</p>
+
+            <p className="footer-small text-gray-400 mb-3">
+              Premium cleaning services in <strong>{location}</strong>.
+            </p>
 
             <div className="flex space-x-4 mt-1">
               <a href={current.facebookUrl} target="_blank" className="text-gray-400 hover:text-peach-300"><Facebook size={18} /></a>
@@ -194,12 +195,12 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* QUICK LINKS + SERVICES in same row */}
+          {/* QUICK LINKS + SERVICES */}
           <div className="footer-links-mobile">
 
             <div className="footer-quick">
-              <h4 className="footer-title font-semibold mb-1 text-white border-b border-gray-700 pb-1">Quick Links</h4>
-              <ul className="space-y-1 text-gray-400 footer-small">
+              <h4 className="footer-title font-semibold mb-2 text-white border-b border-gray-700 pb-1">Quick Links</h4>
+              <ul className="space-y-2 text-gray-400 footer-small">
                 <li><Link to="/" className="hover:text-peach-300">Home</Link></li>
                 <li><Link to="/services" className="hover:text-peach-300">Services</Link></li>
                 <li><Link to="/about" className="hover:text-peach-300">About Us</Link></li>
@@ -209,8 +210,8 @@ const Footer: React.FC = () => {
             </div>
 
             <div className="footer-services">
-              <h4 className="footer-title font-semibold mb-1 text-white border-b border-gray-700 pb-1">Our Services</h4>
-              <ul className="space-y-1 text-gray-400 footer-small">
+              <h4 className="footer-title font-semibold mb-2 text-white border-b border-gray-700 pb-1">Our Services</h4>
+              <ul className="space-y-2 text-gray-400 footer-small">
                 {serviceLinks.map((serviceName) => (
                   <li key={serviceName}>
                     <Link
@@ -226,13 +227,15 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* CONTACT */}
+          {/* MOBILE CONTACT */}
           <div>
-            <h4 className="footer-title font-semibold mb-1 text-white border-b border-gray-700 pb-1">Contact Us ({location})</h4>
-            <div className="space-y-2 text-gray-300 footer-small">
-              <div className="flex items-start gap-2"><Phone size={16} className="text-peach-300 mt-0.5" />{current.phone}</div>
-              <div className="flex items-start gap-2"><Mail size={16} className="text-peach-300 mt-0.5" />{current.email}</div>
-              <div className="flex items-start gap-2"><MapPin size={16} className="text-peach-300 mt-0.5" /><span>{current.address}</span></div>
+            <h4 className="footer-title font-semibold mb-2 text-white border-b border-gray-700 pb-1">
+              Contact Us ({location})
+            </h4>
+            <div className="space-y-3 text-gray-300 footer-small">
+              <div className="flex items-start gap-2"><Phone size={16} className="text-peach-300 mt-1" />{current.phone}</div>
+              <div className="flex items-start gap-2"><Mail size={16} className="text-peach-300 mt-1" />{current.email}</div>
+              <div className="flex items-start gap-2"><MapPin size={16} className="text-peach-300 mt-1" /><span>{current.address}</span></div>
             </div>
           </div>
 
