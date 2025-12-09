@@ -101,7 +101,7 @@ const SignUp: React.FC = () => {
       // 2. Call the signup function
       const result = await signup(payload as any);
 
-      if (result && (result.ok || result.success)) {
+      if (result && (result.ok || (result as any).success)) {
         // Success
         navigate("/");
       } else {
@@ -162,9 +162,8 @@ const SignUp: React.FC = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${
-                    errors.firstName ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${errors.firstName ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="First name"
                 />
               </div>
@@ -181,9 +180,8 @@ const SignUp: React.FC = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${
-                    errors.lastName ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${errors.lastName ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="Last name"
                 />
               </div>
@@ -203,9 +201,8 @@ const SignUp: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${
-                    errors.email ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border ${errors.email ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -231,9 +228,8 @@ const SignUp: React.FC = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full pl-3 pr-3 py-2 text-sm rounded-r-md border ${
-                    errors.phone ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-3 pr-3 py-2 text-sm rounded-r-md border ${errors.phone ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="10-digit number"
                 />
               </div>
@@ -254,9 +250,8 @@ const SignUp: React.FC = () => {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${
-                    errors.password ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${errors.password ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="Password"
                 />
                 <button
@@ -281,9 +276,8 @@ const SignUp: React.FC = () => {
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${
-                    errors.confirmPassword ? "border-red-400" : "border-gray-300"
-                  }`}
+                  className={`w-full pl-9 pr-9 py-2 text-sm rounded-md border ${errors.confirmPassword ? "border-red-400" : "border-gray-300"
+                    }`}
                   placeholder="Confirm"
                 />
                 <button

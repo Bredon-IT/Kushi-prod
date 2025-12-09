@@ -24,7 +24,7 @@ interface Service {
   description: string;
   features: string[];
   active: string;
-   // additional optional fields used by ServiceDetails
+  // additional optional fields used by ServiceDetails
   badge?: string;
   overview?: string;
   our_process?: string;
@@ -36,13 +36,13 @@ interface Service {
   faq?: string;
 }
 
-const HomePage: React.FC = () => { 
-  
- useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, []);
+const HomePage: React.FC = () => {
 
- 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+
 
 
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ const HomePage: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [stopMarquee, setStopMarquee] = useState(false);
 
-   // Top services state + error + loading
+  // Top services state + error + loading
   const [topServices, setTopServices] = useState<any[]>([]);
   const [topServicesError, setTopServicesError] = useState<string | null>(null);
   const [topServicesLoading, setTopServicesLoading] = useState<boolean>(false);
@@ -80,41 +80,41 @@ const HomePage: React.FC = () => {
   };
 
   // Add near the top with other refs/state
-const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
-// How many pixels to scroll per arrow click
-const SCROLL_AMOUNT = 320;
+  // How many pixels to scroll per arrow click
+  const SCROLL_AMOUNT = 320;
 
-const scrollLeft = () => {
-  setStopMarquee(true);
+  const scrollLeft = () => {
+    setStopMarquee(true);
 
-  // resume marquee after 3 seconds
-  setTimeout(() => setStopMarquee(false), 3000);
+    // resume marquee after 3 seconds
+    setTimeout(() => setStopMarquee(false), 3000);
 
-  scrollRef.current?.scrollBy({
-    left: -SCROLL_AMOUNT,
-    behavior: "smooth",
-  });
-};
+    scrollRef.current?.scrollBy({
+      left: -SCROLL_AMOUNT,
+      behavior: "smooth",
+    });
+  };
 
-const scrollRight = () => {
-  setStopMarquee(true);
+  const scrollRight = () => {
+    setStopMarquee(true);
 
-  // resume marquee after 3 seconds
-  setTimeout(() => setStopMarquee(false), 3000);
+    // resume marquee after 3 seconds
+    setTimeout(() => setStopMarquee(false), 3000);
 
-  scrollRef.current?.scrollBy({
-    left: SCROLL_AMOUNT,
-    behavior: "smooth",
-  });
-};
+    scrollRef.current?.scrollBy({
+      left: SCROLL_AMOUNT,
+      behavior: "smooth",
+    });
+  };
 
 
- useEffect(() => {
+  useEffect(() => {
     // Fetch all active services
     const fetchServices = async () => {
       try {
-        const res = await fetch(Global_API_BASE +"/api/customers/all-services");
+        const res = await fetch(Global_API_BASE + "/api/customers/all-services");
         const data = await res.json();
         const mapped: Service[] = data
           .filter((item: any) => item.active === "Y")
@@ -132,22 +132,22 @@ const scrollRight = () => {
             image: item.service_image_url
               ? item.service_image_url.startsWith("http")
                 ? item.service_image_url
-                :  `Global_API_BASE${item.service_image_url}`
+                : `Global_API_BASE${item.service_image_url}`
               : "/placeholder.jpg",
             description: item.service_description || "",
             features: item.features ? item.features.split(",") : [],
             active: item.active,
-             // extra fields used by ServiceDetails tabs
-          badge: item.badge || "",
-          overview: item.overview || item.service_overview || "",
-          our_process: item.our_process || item.service_process || "",
-          benefits: item.benefits || "",
-          whats_included: item.whats_included || item.whatsIncluded || "",
-          whats_not_included: item.whats_not_included || item.whatsNotIncluded || "",
-          why_choose_us: item.why_choose_us || "",
-          kushi_teamwork: item.kushi_teamwork || "",
-          faq: item.faq || "",
-        }));
+            // extra fields used by ServiceDetails tabs
+            badge: item.badge || "",
+            overview: item.overview || item.service_overview || "",
+            our_process: item.our_process || item.service_process || "",
+            benefits: item.benefits || "",
+            whats_included: item.whats_included || item.whatsIncluded || "",
+            whats_not_included: item.whats_not_included || item.whatsNotIncluded || "",
+            why_choose_us: item.why_choose_us || "",
+            kushi_teamwork: item.kushi_teamwork || "",
+            faq: item.faq || "",
+          }));
         setAllServices(mapped);
       } catch (err) {
         console.error("Error fetching services:", err);
@@ -155,8 +155,8 @@ const scrollRight = () => {
     };
     fetchServices();
   }, []);
- 
-  
+
+
   // debug: log heroImage updates
   useEffect(() => {
     console.debug("Home heroImage:", heroImage);
@@ -169,10 +169,10 @@ const scrollRight = () => {
       setSuggestions([]);
       return;
     }
- 
+
     const lowerTerm = searchTerm.toLowerCase();
     const results: typeof suggestions = [];
- 
+
     allServices.forEach((service) => {
       // Category match
       if (service.category.toLowerCase().includes(lowerTerm)) {
@@ -201,12 +201,12 @@ const scrollRight = () => {
         });
       }
     });
- 
+
     setSuggestions(results.slice(0, 10)); // limit to 10 suggestions
   }, [searchTerm, allServices]);
- 
+
   // Handle click outside dropdown
-   useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       const clickedOutsideInput = searchRef.current && !searchRef.current.contains(target);
@@ -226,7 +226,7 @@ const scrollRight = () => {
     const rect = el.getBoundingClientRect();
     setDropdownRect({ left: rect.left, top: rect.bottom, width: rect.width });
   };
- 
+
   useEffect(() => {
     if (showDropdown) updateDropdownPosition();
     window.addEventListener('resize', updateDropdownPosition);
@@ -242,35 +242,35 @@ const scrollRight = () => {
   const handleSelect = (item: typeof suggestions[0]) => {
     setSearchTerm("");
     setShowDropdown(false);
- 
-     if (item.type === "Category") {
-  const categoryName = item.name;
 
-  // 1. Get all services under this category
-  const filteredServices = allServices.filter(
-    (s) => s.category.toLowerCase() === categoryName.toLowerCase()
-  );
+    if (item.type === "Category") {
+      const categoryName = item.name;
 
-  // 2. Extract unique subcategories
-  const subcategories = [
-    ...new Set(filteredServices.map((s) => s.subcategory))
-  ];
+      // 1. Get all services under this category
+      const filteredServices = allServices.filter(
+        (s) => s.category.toLowerCase() === categoryName.toLowerCase()
+      );
 
-  // 3. Create slug for URL
-  const categorySlug = categoryName.toLowerCase().replace(/\s+/g, "-");
+      // 2. Extract unique subcategories
+      const subcategories = [
+        ...new Set(filteredServices.map((s) => s.subcategory))
+      ];
 
-  // 4. Navigate to subcategory page with data
-  navigate(`/services/category/${categorySlug}`, {
-    state: {
-      selectedCategory: categoryName,
-      subcategories: subcategories,
-      services: filteredServices
+      // 3. Create slug for URL
+      const categorySlug = categoryName.toLowerCase().replace(/\s+/g, "-");
+
+      // 4. Navigate to subcategory page with data
+      navigate(`/services/category/${categorySlug}`, {
+        state: {
+          selectedCategory: categoryName,
+          subcategories: subcategories,
+          services: filteredServices
+        }
+      });
+
+      return;
     }
-  });
-
-  return;
-}
- else if (item.type === "Subcategory") {
+    else if (item.type === "Subcategory") {
       const urlSubcategory = item.subcategory!.toLowerCase().replace(/\s/g, "-");
       const filteredServices = allServices.filter(
         (s) => s.subcategory.toLowerCase() === item.subcategory!.toLowerCase()
@@ -284,19 +284,19 @@ const scrollRight = () => {
       navigate(`/services/${urlSubcategory}`, { state: { services: [item.service!] } });
     }
   };
- 
 
-/** ---------------------------
-   * Fetch Top Services from backend
-   ---------------------------- */
-const API_BASE_URL = Global_API_BASE +"/api/admin"; // backend URL
+
+  /** ---------------------------
+     * Fetch Top Services from backend
+     ---------------------------- */
+  const API_BASE_URL = Global_API_BASE + "/api/admin"; // backend URL
 
   const getTopServices = async () => {
     setTopServicesLoading(true);
     setTopServicesError(null);
     try {
-     console.debug("Requesting top services:", `${API_BASE_URL}/top-services`);
-      const response = await axios.get( `${API_BASE_URL}/top-services`, { timeout: 10000 });
+      console.debug("Requesting top services:", `${API_BASE_URL}/top-services`);
+      const response = await axios.get(`${API_BASE_URL}/top-services`, { timeout: 10000 });
       console.debug("top-services response:", response.status, response.data);
       const payload = response.data;
       const list = payload?.topServices ?? payload ?? [];
@@ -312,179 +312,179 @@ const API_BASE_URL = Global_API_BASE +"/api/admin"; // backend URL
       setTopServicesLoading(false);
     }
   };
-useEffect(() => {
+  useEffect(() => {
     getTopServices();
   }, []);
 
 
 
-  
 
-/** ---------------------------
-  * New function to handle navigation from Top Booked Service card
-  ---------------------------- */
-const handleClickTopService = async (topItem: any | string) => {
-  const top = typeof topItem === "string"
-    ? { booking_service_name: topItem }
-    : topItem || {};
- 
-  const bookingName = (top.booking_service_name || top.service_name || "").trim();
- 
-  // helper slug function
-  const slugify = (s: string) =>
-    s.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and");
- 
-  const getRawSubcat = (obj: any) =>
-    obj?.booking_service_subcategory ||
-    obj?.service_type ||
-    obj?.service_category ||
-    obj?.subcategory ||
-    obj?.category ||
-    bookingName ||
-    "general";
- 
-  const rawSubcategory = getRawSubcat(top);
- 
-  // ---- TRY TO FIND MATCH IN CURRENT allServices ----
-  let found =
-    allServices.find(
-      (s) =>
-        String(s.id) ===
-        String(top.booking_service_id ?? top.service_id ?? top.id)
-    ) ||
-    allServices.find(
-      (s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()
-    ) ||
-    (bookingName
-      ? allServices.find((s) =>
+
+  /** ---------------------------
+    * New function to handle navigation from Top Booked Service card
+    ---------------------------- */
+  const handleClickTopService = async (topItem: any | string) => {
+    const top = typeof topItem === "string"
+      ? { booking_service_name: topItem }
+      : topItem || {};
+
+    const bookingName = (top.booking_service_name || top.service_name || "").trim();
+
+    // helper slug function
+    const slugify = (s: string) =>
+      s.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and");
+
+    const getRawSubcat = (obj: any) =>
+      obj?.booking_service_subcategory ||
+      obj?.service_type ||
+      obj?.service_category ||
+      obj?.subcategory ||
+      obj?.category ||
+      bookingName ||
+      "general";
+
+    const rawSubcategory = getRawSubcat(top);
+
+    // ---- TRY TO FIND MATCH IN CURRENT allServices ----
+    let found =
+      allServices.find(
+        (s) =>
+          String(s.id) ===
+          String(top.booking_service_id ?? top.service_id ?? top.id)
+      ) ||
+      allServices.find(
+        (s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()
+      ) ||
+      (bookingName
+        ? allServices.find((s) =>
           s.name.trim().toLowerCase().includes(bookingName.toLowerCase())
         )
-      : undefined);
- 
-  // ---- If not found, re-fetch ALL services ----
-  if (!found) {
-    try {
-      const res = await fetch(Global_API_BASE + "/api/customers/all-services");
-      if (res.ok) {
-        const data = await res.json();
- 
-        const mapped: Service[] = data
-          .filter((item: any) =>
-            (item.active ?? "Y").toString().toUpperCase() === "Y"
-          )
-          .map((item: any, index: number) => ({
-            id: item.service_id?.toString() || index.toString(),
-            name: item.service_name || item.booking_service_name || "Unnamed",
-            category: item.service_category || item.category || "",
-            subcategory:
-              item.service_type ||
-              item.subcategory ||
-              item.booking_service_subcategory ||
-              "",
-            service_package: item.service_package || "",
-            price: Number(item.service_cost ?? item.price ?? 0),
-            originalPrice: Number(item.originalPrice ?? item.price ?? 0),
-            rating: parseFloat(item.rating) || 0,
-            reviews: item.rating_count ? String(item.rating_count) : "0",
-            duration: item.duration || "1 hr",
-            image:
-              item.service_image_url &&
-              String(item.service_image_url).startsWith("http")
-                ? item.service_image_url
-                : item.service_image_url
-                ? Global_API_BASE + item.service_image_url
-                : "/placeholder.jpg",
-            description:
-              item.service_description ||
-              item.booking_service_description ||
-              "",
-            features: item.features ? String(item.features).split(",") : [],
-            active: item.active ?? "Y",
-            badge: item.badge || "",
-            overview: item.overview || "",
-            our_process: item.our_process || "",
-            benefits: item.benefits || "",
-            whats_included: item.whats_included || "",
-            whats_not_included: item.whats_not_included || "",
-            why_choose_us: item.why_choose_us || "",
-            kushi_teamwork: item.kushi_teamwork || "",
-            faq: item.faq || "",
-          }));
- 
-        setAllServices(mapped);
- 
-        found =
-          mapped.find(
-            (s) =>
-              String(s.id) ===
-              String(top.booking_service_id ?? top.service_id ?? top.id)
-          ) ||
-          mapped.find(
-            (s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()
-          ) ||
-          (bookingName
-            ? mapped.find((s) =>
+        : undefined);
+
+    // ---- If not found, re-fetch ALL services ----
+    if (!found) {
+      try {
+        const res = await fetch(Global_API_BASE + "/api/customers/all-services");
+        if (res.ok) {
+          const data = await res.json();
+
+          const mapped: Service[] = data
+            .filter((item: any) =>
+              (item.active ?? "Y").toString().toUpperCase() === "Y"
+            )
+            .map((item: any, index: number) => ({
+              id: item.service_id?.toString() || index.toString(),
+              name: item.service_name || item.booking_service_name || "Unnamed",
+              category: item.service_category || item.category || "",
+              subcategory:
+                item.service_type ||
+                item.subcategory ||
+                item.booking_service_subcategory ||
+                "",
+              service_package: item.service_package || "",
+              price: Number(item.service_cost ?? item.price ?? 0),
+              originalPrice: Number(item.originalPrice ?? item.price ?? 0),
+              rating: parseFloat(item.rating) || 0,
+              reviews: item.rating_count ? String(item.rating_count) : "0",
+              duration: item.duration || "1 hr",
+              image:
+                item.service_image_url &&
+                  String(item.service_image_url).startsWith("http")
+                  ? item.service_image_url
+                  : item.service_image_url
+                    ? Global_API_BASE + item.service_image_url
+                    : "/placeholder.jpg",
+              description:
+                item.service_description ||
+                item.booking_service_description ||
+                "",
+              features: item.features ? String(item.features).split(",") : [],
+              active: item.active ?? "Y",
+              badge: item.badge || "",
+              overview: item.overview || "",
+              our_process: item.our_process || "",
+              benefits: item.benefits || "",
+              whats_included: item.whats_included || "",
+              whats_not_included: item.whats_not_included || "",
+              why_choose_us: item.why_choose_us || "",
+              kushi_teamwork: item.kushi_teamwork || "",
+              faq: item.faq || "",
+            }));
+
+          setAllServices(mapped);
+
+          found =
+            mapped.find(
+              (s) =>
+                String(s.id) ===
+                String(top.booking_service_id ?? top.service_id ?? top.id)
+            ) ||
+            mapped.find(
+              (s) => s.name.trim().toLowerCase() === bookingName.toLowerCase()
+            ) ||
+            (bookingName
+              ? mapped.find((s) =>
                 s.name.trim().toLowerCase().includes(bookingName.toLowerCase())
               )
-            : undefined);
-      }
-    } catch {}
-  }
- 
-  // ---- If still not found → build fallback service object ----
-  const selected: Service =
-    found ||
-    ({
-      id: String(
-        top.service_id ?? top.booking_service_id ?? top.id ?? Date.now()
-      ),
-      name: bookingName || "Service",
-      category: top.service_category || top.category || "",
-      subcategory: rawSubcategory,
-      service_package: top.service_package || "",
-      price: Number(top.price ?? 0),
-      originalPrice: Number(top.originalPrice ?? 0),
-      rating: Number(top.rating ?? 0),
-      reviews: top.rating_count ? String(top.rating_count) : "0",
-      duration: top.duration || "1 hr",
-      image:
-        top.service_image_url && String(top.service_image_url).startsWith("http")
-          ? top.service_image_url
-          : "/placeholder.jpg",
-      description:
-        top.booking_service_description || top.service_description || "",
-      features: top.features ? String(top.features).split(",") : [],
-      active: top.active ?? "Y",
-      badge: "",
-      overview: "",
-      our_process: "",
-      benefits: "",
-      whats_included: "",
-      whats_not_included: "",
-      why_choose_us: "",
-      kushi_teamwork: "",
-      faq: "",
-    } as Service);
- 
-  // ---- ALWAYS NAVIGATE DIRECTLY TO SERVICE DETAILS ----
-  const subSlug = slugify(selected.subcategory || selected.category || "general");
-  const serviceSlug = slugify(selected.name);
- 
-  navigate(`/services/${subSlug}/${serviceSlug}`, {
-    state: {
-      services: [selected],        // 🔥 ALWAYS a single service
-      selectedServiceId: selected.id,
-      openDirectly: true,
-    },
-  });
-}; 
+              : undefined);
+        }
+      } catch { }
+    }
+
+    // ---- If still not found → build fallback service object ----
+    const selected: Service =
+      found ||
+      ({
+        id: String(
+          top.service_id ?? top.booking_service_id ?? top.id ?? Date.now()
+        ),
+        name: bookingName || "Service",
+        category: top.service_category || top.category || "",
+        subcategory: rawSubcategory,
+        service_package: top.service_package || "",
+        price: Number(top.price ?? 0),
+        originalPrice: Number(top.originalPrice ?? 0),
+        rating: Number(top.rating ?? 0),
+        reviews: top.rating_count ? String(top.rating_count) : "0",
+        duration: top.duration || "1 hr",
+        image:
+          top.service_image_url && String(top.service_image_url).startsWith("http")
+            ? top.service_image_url
+            : "/placeholder.jpg",
+        description:
+          top.booking_service_description || top.service_description || "",
+        features: top.features ? String(top.features).split(",") : [],
+        active: top.active ?? "Y",
+        badge: "",
+        overview: "",
+        our_process: "",
+        benefits: "",
+        whats_included: "",
+        whats_not_included: "",
+        why_choose_us: "",
+        kushi_teamwork: "",
+        faq: "",
+      } as Service);
+
+    // ---- ALWAYS NAVIGATE DIRECTLY TO SERVICE DETAILS ----
+    const subSlug = slugify(selected.subcategory || selected.category || "general");
+    const serviceSlug = slugify(selected.name);
+
+    navigate(`/services/${subSlug}/${serviceSlug}`, {
+      state: {
+        services: [selected],        // 🔥 ALWAYS a single service
+        selectedServiceId: selected.id,
+        openDirectly: true,
+      },
+    });
+  };
 
   /** ---------------------------
    * Service Categories
    ---------------------------- */
-   // Add a function to create a URL-friendly slug
-   
-const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').replace(/&/g, 'and');
+  // Add a function to create a URL-friendly slug
+
+  const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').replace(/&/g, 'and');
 
 
 
@@ -497,9 +497,9 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       image: "/ResidentialCleaning.png",
       link: '/services',
       gradient: 'from-peach-300 to-navy-700',
-      services: ['Full Home Deep Cleaning Services', 'Kitchen Cleaning Services', 'Bathroom Cleaning Services', 
+      services: ['Full Home Deep Cleaning Services', 'Kitchen Cleaning Services', 'Bathroom Cleaning Services',
         'Carpet Cleaning Services', 'Sofa cleaning Services', 'Mattress cleaning Services', 'Window Cleaning Services',
-        'Balcony Cleaning Services', 'Hall Cleaning Services', 'Bedroom Cleaning Services', 'Exterior Cleaning', 
+        'Balcony Cleaning Services', 'Hall Cleaning Services', 'Bedroom Cleaning Services', 'Exterior Cleaning',
         'Water Sump Cleaning and Water Tank Cleaning', 'Floor Deep Cleaning Services']
     },
     {
@@ -530,7 +530,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       image: "/PestControlServices.png",
       link: '/services',
       gradient: 'from-peach-300 to-navy-700',
-      services: ['Cockroach Pest Control ', 'Bedbug Pest Control', 'Termite Treatment ', 'Woodborer Pest Control', 'Rodent Pest Control', 
+      services: ['Cockroach Pest Control ', 'Bedbug Pest Control', 'Termite Treatment ', 'Woodborer Pest Control', 'Rodent Pest Control',
         'Mosquito Pest Control', 'General Pest Control', 'Commercial Pest Control', 'AMC Pest Control']
     },
     {
@@ -543,89 +543,89 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
       gradient: 'from-navy-700 to-peach-300',
       services: ['Indian Marble Polishing Services', '•	Italian Marble Polishing Services', 'Mosaic Tile Polishing Services']
     },
-    
+
     {
       icon: Truck,
       title: 'Packers And Movers',
       description: 'Professional packing and moving services with complete care',
       price: 'Starting ₹6,999',
-     image: "/Packers&Movers.png",
-    link: '/services',
+      image: "/Packers&Movers.png",
+      link: '/services',
       gradient: 'from-peach-300 to-navy-700',
       services: ['Home Shifting Services', 'Office Shifting Services']
     }
   ];
 
 
-  
-  
+
+
 
   const promotions = [
-  {
-    title: 'Get Offer on Your First Deep Clean!',
-    description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
-    cta: 'Claim Offer Now',
-    image: "/ResidentialCleaning.png",
-    link: '/services',
-    gradient: 'from-peach-300/80 to-navy-700/80'
-  },
-  {
-    title: 'Annual Pest Control Package',
-    description: 'Protect your home or office year-round with our comprehensive pest control solutions. Special rates available!',
-    cta: 'Learn More',
-    image:"/CommercialCleaningServices.png",
-    gradient: 'from-navy-700/80 to-peach-300/80'
-  },
-  {
-    title: 'Marble Polishing Offer',
-    description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
-    cta: 'Book Now',
-    image: "/MarblePolishingServices.png",
-    link: '/services',
-    gradient: 'from-peach-300/80 to-navy-700/80'
-  },
-  {
-    title: 'Packers & Movers Discount',
-    description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
-    cta: 'Move Now',
-    image: "/Packers&Movers.png",
-   link: '/services',
-    gradient: 'from-navy-700/80 to-peach-300/80'
-  },
-  {
-    title: 'Get Offer Your First Deep Clean!',
-    description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
-    cta: 'Claim Offer Now',
-    image: "/ResidentialCleaning.png",
-    link: '/services',
-    gradient: 'from-peach-300/80 to-navy-700/80'
-  },
-  {
-    title: 'Annual Pest Control Package',
-    description: 'Protect your home or office year-round with our comprehensive pest control solutions. Special rates available!',
-    cta: 'Learn More',
-    image: "/CommercialCleaningServices.png",
-    link: '/services',
-    gradient: 'from-navy-700/80 to-peach-300/80'
-  },
-  {
-    title: 'Marble Polishing Offer',
-    description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
-    cta: 'Book Now',
-   image:"/MarblePolishingServices.png",
-     link: '/services',
-    gradient: 'from-peach-300/80 to-navy-700/80'
-  },
-  {
-    title: 'Packers & Movers Discount',
-    description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
-    cta: 'Move Now',
-   image: "/Packers&Movers.png",
-    link: '/services',
-    gradient: 'from-navy-700/80 to-peach-300/80'
-  }
+    {
+      title: 'Get Offer on Your First Deep Clean!',
+      description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
+      cta: 'Claim Offer Now',
+      image: "/ResidentialCleaning.png",
+      link: '/services',
+      gradient: 'from-peach-300/80 to-navy-700/80'
+    },
+    {
+      title: 'Annual Pest Control Package',
+      description: 'Protect your home or office year-round with our comprehensive pest control solutions. Special rates available!',
+      cta: 'Learn More',
+      image: "/CommercialCleaningServices.png",
+      gradient: 'from-navy-700/80 to-peach-300/80'
+    },
+    {
+      title: 'Marble Polishing Offer',
+      description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
+      cta: 'Book Now',
+      image: "/MarblePolishingServices.png",
+      link: '/services',
+      gradient: 'from-peach-300/80 to-navy-700/80'
+    },
+    {
+      title: 'Packers & Movers Discount',
+      description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
+      cta: 'Move Now',
+      image: "/Packers&Movers.png",
+      link: '/services',
+      gradient: 'from-navy-700/80 to-peach-300/80'
+    },
+    {
+      title: 'Get Offer Your First Deep Clean!',
+      description: 'Experience a spotless home with our premium deep cleaning service. Limited time offer for new customers.',
+      cta: 'Claim Offer Now',
+      image: "/ResidentialCleaning.png",
+      link: '/services',
+      gradient: 'from-peach-300/80 to-navy-700/80'
+    },
+    {
+      title: 'Annual Pest Control Package',
+      description: 'Protect your home or office year-round with our comprehensive pest control solutions. Special rates available!',
+      cta: 'Learn More',
+      image: "/CommercialCleaningServices.png",
+      link: '/services',
+      gradient: 'from-navy-700/80 to-peach-300/80'
+    },
+    {
+      title: 'Marble Polishing Offer',
+      description: 'Get a luxurious shine with our marble polishing services. Flat offer for this season!',
+      cta: 'Book Now',
+      image: "/MarblePolishingServices.png",
+      link: '/services',
+      gradient: 'from-peach-300/80 to-navy-700/80'
+    },
+    {
+      title: 'Packers & Movers Discount',
+      description: 'Shift your home or office hassle-free! Get offer on your first move with us.',
+      cta: 'Move Now',
+      image: "/Packers&Movers.png",
+      link: '/services',
+      gradient: 'from-navy-700/80 to-peach-300/80'
+    }
 
-];
+  ];
 
 
 
@@ -642,69 +642,69 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
 
   return (
     <div>
-    <SEO 
+      <SEO
         title="Home Services in Bangalore - Cleaning, Plumbing, Electrical & More"
         description="Professional home services in Bangalore. Expert cleaning, plumbing, electrical, pest control, and more. Book trusted professionals with instant quotes. Available 24/7."
         keywords="home services bangalore, cleaning services, plumbing services, electrical services, pest control, AC repair, appliance repair, painting services"
         url="https://kushiservices.com"
       />
-   {/* Rotating Offers */}
- <RotatingOffers onHeroImageUpdate={handleHeroImageUpdate} />
+      {/* Rotating Offers */}
+      <RotatingOffers onHeroImageUpdate={handleHeroImageUpdate} />
 
 
-{/* Hero Section with Auto Background Change and Left-Aligned Content */}
+      {/* Hero Section with Auto Background Change and Left-Aligned Content */}
 
-<section className="relative min-h-[2vh] flex flex-col justify-center overflow-hidden bg-gradient-to-r from-peach-300 to-navy-700">
+      <section className="relative min-h-[2vh] flex flex-col justify-center overflow-hidden bg-gradient-to-r from-peach-300 to-navy-700">
 
-  {/* --- Main Content (Left-Aligned) --- */}
+        {/* --- Main Content (Left-Aligned) --- */}
 
-  <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12 py-8 text-left z-10 flex flex-col justify-center items-start">
+        <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12 py-8 text-left z-10 flex flex-col justify-center items-start">
 
-    {/* Certification Badge */}
-    <div className="inline-flex items-center gap-2 bg-peach-300/20 backdrop-blur-sm px-3 py-1 rounded-full border border-peach-300 mb-2 text-xs font-semibold text-black shadow-xl">
+          {/* Certification Badge */}
+          <div className="inline-flex items-center gap-2 bg-peach-300/20 backdrop-blur-sm px-3 py-1 rounded-full border border-peach-300 mb-2 text-xs font-semibold text-black shadow-xl">
 
-      <Star className="text-yellow-400 fill-current" size={12} />
-      IAS Accredited Management System Certified Company
-    </div>
+            <Star className="text-yellow-400 fill-current" size={12} />
+            IAS Accredited Management System Certified Company
+          </div>
 
-    {/* Hero Headline */}
-    <h1 className="text-lg sm:text-xl lg:text-3xl font-black leading-tight mb-3">
-      <span className="text-black drop-shadow-1xl">
-        Redefining Cleanliness <span className="text-black">Elevating Happiness</span>
-    </span>
+          {/* Hero Headline */}
+          <h1 className="text-lg sm:text-xl lg:text-3xl font-black leading-tight mb-3">
+            <span className="text-black drop-shadow-1xl">
+              Redefining Cleanliness <span className="text-black">Elevating Happiness</span>
+            </span>
 
-    </h1>
-     {/* Subheading */}
-    <p className="text-sm sm:text-lg text-black/90 max-w-l mb-3 font-light drop-shadow-md">
-      Professional, reliable, and trusted maintenance solutions for a spotless home and vibrant business.
-    </p>
-    {/* --- Search Bar (Unchanged Logic) --- */}
+          </h1>
+          {/* Subheading */}
+          <p className="text-sm sm:text-lg text-black/90 max-w-l mb-3 font-light drop-shadow-md">
+            Professional, reliable, and trusted maintenance solutions for a spotless home and vibrant business.
+          </p>
+          {/* --- Search Bar (Unchanged Logic) --- */}
 
-     <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
-    <div className="max-w-xs w-full relative order-1 md:order-1" ref={searchRef}>
-    <div className="relative bg-white backdrop-blur-sm rounded-full p-1 shadow-2xl border-4 border-peach-300/0 hover:border-peach-300 transition-all duration-300">
-          <input
-          type="text"
-          placeholder="Search Services..."
-           className="w-full p-2.5 pr-12 rounded-full border-2 border-transparent focus:outline-none focus:border-peach-300 bg-transparent text-sm text-black placeholder-black/80"
-           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setShowDropdown(true);
-          }}
-          onFocus={() => setShowDropdown(true)}
-        />
-        <button
-          onClick={() => {
-            alert(`Searching for: ${searchTerm}`);
-          }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-peach-300 p-2 rounded-full hover:bg-navy-700 transition shadow-xl"
-        >
-          <Search className="text-black" size={18} />
-        </button>
-      </div>
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
+            <div className="max-w-xs w-full relative order-1 md:order-1" ref={searchRef}>
+              <div className="relative bg-white backdrop-blur-sm rounded-full p-1 shadow-2xl border-4 border-peach-300/0 hover:border-peach-300 transition-all duration-300">
+                <input
+                  type="text"
+                  placeholder="Search Services..."
+                  className="w-full p-2.5 pr-12 rounded-full border-2 border-transparent focus:outline-none focus:border-peach-300 bg-transparent text-sm text-black placeholder-black/80"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                />
+                <button
+                  onClick={() => {
+                    alert(`Searching for: ${searchTerm}`);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-peach-300 p-2 rounded-full hover:bg-navy-700 transition shadow-xl"
+                >
+                  <Search className="text-black" size={18} />
+                </button>
+              </div>
 
-    {showDropdown && dropdownRect &&
+              {showDropdown && dropdownRect &&
                 ReactDOM.createPortal(
                   <div
                     ref={dropdownRef}
@@ -729,7 +729,7 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
                           </li>
                         ))
                       ) : (
-            searchTerm && (
+                        searchTerm && (
                           <li className="p-4 text-gray-500 text-sm">No services found for "{searchTerm}".</li>
                         )
                       )}
@@ -740,8 +740,8 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
               }
             </div>
 
-    {/* Right-side hero image (does not increase hero height) */}
- <div className="hidden md:block absolute right-6 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none">
+            {/* Right-side hero image (does not increase hero height) */}
+            <div className="hidden md:block absolute right-6 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none">
               <div className="w-56 md:w-72 lg:w-80 max-h-[220px] overflow-hidden rounded-3xl shadow-2xl bg-white/0">
                 <img
                   src={normalizeImageUrl(heroImage)}
@@ -756,192 +756,192 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
               </div>
             </div>
 
-    {/* --- Action Buttons --- */}
-    <div className="flex flex-row flex-wrap justify-start gap-3 order-2 md:order-2">
-      <Link
-        to="/contact"
-         className="bg-navy-700 text-white px-5 py-1.5 rounded-lg text-sm font-bold hover:bg-navy-600 transition-colors flex items-center justify-center gap-2 shadow-lg transform hover:scale-105 whitespace-nowrap"
-         >
-        <Phone size={16} />
-        Get Free Quote
-      </Link>
-     <Link
-        to="/services"
-         className="bg-transparent border-2 border-peach-300 text-black px-5 py-1.5 rounded-lg text-sm font-bold hover:bg-peach-300 hover:text-navy-900 transition-colors flex items-center justify-center gap-2 transform hover:scale-105 whitespace-nowrap"
-           >
-        Explore All Services
-        <ArrowRight size={16} />
-      </Link>
-    </div>
-  </div>
-</div>
-  {/* --- Trust Bar (Unchanged) --- */}
-  <div className="relative w-full bg-white/10 backdrop-blur-md border-t border-b border-peach-300/50 py-1.5 z-10 mt-3">
-    <div className="max-w-10xl mx-auto px-3 lg:px-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="flex items-center space-x-2 text-black justify-center">
-        <Shield size={18} className="text-peach-300" />
-        <span className="text-xs font-semibold">100% Insured & Bonded</span>
-      </div>
-      <div className="flex items-center space-x-2 text-black justify-center">
-        <Star size={20} className="text-peach-300 fill-peach-300" />
-        <span className="text-xs font-semibold">500+ Verified Reviews</span>
-      </div>
-      <div className="flex items-center space-x-2 text-black justify-center">
-        <Clock size={20} className="text-peach-300" />
-        <span className="text-xs font-semibold">Same-Day Availability</span>
-      </div>
-      <div className="flex items-center space-x-2 text-black justify-center">
-        <CheckCircle size={20} className="text-peach-300" />
-        <span className="text-xs font-semibold">Satisfaction Guaranteed</span>
-      </div>
-    </div>
-  </div>
-</section>
+            {/* --- Action Buttons --- */}
+            <div className="flex flex-row flex-wrap justify-start gap-3 order-2 md:order-2">
+              <Link
+                to="/contact"
+                className="bg-navy-700 text-white px-5 py-1.5 rounded-lg text-sm font-bold hover:bg-navy-600 transition-colors flex items-center justify-center gap-2 shadow-lg transform hover:scale-105 whitespace-nowrap"
+              >
+                <Phone size={16} />
+                Get Free Quote
+              </Link>
+              <Link
+                to="/services"
+                className="bg-transparent border-2 border-peach-300 text-black px-5 py-1.5 rounded-lg text-sm font-bold hover:bg-peach-300 hover:text-navy-900 transition-colors flex items-center justify-center gap-2 transform hover:scale-105 whitespace-nowrap"
+              >
+                Explore All Services
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+        {/* --- Trust Bar (Unchanged) --- */}
+        <div className="relative w-full bg-white/10 backdrop-blur-md border-t border-b border-peach-300/50 py-1.5 z-10 mt-3">
+          <div className="max-w-10xl mx-auto px-3 lg:px-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-2 text-black justify-center">
+              <Shield size={18} className="text-peach-300" />
+              <span className="text-xs font-semibold">100% Insured & Bonded</span>
+            </div>
+            <div className="flex items-center space-x-2 text-black justify-center">
+              <Star size={20} className="text-peach-300 fill-peach-300" />
+              <span className="text-xs font-semibold">500+ Verified Reviews</span>
+            </div>
+            <div className="flex items-center space-x-2 text-black justify-center">
+              <Clock size={20} className="text-peach-300" />
+              <span className="text-xs font-semibold">Same-Day Availability</span>
+            </div>
+            <div className="flex items-center space-x-2 text-black justify-center">
+              <CheckCircle size={20} className="text-peach-300" />
+              <span className="text-xs font-semibold">Satisfaction Guaranteed</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-{/* Glow Utility Class */}
-<style>
-{`
+      {/* Glow Utility Class */}
+      <style>
+        {`
   .shadow-peachGlow {
     box-shadow: 0 0 20px rgba(255, 183, 134, 0.7),
                 0 0 30px rgba(255, 150, 100, 0.5);
   }
 `}
-</style>
+      </style>
 
-{/* Service Categories Section */}
-<section className="py-3 bg-white relative"> {/* relative for arrow positioning */}
-  <div className="w-full px-2 sm:px-3 lg:px-4">
+      {/* Service Categories Section */}
+      <section className="py-3 bg-white relative"> {/* relative for arrow positioning */}
+        <div className="w-full px-2 sm:px-3 lg:px-4">
 
-    {/* Section Header */}
-    <div className="text-center mb-6">
-      <h2 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">
-        Our{" "}
-        <span className="bg-gradient-to-r from-navy-600 to-navy-700 bg-clip-text text-transparent">
-          Premium Services
-        </span>
-      </h2>
-      <p className="text-base text-navy-600 max-w-2xl mx-auto">
-        Choose from our professional cleaning and maintenance services.
-      </p>
-    </div>
+          {/* Section Header */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-navy-900 mb-2">
+              Our{" "}
+              <span className="bg-gradient-to-r from-navy-600 to-navy-700 bg-clip-text text-transparent">
+                Premium Services
+              </span>
+            </h2>
+            <p className="text-base text-navy-600 max-w-2xl mx-auto">
+              Choose from our professional cleaning and maintenance services.
+            </p>
+          </div>
 
-    {/* Left Arrow */}
-    <button
-      onClick={scrollLeft}
-      aria-label="Scroll left"
-      className="
+          {/* Left Arrow */}
+          <button
+            onClick={scrollLeft}
+            aria-label="Scroll left"
+            className="
         hidden md:flex items-center justify-center
         absolute left-2 top-1/2 -translate-y-1/2 z-[999]
         w-10 h-10 rounded-full shadow-lg bg-white border border-gray-200
         hover:scale-105 transition
       "
-    >
-      ❮
-    </button>
+          >
+            ❮
+          </button>
 
-    {/* Right Arrow */}
-    <button
-      onClick={scrollRight}
-      aria-label="Scroll right"
-      className="
+          {/* Right Arrow */}
+          <button
+            onClick={scrollRight}
+            aria-label="Scroll right"
+            className="
         hidden md:flex items-center justify-center
         absolute right-2 top-1/2 -translate-y-1/2 z-[999]
         w-10 h-10 rounded-full shadow-lg bg-white border border-gray-200
         hover:scale-105 transition
       "
-    >
-      ❯
-    </button>
+          >
+            ❯
+          </button>
 
-    {/* Scrollable container (use overflow-x-auto, keep overflow-visible for zoom) */}
-    <div
-      ref={scrollRef}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      className="flex w-full overflow-x-auto overflow-y-visible no-scrollbar space-x-6 py-2"
-      // keep scroll snapping optional:
-      // snap-x snap-mandatory
-    >
-      <div className={`flex space-x-6 ${!isHovering && !stopMarquee ? 'animate-marquee-scroll' : ''}`}>
-        {[...serviceCategories, ...serviceCategories].map((service, index) => {
-          const categorySlug = createSlug(service.title);
-          return (
-            <div
-              key={index}
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
-              onClick={() =>
-                navigate(`/services/category/${categorySlug}`, {
-                  state: { selectedCategory: service.title }
-                })
-              }
-              className="
+          {/* Scrollable container (use overflow-x-auto, keep overflow-visible for zoom) */}
+          <div
+            ref={scrollRef}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+            className="flex w-full overflow-x-auto overflow-y-visible no-scrollbar space-x-6 py-2"
+          // keep scroll snapping optional:
+          // snap-x snap-mandatory
+          >
+            <div className={`flex space-x-6 ${!isHovering && !stopMarquee ? 'animate-marquee-scroll' : ''}`}>
+              {[...serviceCategories, ...serviceCategories].map((service, index) => {
+                const categorySlug = createSlug(service.title);
+                return (
+                  <div
+                    key={index}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                    onClick={() =>
+                      navigate(`/services/category/${categorySlug}`, {
+                        state: { selectedCategory: service.title }
+                      })
+                    }
+                    className="
                 group min-w-[200px] max-w-[200px] flex-shrink-0 rounded-2xl
                 cursor-pointer bg-white shadow-lg border-4 border-peach-300
                 relative overflow-visible transition-transform duration-300 hover:z-[999]
               "
-            >
-              {/* Card content container (keeps layout stable) */}
-              <div className="rounded-2xl overflow-visible bg-white">
-                {/* visible image area (keeps original size) */}
-                <div className="relative h-40 w-full rounded-t-2xl overflow-visible">
-                  {/* image: same size normally, but will pop-out on hover */}
-                  <img
-  src={service.image}
-  alt={service.title}
-  className="
+                  >
+                    {/* Card content container (keeps layout stable) */}
+                    <div className="rounded-2xl overflow-visible bg-white">
+                      {/* visible image area (keeps original size) */}
+                      <div className="relative h-40 w-full rounded-t-2xl overflow-visible">
+                        {/* image: same size normally, but will pop-out on hover */}
+                        <img
+                          src={service.image}
+                          alt={service.title}
+                          className="
     w-full h-full object-cover rounded-t-2xl
     transform transition-transform duration-500 ease-out
     hover:scale-[1.6] hover:-translate-y-6
     will-change-transform z-30
   "
-  style={{ transformOrigin: 'center top' }}
-/>
+                          style={{ transformOrigin: 'center top' }}
+                        />
 
-                  {/* subtle overlay to keep title readable */}
-                  <div className="absolute inset-0 bg-black/12 rounded-t-2xl pointer-events-none"></div>
-                </div>
+                        {/* subtle overlay to keep title readable */}
+                        <div className="absolute inset-0 bg-black/12 rounded-t-2xl pointer-events-none"></div>
+                      </div>
 
-                {/* Title area */}
-                <div className="p-2 text-center bg-white rounded-b-2xl">
-                  <h3 className="text-sm font-semibold text-navy-700 group-hover:text-peach-300 transition-colors duration-300">
-                    {service.title}
-                  </h3>
-                </div>
-              </div>
+                      {/* Title area */}
+                      <div className="p-2 text-center bg-white rounded-b-2xl">
+                        <h3 className="text-sm font-semibold text-navy-700 group-hover:text-peach-300 transition-colors duration-300">
+                          {service.title}
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  </div>
-</section>
+          </div>
+        </div>
+      </section>
 
 
-{/* 🔹 Top Booked Services Section */}
-<section className="py-2 bg-white w-full">
-  <div className="w-full max-w-[100vw] overflow-hidden">
-    <div className="text-center mb-4 px-2">
-      <h2 className="text-2xl sm:text-2xl font-bold text-navy-900 mb-2">
-        Top{" "}
-        <span className="bg-gradient-to-r from-peach-300 to-navy-700 bg-clip-text text-transparent">
-          5 Services
-        </span>
-      </h2>
-      <p className="text-base text-navy-600 max-w-xl mx-auto">
-        Our customers love these services the most!
-      </p>
-    </div>
+      {/* 🔹 Top Booked Services Section */}
+      <section className="py-2 bg-white w-full">
+        <div className="w-full max-w-[100vw] overflow-hidden">
+          <div className="text-center mb-4 px-2">
+            <h2 className="text-2xl sm:text-2xl font-bold text-navy-900 mb-2">
+              Top{" "}
+              <span className="bg-gradient-to-r from-peach-300 to-navy-700 bg-clip-text text-transparent">
+                5 Services
+              </span>
+            </h2>
+            <p className="text-base text-navy-600 max-w-xl mx-auto">
+              Our customers love these services the most!
+            </p>
+          </div>
 
-    {topServicesLoading ? (
-      <p className="text-center text-navy-600">Loading top booked services...</p>
-    ) : topServicesError ? (
-      <p className="text-center text-red-600">Error: {topServicesError}</p>
-    ) : topServices.length === 0 ? (
-      <p className="text-center text-navy-600">No top booked services found.</p>
-    ) : (
-      // 👇 REVISED CONTAINER: Ensures full-width 5-column grid on desktop
-      <div className="
+          {topServicesLoading ? (
+            <p className="text-center text-navy-600">Loading top booked services...</p>
+          ) : topServicesError ? (
+            <p className="text-center text-red-600">Error: {topServicesError}</p>
+          ) : topServices.length === 0 ? (
+            <p className="text-center text-navy-600">No top booked services found.</p>
+          ) : (
+            // 👇 REVISED CONTAINER: Ensures full-width 5-column grid on desktop
+            <div className="
         /* Default for Mobile: Horizontal Scrolling Flex */
         flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 py-1 no-scrollbar w-full
 
@@ -951,11 +951,11 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
         /* Desktop (lg): Show 5 columns, fills available width */
         lg:grid-cols-5 lg:px-6
       ">
-        {topServices.map((service, index) => (
-          <div
-            key={index}
-            onClick={() => handleClickTopService(service)}
-            className="
+              {topServices.map((service, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleClickTopService(service)}
+                  className="
               group relative snap-start cursor-pointer
               
               /* Mobile: Keep fixed width for scrolling */
@@ -966,145 +966,127 @@ const createSlug = (text: string) => text.toLowerCase().replace(/\s/g, '-').repl
               
               transition-transform duration-500
             "
-          >
-            {/* Hover Ring Wrapper */}
-            <div
-              className="
+                >
+                  {/* Hover Ring Wrapper */}
+                  <div
+                    className="
                 bg-white rounded-2xl shadow-md p-[4px]
                 
               "
-            >
-              {/* Image Wrapper */}
-              <div className="relative h-[160px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
-                <img
-                  src={service.service_image_url || service.booking_service_image_url || '/logo.png'}
-                  alt={service.booking_service_name || service.service_name}
-                  className="
+                  >
+                    {/* Image Wrapper */}
+                    <div className="relative h-[160px] overflow-hidden rounded-t-xl flex justify-center items-center bg-white">
+                      <img
+                        src={service.service_image_url || service.booking_service_image_url || '/logo.png'}
+                        alt={service.booking_service_name || service.service_name}
+                        className="
                     w-full h-full object-cover object-center
                     transition-transform duration-700 ease-out
                     group-hover:scale-150
                   "
-                />
+                      />
 
-                {/* Arrow */}
-                <div
-                  className="
+                      {/* Arrow */}
+                      <div
+                        className="
                     absolute bottom-2 right-2 opacity-0 translate-y-3
                     group-hover:opacity-100 group-hover:translate-y-0
                     transition-all duration-500 z-20
                   "
-                >
-                  <span className="bg-white/80 backdrop-blur-md p-2 rounded-full shadow">
-                    ➜
-                  </span>
-                </div>
-              </div>
+                      >
+                        <span className="bg-white/80 backdrop-blur-md p-2 rounded-full shadow">
+                          ➜
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Title */}
-              <div className="py-1 text-center bg-white rounded-b-xl">
-                <h3
-                  className="
+                    {/* Title */}
+                    <div className="py-1 text-center bg-white rounded-b-xl">
+                      <h3
+                        className="
                     text-sm font-bold text-navy-700
                     group-hover:text-peach-600 group-hover:-translate-y-1
                     transition-transform duration-500
                   "
-                >
-                  {service.booking_service_name || service.service_name}
-                </h3>
-              </div>
+                      >
+                        {service.booking_service_name || service.service_name}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
-      
-    )}
-  </div>
-</section>
 
+          )}
+        </div>
+      </section>
 
-
-{/* Promotions Section (Scrollable Cards) */}
-<section className="py-2 bg-white">
-  <div className="w-full px-2 sm:px-3 lg:px-4 max-w-10xl mx-auto">
-    <div className="text-center mb-6">
-      <h2 className="text-2xl sm:text-2xl font-bold text-navy-900 mb-2">
-        Special{" "}
-        <span className="bg-gradient-to-r from-navy-600 to-navy-700 bg-clip-text text-transparent">
-          Promotions & Offers
-        </span>
-      </h2>
-      <p className="text-base text-navy-600 max-w-1xl mx-auto">
-        Take advantage of our limited-time offers and packages for premium services.
-      </p>
-    </div>
-
-    {/* REVISED CONTAINER: Switched from grid to flex for horizontal scrolling */}
-    <div className="flex space-x-6 overflow-x-auto pb-4 no-scrollbar"> {/* Added space-x-6 for gap and overflow-x-auto for scrolling */}
-      {promotions.map((promo, index) => (
-        <Link
-          key={index}
-          to={promo.link}
-          // ADDED CLASSES: min-w-72 ensures a fixed width, flex-shrink-0 stops shrinking
-          className="group relative rounded-2xl overflow-hidden shadow-xl hover:scale-[1.02] transform transition-transform duration-300 min-w-44 flex-shrink-0"
-        >
-          {/* Image */}
-          <div className="relative h-44 overflow-hidden">
-            <img
-              src={promo.image}
-              alt={promo.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            />
-            <div className={`absolute inset-0 bg-gradient-to-br ${promo.gradient}`}></div>
+      {/* Promotions Section (Scrollable Cards) */}
+      <section className="py-2 bg-white">
+        <div className="w-full px-2 sm:px-3 lg:px-4 max-w-10xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-2xl font-bold text-navy-900 mb-2">
+              Special{" "}
+              <span className="bg-gradient-to-r from-navy-600 to-navy-700 bg-clip-text text-transparent">
+                Promotions & Offers
+              </span>
+            </h2>
+            <p className="text-base text-navy-600 max-w-xl mx-auto">
+              Take advantage of our limited-time offers and packages for premium services.
+            </p>
           </div>
 
-          {/* Content */}
-          <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-            <h3 className="text-lg font-bold mb-2 leading-snug">{promo.title}</h3>
-            <p className="text-sm mb-2 opacity-50 line-clamp-2">{promo.description}</p>
-            <div className="inline-flex items-center gap-2 bg-white text-navy-700 font-bold px-4 py-2 rounded-lg text-sm self-start group-hover:bg-peach-300 transition-colors">
-              {promo.cta}
-              {/* Assuming ArrowRight is an imported component */}
-              <ArrowRight
-                size={14}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </div>
+          <div className="flex space-x-6 overflow-x-auto pb-4 no-scrollbar">
+            {promotions.map((promo, index) => (
+              <Link
+                key={index}
+                to={promo.link || '#'}
+                className="group relative rounded-2xl overflow-hidden shadow-xl hover:scale-[1.02] transform transition-transform duration-300 min-w-44 flex-shrink-0"
+              >
+                {/* Image */}
+                <div className="relative h-44 overflow-hidden">
+                  <img
+                    src={promo.image}
+                    alt={promo.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${promo.gradient}`}></div>
+                </div>
+
+                {/* Content */}
+                <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
+                  <h3 className="text-lg font-bold mb-2 leading-snug">{promo.title}</h3>
+                  <p className="text-sm mb-2 opacity-50 line-clamp-2">{promo.description}</p>
+                  <div className="inline-flex items-center gap-2 bg-white text-navy-700 font-bold px-4 py-2 rounded-lg text-sm self-start group-hover:bg-peach-300 transition-colors">
+                    {promo.cta}
+                    <ArrowRight
+                      size={14}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-        </Link>
-      ))}
-    </div>
-  </div>
-</section>
-
-
-
+        </div>
+      </section>
 
       {/* Features Section - Why Choose Kushi Services Section */}
- 
-  <FeaturesCarousel />
+      <FeaturesCarousel />
 
- 
+      {/* --- Kushi Teamwork Carousel Section --- */}
+      <section className="py-2 bg-white">
+        <div className="w-full px-2 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+          </div>
+          <div className="mt-6">
+            <KushiTeamworkCarousel />
+          </div>
+        </div>
+      </section>
 
-
-
-
-
-{/* --- Kushi Teamwork Carousel Section --- */}
-<section className="py-2 bg-white">
-  <div className="w-full px-2 sm:px-6 lg:px-8">
-    <div className="text-center mb-8">
-    
-    </div>
-
-    <div className="mt-6">
-      <KushiTeamworkCarousel />
-    </div>
-  </div>
-</section>
-
-
-{/* ✅ Add Google Reviews Section Above Footer */}
-<GoogleReviews />
+      {/* ✅ Add Google Reviews Section Above Footer */}
+      <GoogleReviews />
 
     </div>
   );

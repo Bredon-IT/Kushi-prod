@@ -3,8 +3,9 @@ import React from "react";
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "danger" | "success" | "outline" | "danger-outline";
-  size?: "sm" | "md" | "lg" | "icon";
+  variant?: "primary" | "secondary" | "danger" | "success" | "outline" | "danger-outline" | "ghost";
+  size?: "default" | "sm" | "icon";
+  title?: string;
   className?: string;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
@@ -14,7 +15,7 @@ interface ButtonProps {
 export function Button({
   children,
   variant = "primary",
-  size = "md",
+  size = "default",
   className = "",
   onClick,
   disabled = false,
@@ -36,6 +37,8 @@ export function Button({
       "bg-transparent border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500",
     "danger-outline":
       "bg-transparent border-2 border-red-500 text-red-600 hover:bg-red-50 focus:ring-red-500",
+    ghost:
+      "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500",
   };
 
   const sizes: Record<string, string> = {
