@@ -137,10 +137,12 @@ interface CartItem extends Service {
 type TabKey = "overview" | "process" | "benefits" | "teamwork" |"why_choose_us"|"faq";
  
 const ServiceDetails: React.FC = () => {
-  const { subcategory } = useParams<{ subcategory: string }>();
+  const { subcategory, serviceSlug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
  
+  
+
   // Pre-fetched data passed via navigation state
   const preFetchedServices = location.state?.services as Service[] | undefined;
 
@@ -405,7 +407,7 @@ if (isInspection) {
         ? service.service_package.split(";").map((pkg) => {
             const [name, price, description] = pkg.split(":");
 
-            // 👉 Treat as inspection if no numeric price or contains these words
+            //  Treat as inspection if no numeric price or contains these words
             const lower = (price || "").toLowerCase();
             const isInspection =
               !price ||
@@ -475,18 +477,18 @@ if (isInspection) {
   };
 
  
- // --- Data Fetching useEffect (UPDATED: Auto-open single service or when openDirectly is true) ---
+// --- Data Fetching useEffect (UPDATED: Auto-open single service or when openDirectly is true) ---
 useEffect(() => {
   if (!preFetchedServices) {
     const loadServices = async () => {
       try {
         setLoading(true);
         setError(null);
- 
+
         const res = await fetch(Global_API_BASE + "/api/customers/all-services");
         if (!res.ok) throw new Error("Failed to fetch services");
         const data = await res.json();
- 
+
         const mapped: Service[] = data.map((item: any, index: number) => ({
           id: item.service_id?.toString() || index.toString(),
           name: item.service_name || "Unnamed Service",
@@ -501,12 +503,10 @@ useEffect(() => {
           image: item.service_image_url
             ? item.service_image_url.startsWith("http")
               ? item.service_image_url
-              :  `Global_API_BASE${item.service_image_url}`
+              : `${Global_API_BASE}${item.service_image_url}`
             : "/placeholder.jpg",
           description: item.service_description || "",
-          features: item.features
-            ? item.features.split(",")
-            : ["Eco-Friendly Products", "Insured Service"],
+          features: item.features ? item.features.split(",") : [],
           badge: item.badge || "",
           overview: item.overview || "",
           our_process: item.our_process || "",
@@ -517,16 +517,27 @@ useEffect(() => {
           kushi_teamwork: item.kushi_teamwork || "",
           faq: item.faq || "",
         }));
- 
+
         const filtered = mapped.filter(
           (s) =>
             s.subcategory.toLowerCase().replace(/\s/g, "-") ===
             subcategory?.toLowerCase()
         );
- 
+
         setServices(filtered);
- 
-       
+
+        //  FIX: Auto-select service when opening URL directly
+        if (serviceSlug && filtered.length > 0) {
+          const match = filtered.find(
+            (s) =>
+              s.name.toLowerCase().replace(/\s+/g, "-") ===
+              serviceSlug.toLowerCase()
+          );
+
+          if (match) {
+            handleCardClick(match);
+          }
+        }
       } catch (err) {
         console.error(err);
         setError("Unable to load services.");
@@ -534,7 +545,7 @@ useEffect(() => {
         setLoading(false);
       }
     };
- 
+
     loadServices();
   } else if (preFetchedServices.length > 0 && !selectedService) {
     const filtered = preFetchedServices.filter(
@@ -542,12 +553,24 @@ useEffect(() => {
         s.subcategory.toLowerCase().replace(/\s/g, "-") ===
         subcategory?.toLowerCase()
     );
+
     setServices(filtered);
- 
-    
+
+    //  FIX (also needed here)
+    if (serviceSlug && filtered.length > 0) {
+      const match = filtered.find(
+        (s) =>
+          s.name.toLowerCase().replace(/\s+/g, "-") ===
+          serviceSlug.toLowerCase()
+      );
+
+      if (match) {
+        handleCardClick(match);
+      }
+    }
   }
-}, [subcategory, preFetchedServices]);
-// --- End of Updated useEffect ---
+}, [subcategory, serviceSlug, preFetchedServices]);
+
 
 
 
@@ -572,7 +595,8 @@ useEffect(() => {
         image: item.service_image_url
           ? item.service_image_url.startsWith("http")
             ? item.service_image_url
-            : `Global_API_BASE${item.service_image_url}`
+            :  `${Global_API_BASE}${item.service_image_url}`
+
           : "/placeholder.jpg",
         description: item.service_description || "",
         features: item.features
@@ -764,7 +788,7 @@ const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
                         key={index}
                         onClick={() => handlePackageSelect(pkg)}
                         className={`px-4 py-3 border rounded-lg text-sm font-medium flex flex-col items-center justify-center text-center transition-colors
-                          ${selectedService.name.includes(`(${pkg.name})`)
+                          ${selectedService?.name?.includes(`(${pkg.name})`)
                             ? "bg-gradient-to-r from-peach-200 to-navy-700 border-peach-300 text-white"
                             : "bg-white border-gray-300 text-gray-700 hover:bg-peach-100 hover:border-peach-500"
                           }`}
@@ -866,12 +890,23 @@ const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
         </button>
  
         {/* Get Quote */}
-        <button
-            onClick={() => navigate("/contact")}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-md shadow hover:opacity-90 transition"
-        >
-            <ClipboardList size={16} /> Get Quote
-        </button>
+         <button
+                    onClick={() => {
+                      if (!selectedService) return;
+                      // clean name (remove package suffix like " (1BHK)")
+                      const cleanName = selectedService.name.replace(/\s*\(.*\)$/, "").trim();
+                      navigate("/contact", {
+                        state: {
+                          prefillService: selectedService.category, // full API category label
+                          prefillSubcategory: cleanName, // service_name (clean)
+                        },
+                      });
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-md shadow hover:opacity-90 transition"
+                  >
+                    <ClipboardList size={16} /> Get Quote
+                  </button>
+ 
  
         {/* Includes Button */}
         {selectedService.whats_included && (
