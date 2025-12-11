@@ -8,6 +8,7 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { Star, ArrowRight } from "lucide-react";
+import Global_API_BASE from "../services/GlobalConstants";
  
 const ServiceList: React.FC = () => {
   const { subcategory } = useParams();
@@ -15,8 +16,10 @@ const ServiceList: React.FC = () => {
   const location = useLocation();
   const navigationType = useNavigationType();
  
-  const services = location.state?.services || [];
- 
+  const preFetchedServices = location.state?.services || null;
+const [services, setServices] = React.useState(preFetchedServices || []);
+const [loading, setLoading] = React.useState(!preFetchedServices);
+
   // 🔥 Prevent auto-open from running more than ONCE
   const autoOpened = useRef(false);
 
@@ -24,6 +27,52 @@ const ServiceList: React.FC = () => {
 useEffect(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }, []);
+
+useEffect(() => {
+  // If services were passed through navigation (location.state), use them.
+  if (preFetchedServices) return;
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${Global_API_BASE}/api/customers/all-services`);
+      const data = await res.json();
+
+      const mapped = data.map((item: any, index: number) => ({
+        id: item.service_id?.toString() || index.toString(),
+        name: item.service_name,
+        category: item.service_category,
+        subcategory: item.service_type,
+        service_package: item.service_package,
+        price: item.service_cost,
+        originalPrice: item.originalPrice || item.price,
+        rating: parseFloat(item.rating),
+        reviews: item.rating_count?.toString() || "0",
+        duration: item.duration,
+        image: item.service_image_url.startsWith("http")
+          ? item.service_image_url
+          : `${Global_API_BASE}${item.service_image_url}`,
+        description: item.service_description,
+        features: item.features ? item.features.split(",") : [],
+        active: item.active,
+      }));
+
+      const filtered = mapped.filter(
+        (s) =>
+          s.subcategory.toLowerCase().replace(/\s+/g, "-") ===
+          subcategory?.toLowerCase()
+      );
+
+      setServices(filtered);
+    } catch (err) {
+      console.error("Error fetching services", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchServices();
+}, [subcategory]);
 
 
  

@@ -14,10 +14,4 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - project/node_modules
-
-# Standard SPA Rewrite for React Router
-rewrites:
-  - source: </^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/>
-    target: /index.html
-    status: 200
+      - project/node_modules/**/*
