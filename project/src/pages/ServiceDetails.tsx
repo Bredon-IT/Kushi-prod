@@ -94,11 +94,6 @@ const mockMiniServices = [
 ]; 
 
 
-
-
-
-
-
 // --- Interface for Service Data ---
 interface Service {
   id: string;
@@ -866,12 +861,23 @@ const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
         </button>
  
         {/* Get Quote */}
-        <button
-            onClick={() => navigate("/contact")}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-md shadow hover:opacity-90 transition"
-        >
-            <ClipboardList size={16} /> Get Quote
-        </button>
+             <button
+                    onClick={() => {
+                      if (!selectedService) return;
+                      // clean name (remove package suffix like " (1BHK)")
+                      const cleanName = selectedService.name.replace(/\s*\(.*\)$/, "").trim();
+                      navigate("/contact", {
+                        state: {
+                          prefillService: selectedService.category, // full API category label
+                          prefillSubcategory: cleanName, // service_name (clean)
+                        },
+                      });
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-md shadow hover:opacity-90 transition"
+                  >
+                    <ClipboardList size={16} /> Get Quote
+                  </button>
+
  
         {/* Includes Button */}
         {selectedService.whats_included && (
