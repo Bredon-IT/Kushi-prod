@@ -34,7 +34,11 @@ const Subcategories: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
  
-  const selectedCategory = location.state?.selectedCategory || null;
+  const selectedCategory =
+  location.state?.selectedCategory ||
+  categorySlug?.replace(/-/g, " ") ||
+  "";
+
  
   const [allServices, setAllServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
