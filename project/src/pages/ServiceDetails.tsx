@@ -94,11 +94,6 @@ const mockMiniServices = [
 ]; 
 
 
-
-
-
-
-
 // --- Interface for Service Data ---
 interface Service {
   id: string;
@@ -890,7 +885,7 @@ const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
         </button>
  
         {/* Get Quote */}
-         <button
+             <button
                     onClick={() => {
                       if (!selectedService) return;
                       // clean name (remove package suffix like " (1BHK)")
@@ -906,7 +901,7 @@ const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
                   >
                     <ClipboardList size={16} /> Get Quote
                   </button>
- 
+
  
         {/* Includes Button */}
         {selectedService.whats_included && (

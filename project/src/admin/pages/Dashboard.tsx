@@ -361,6 +361,29 @@ export function Dashboard() {
     { metric: 'Staff Efficiency', value: '92%', percentage: 92, color: 'bg-coral-500' }
   ];
 
+
+  
+function formatDateTime(dateTimeStr: string) {
+  if (!dateTimeStr) return "";
+
+  try {
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+  } catch {
+    return dateTimeStr;
+  }
+}
+
+
+  
+
   return (
     <div className="space-y-1 md:space-y-1 py-1 md:py-1">
       {/* Main Stats Cards */}
@@ -542,161 +565,163 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Today's Schedule & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Today's Schedule */}
-        <Card className="shadow-lg border-0 overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-3 md:p-4">
-            <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Timer className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-orange-600" />
-              Today's Schedule
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Upcoming bookings for today (excluding completed)
-            </p>
-          </CardHeader>
+     {/* Today's Schedule & Recent Activity */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 
-          <CardContent className="p-3 md:p-4">
-            {upcomingBookings.filter(b => b.bookingStatus?.toLowerCase() !== "completed").length === 0 ? (
-              <p className="text-center text-gray-500 text-sm">
-                No active bookings scheduled for today.
-              </p>
-            ) : (
+  {/* Today's Schedule */}
+  <Card className="shadow-lg border-0 overflow-hidden">
+    <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-3 md:p-4">
+      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+        <Timer className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-orange-600" />
+        Today's Schedule
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Upcoming bookings for today (excluding completed)
+      </p>
+    </CardHeader>
+
+    <CardContent className="p-3 md:p-4">
+      {upcomingBookings.filter(b => b.bookingStatus?.toLowerCase() !== "completed").length === 0 ? (
+        <p className="text-center text-gray-500 text-sm">
+          No active bookings scheduled for today.
+        </p>
+      ) : (
+        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+
+          {upcomingBookings
+            .filter(b => b.bookingStatus?.toLowerCase() !== "completed")
+            .sort((a, b) => (a.booking_time || "").localeCompare(b.booking_time || ""))
+            .slice(0, 5)
+            .map((booking, index) => (
               <div
-                className="space-y-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+                key={booking.booking_id || index}
+                className="flex items-center space-x-3 p-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 
+                           dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 
+                           hover:shadow-md transition-all"
               >
-                {upcomingBookings
-                  //  Filter out completed bookings
-                  .filter(b => b.bookingStatus?.toLowerCase() !== "completed")
-                  //  Sort by time if available
-                  .sort((a, b) => (a.booking_time || "").localeCompare(b.booking_time || ""))
-                  //  Show up to 5 initially
-                  .slice(0, 5)
-                  .map((booking, index) => (
-                    <div
-                      key={booking.booking_id || index}
-                      className="flex items-center space-x-3 p-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all"
-                    >
-                      {/* Left content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                          {booking.customer_name}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                          {booking.booking_service_name}
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500 mt-1">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span className="truncate">{booking.address_line_1}</span>
-                        </div>
-                      </div>
-
-                      {/* Right content */}
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-xs text-gray-500 mb-1">
-                          {booking.booking_date}
-                        </div>
-                        <Badge
-                          variant={
-                            booking.bookingStatus?.toLowerCase() === "confirmed"
-                              ? "success"
-                              : booking.bookingStatus?.toLowerCase() === "pending"
-                                ? "warning"
-                                : "danger"
-                          }
-                          className="text-xs capitalize"
-                        >
-                          {booking.bookingStatus}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-
-                {/*  Optional: show total if more than 5 bookings */}
-                {upcomingBookings.filter(b => b.bookingStatus?.toLowerCase() !== "completed").length > 5 && (
-                  <div className="text-center mt-2 text-xs text-gray-500 italic">
-                    Showing first 5 bookings — scroll to view more ↓
+                {/* Left */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                    {booking.customer_name}
                   </div>
-                )}
+                  <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                    {booking.booking_service_name}
+                  </div>
+                  <div className="flex items-center text-xs text-gray-500 mt-1">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    <span className="truncate">{booking.address_line_1}</span>
+                  </div>
+                </div>
+
+                {/* Right */}
+                <div className="text-right flex-shrink-0">
+                  <div className="text-xs text-gray-500 mb-1">
+                { formatDateTime(booking.booking_date) }
+
+
+
+                  </div>
+
+                  <Badge
+                    variant={
+                      booking.bookingStatus?.toLowerCase() === "confirmed"
+                        ? "success"
+                        : booking.bookingStatus?.toLowerCase() === "pending"
+                        ? "warning"
+                        : "danger"
+                    }
+                    className="text-xs capitalize"
+                  >
+                    {booking.bookingStatus}
+                  </Badge>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
 
+          {/* Show more message */}
+          {upcomingBookings.filter(b => b.bookingStatus?.toLowerCase() !== "completed").length > 5 && (
+            <div className="text-center mt-2 text-xs text-gray-500 italic">
+              Showing first 5 bookings — scroll to view more ↓
+            </div>
+          )}
+        </div>
+      )}
+    </CardContent>
+  </Card>
 
+  {/* Recent Activity */}
+  <Card className="shadow-lg border-0 overflow-hidden">
+    <CardHeader className="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 p-3 md:p-4">
+      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+        <Activity className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-pink-600" />
+        Recent Activity
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Latest system activities for today
+      </p>
+    </CardHeader>
 
+    <CardContent className="p-3 md:p-4">
+      {recentActivities.length === 0 ? (
+        <p className="text-center text-gray-500 text-sm">
+          No recent activity found for today.
+        </p>
+      ) : (
+        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
 
-        {/* Recent Activity */}
-        <Card className="shadow-lg border-0 overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 p-3 md:p-4">
-            <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Activity className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-pink-600" />
-              Recent Activity
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Latest system activities for today
-            </p>
-          </CardHeader>
-
-          <CardContent className="p-3 md:p-4">
-            {recentActivities.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm">
-                No recent activity found for today.
-              </p>
-            ) : (
+          {recentActivities
+            .sort((a, b) => new Date(b.bookingDate) - new Date(a.bookingDate))
+            .slice(0, 5)
+            .map((activity, index) => (
               <div
-                className="space-y-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+                key={index}
+                className="flex items-start space-x-3 p-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 
+                           dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 
+                           hover:shadow-md transition-all duration-300"
               >
-                {recentActivities
-                  .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime())
-                  .slice(0, 5)
-                  .map((activity, index) => (
-                    <div key={index}
-                      className="flex items-start space-x-3 p-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all duration-300"
-                    >
-                      {/* Status Icon */}
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.bookingStatus === "completed"
-                          ? "bg-green-100 dark:bg-green-900/20"
-                          : activity.bookingStatus === "pending"
-                            ? "bg-yellow-100 dark:bg-yellow-900/20"
-                            : activity.bookingStatus === "cancelled"
-                              ? "bg-red-100 dark:bg-red-900/20"
-                              : "bg-gray-200 dark:bg-gray-700"
-                          }`}
-                      >
-                        {activity.bookingStatus === "completed" ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : activity.bookingStatus === "pending" ? (
-                          <AlertCircle className="h-4 w-4 text-yellow-600" />
-                        ) : activity.bookingStatus === "cancelled" ? (
-                          <XCircle className="h-4 w-4 text-red-600" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-gray-600" />
-                        )}
-                      </div>
+                {/* Status Icon */}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    activity.bookingStatus?.toLowerCase() === "completed"
+                      ? "bg-green-100 dark:bg-green-900/20"
+                      : activity.bookingStatus?.toLowerCase() === "pending"
+                      ? "bg-yellow-100 dark:bg-yellow-900/20"
+                      : "bg-red-100 dark:bg-red-900/20"
+                  }`}
+                >
+                  {activity.bookingStatus?.toLowerCase() === "completed" ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : activity.bookingStatus?.toLowerCase() === "pending" ? (
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-600" />
+                  )}
+                </div>
 
-                      {/* Activity Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-gray-900 dark:text-white truncate">
-                          {activity.customer_name} — {activity.booking_service_name}-{activity.bookingStatus}
-                        </div>
-
-                      </div>
-                    </div>
-                  ))}
-
-                {/* Optional Info Text */}
-                {recentActivities.length > 5 && (
-                  <div className="text-center text-xs text-gray-500 italic mt-2">
-                    Showing 5 of {recentActivities.length} activities — scroll to view more ↓
+                {/* Activity Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-gray-900 dark:text-white truncate">
+                    {activity.message}
                   </div>
-                )}
+
+                  <div className="text-xs text-gray-500">
+                    {activity.formattedTime}
+                  </div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            ))}
+
+          {recentActivities.length > 5 && (
+            <div className="text-center text-xs text-gray-500 italic mt-2">
+              Showing 5 of {recentActivities.length} activities — scroll to view more ↓
+            </div>
+          )}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+
+</div>
 
 
 
@@ -967,7 +992,7 @@ export function Dashboard() {
                           size="sm"
                           variant="secondary"
                           onClick={() =>
-                            navigate("/bookings", {
+                            navigate("/admin/bookings", {
                               state: { openEdit: true, bookingId: booking.id }   // 👈 pass state
                             })
                           }
@@ -998,7 +1023,7 @@ export function Dashboard() {
               <Button
                 variant="secondary"
                 className="flex items-center space-x-2"
-                onClick={() => navigate("/services", { state: { openForm: true } })}
+                onClick={() => navigate("/admin/services", { state: { openForm: true } })}
               >
                 <Wrench className="h-4 w-4" />
                 <span>Add Service</span>

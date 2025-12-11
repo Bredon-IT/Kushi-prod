@@ -5,9 +5,7 @@ import BookingsAPIService from "../services/BookingAPIService";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import Global_API_BASE from "../services/GlobalConstants";
-import ReactDOM from "react-dom";
 import { useLocation } from "react-router-dom";
-
 
 import {
   Edit,
@@ -22,6 +20,23 @@ import {
 } from "lucide-react";
 
 /* ------------------------- Utilities / Types ------------------------- */
+
+
+// convert "20:00" -> "08:00 PM"
+const convert24To12 = (time24?: string) => {
+  if (!time24) return "";
+  // Accept "HH:mm" or "HH:mm:ss"
+  const [hms] = time24.split(" ");
+  const [hhStr, mmStr] = hms.split(":");
+  if (hhStr == null || mmStr == null) return time24;
+  let hh = Number(hhStr);
+  const mm = mmStr.padStart(2, "0");
+  const ampm = hh >= 12 ? "PM" : "AM";
+  hh = hh % 12;
+  if (hh === 0) hh = 12;
+  const hhOut = String(hh).padStart(2, "0");
+  return `${hhOut}:${mm} ${ampm}`;
+};
 
 // Safe parse booking_date to Date (returns null if invalid)
 const parseBookingDate = (raw?: string | null) => {
@@ -119,11 +134,13 @@ interface EditModalProps {
     cancellationReason?: string,
     workers?: string[],
     discount?: number,
-    paymentStatus?: string
+    paymentStatus?: string,
+    paymentMethod?: string
   ) => Promise<void>;
   onAssignWorkerImmediate: (bookingId: number, workerName: string) => Promise<void>;
- onRemoveWorker: (bookingId: number, workerName: string) => Promise<void>; // <-- ADD THIS
+  onRemoveWorker: (bookingId: number, workerName: string) => Promise<void>;
 }
+
 
 const EditBookingModal: React.FC<EditModalProps> = ({
   booking,
@@ -132,31 +149,41 @@ const EditBookingModal: React.FC<EditModalProps> = ({
   onAssignWorkerImmediate,
   onRemoveWorker,
 }) => {
-  // discount as string so it can be blank when 0
+
+
+   /* ------------------ Local States ------------------ */
+
+  const [statusSelection, setStatusSelection] = useState(
+    booking.bookingStatus || "pending"
+  );
+
+  const [cancelReason, setCancelReason] = useState(
+    booking.statusReason || booking.cancellation_reason || ""
+  );
+
+  const [statusReasonLabel, setStatusReasonLabel] = useState("Reason");
+
+
   const [discount, setDiscount] = useState<string>(
     booking.discount && booking.discount !== 0 ? String(booking.discount) : ""
   );
 
-  // workerNames is the editable input (comma separated)
   const [workerNames, setWorkerNames] = useState<string>(
     booking.worker_assign?.join(", ") || ""
   );
 
-  // keep a local array of workers to show in UI (initially filled from booking)
   const [localWorkers, setLocalWorkers] = useState<string[]>(
     booking.worker_assign ? [...booking.worker_assign] : []
   );
-
-  const [cancelReason, setCancelReason] = useState<string>(
-    booking.cancellation_reason || ""
-  );
-  const [statusSelection, setStatusSelection] = useState<string>(
-    booking.bookingStatus || "pending"
-  );
+  
   const [saving, setSaving] = useState(false);
 
-  const [paymentStatusSelection, setPaymentStatusSelection] = useState<string>(
+  const [paymentStatusSelection, setPaymentStatusSelection] = useState(
     booking.paymentStatus || "Pending"
+  );
+
+  const [paymentMethodSelection, setPaymentMethodSelection] = useState(
+    booking.paymentMethod || "Pay on Service"
   );
 
   const basePrice = booking.booking_amount ?? 0;
@@ -186,7 +213,6 @@ const EditBookingModal: React.FC<EditModalProps> = ({
       for (const worker of trimmed) {
         await onAssignWorkerImmediate(booking.booking_id, worker);
       }
-      // merge into localWorkers and clear input
       setLocalWorkers((prev) => [...prev, ...trimmed]);
       setWorkerNames("");
     } catch (err) {
@@ -197,75 +223,73 @@ const EditBookingModal: React.FC<EditModalProps> = ({
     }
   };
 
-  // Remove local worker from UI (not calling API)
- const handleRemoveLocalWorker = async (idx: number) => {
-  const workerToRemove = localWorkers[idx];
-  if (!workerToRemove) return;
-
-  setSaving(true);
-
-  try {
-    await onRemoveWorker(booking.booking_id, workerToRemove);
-
-    // Update only local UI inside modal
-    setLocalWorkers(prev => prev.filter((_, i) => i !== idx));
-  } finally {
-    setSaving(false);
-  }
-};
-
-
-  // Single Save Status -> calls all existing APIs + assign workers
-  const handleSaveStatus = async () => {
-    const s = statusSelection.toLowerCase();
-    if (s === "cancelled" && !cancelReason.trim()) {
-      alert("Please provide a cancellation reason before cancelling.");
-      return;
-    }
+  // Remove local worker (calls API to remove permanently)
+  const handleRemoveLocalWorker = async (idx: number) => {
+    const workerToRemove = localWorkers[idx];
+    if (!workerToRemove) return;
 
     setSaving(true);
     try {
-      // parse workers from localWorkers (use localWorkers which includes previously assigned + newly added)
-      const workersToSave = [...new Set(localWorkers.map((w) => w.trim()).filter(Boolean))];
-
-      // Call combined update sequence (parent will call separate endpoints)
-      await onCombinedUpdate(
-        booking,
-        statusSelection,
-        s === "cancelled" ? "admin" : undefined,
-        cancelReason.trim() || undefined,
-        workersToSave,
-        isNaN(parsedDiscount) ? 0 : parsedDiscount,
-        paymentStatusSelection
-      );
-
-       window.dispatchEvent(
-      new CustomEvent("bookingUpdatedLive", {
-        detail: {
-          booking_id: booking.booking_id,
-          booking_status: statusSelection.toLowerCase(),
-          discount: isNaN(parsedDiscount) ? 0 : parsedDiscount,
-          paymentStatus: paymentStatusSelection,
-          workers: workersToSave
-        }
-      })
-    );
- 
-
-      // close modal after success
-      onClose();
+      await onRemoveWorker(booking.booking_id, workerToRemove);
+      setLocalWorkers(prev => prev.filter((_, i) => i !== idx));
     } catch (err) {
-      console.error("Failed to save combined update:", err);
-      alert("Failed to save. See console for details.");
+      console.error("Failed to remove worker within modal:", err);
+      alert("Failed to remove worker. See console.");
     } finally {
       setSaving(false);
     }
   };
 
+  /* ------------------ SAVE STATUS ------------------ */
+
+  const handleSaveStatus = async () => {
+    const s = statusSelection.toLowerCase();
+
+    if (s === "cancelled" && !cancelReason.trim()) {
+      alert("Cancellation reason is required.");
+      return;
+    }
+
+    const workersToSave = [
+      ...new Set(localWorkers.map(w => w.trim()).filter(Boolean)),
+    ];
+
+    setSaving(true);
+    try {
+      await onCombinedUpdate(
+        booking,
+        statusSelection,
+        s === "cancelled" ? "admin" : undefined,
+        cancelReason.trim(),
+        workersToSave,
+        parsedDiscount,
+        paymentStatusSelection,
+        paymentMethodSelection
+      );
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update booking");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  /* ------------------ Dynamic Status Reason Label ------------------ */
+
+  useEffect(() => {
+    const s = statusSelection.toLowerCase();
+    if (s === "pending") setStatusReasonLabel("Reason (optional)");
+    else if (s === "confirmed") setStatusReasonLabel("Confirmation Reason");
+    else if (s === "completed") setStatusReasonLabel("Completion Reason");
+    else if (s === "cancelled") setStatusReasonLabel("Cancellation Reason");
+  }, [statusSelection]);
+
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 overflow-y-auto">
       <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl space-y-4">
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold text-navy-700">
@@ -281,18 +305,15 @@ const EditBookingModal: React.FC<EditModalProps> = ({
           </button>
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* LEFT */}
           <div className="space-y-4 border-b md:border-b-0 md:border-r pr-6">
-            <h3 className="text-md font-semibold">Status & Assignment</h3>
-
+            {/* Status */}
             <div>
-              <label className="block text-sm mb-1">Booking Status</label>
+              <label className="block text-sm">Booking Status</label>
               <select
                 value={statusSelection}
                 onChange={(e) => setStatusSelection(e.target.value)}
-                className="w-full border px-3 py-2 rounded-lg text-sm"
+                className="border w-full px-3 py-2 rounded-lg"
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
@@ -301,12 +322,13 @@ const EditBookingModal: React.FC<EditModalProps> = ({
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm mb-1">Cancellation Reason</label>
+            {/* Dynamic Reason */}
+           <div>
+              <label className="text-sm">{statusReasonLabel}</label>
               <textarea
+                className="border rounded-lg px-3 py-2 w-full"
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full border px-3 py-2 rounded-lg text-sm resize-none"
               />
             </div>
 
@@ -325,7 +347,6 @@ const EditBookingModal: React.FC<EditModalProps> = ({
                 <div className="text-xs text-gray-500">{localWorkers.length} assigned</div>
               </div>
 
-              {/* display local workers */}
               {localWorkers.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {localWorkers.map((w, i) => (
@@ -341,7 +362,6 @@ const EditBookingModal: React.FC<EditModalProps> = ({
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className="space-y-4">
             <h3 className="text-md font-semibold">Pricing & Payment</h3>
 
@@ -360,14 +380,23 @@ const EditBookingModal: React.FC<EditModalProps> = ({
                   className="w-full border px-3 py-2 rounded-lg"
                   placeholder=""
                 />
-                {/* no separate Save button — discount saved when Save Status is clicked */}
               </div>
               <div className="text-xs text-gray-500 mt-1">New total: ₹{newTotalAmount.toFixed(2)}</div>
             </div>
 
+           {/* Payment Method */}
             <div>
-              <label className="block text-sm mb-1">Payment Method</label>
-              <div className="px-3 py-2 border rounded-lg bg-gray-100 text-sm">{booking.paymentMethod || "N/A"}</div>
+              <label className="text-sm">Payment Method</label>
+              <select
+                value={paymentMethodSelection}
+                onChange={(e) => setPaymentMethodSelection(e.target.value)}
+                className="border w-full px-3 py-2 rounded-lg"
+              >
+                <option value="Pay on Service">Pay on Service</option>
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+               
+              </select>
             </div>
 
             <div>
@@ -405,8 +434,6 @@ const EditBookingModal: React.FC<EditModalProps> = ({
 
 /* -------------------------
    CalendarPopup component
-   - simple, dependency-free calendar
-   - supports 'single' (pick a date) and 'month' (pick month-year) modes
 ------------------------- */
 
 type CalendarMode = "single" | "month";
@@ -473,7 +500,6 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorRef, initialDate = 
     }
   };
 
-  // month names
   const months = [
     "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
   ];
@@ -539,6 +565,330 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorRef, initialDate = 
     </div>
   );
 };
+
+/* ----------------------------------------------------
+   ADMIN CREATE BOOKING MODAL
+---------------------------------------------------- */
+const AdminCreateBookingModal: React.FC<{ onClose: () => void; onCreated: () => void }> = ({
+  onClose,
+  onCreated,
+}) => {
+  const [form, setForm] = useState({
+    customerName: "",
+    customerEmail: "",
+    customerNumber: "",
+    addressLine1: "",
+    city: "",
+    pincode: "",
+    bookingServiceName: "",
+    bookingDate: "",
+    bookingTime: "",
+    bookingAmount: 0,        // ✅ FIXED: should start as number
+    remarks: "",
+  });
+
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setForm((s) => ({ ...s, [name]: value }));
+  };
+
+  /* ------------------ SERVICES ------------------ */
+  const [allServices, setAllServices] = useState<any[]>([]);
+  const [serviceRows, setServiceRows] = useState([
+    { category: "", subcategory: "", packageId: "", price: 0, subcategories: [], packages: [] },
+  ]);
+
+  const [gst, setGST] = useState(0);
+  const [grandTotal, setGrandTotal] = useState(0);
+
+  useEffect(() => {
+    axios
+      .get(`${Global_API_BASE}/api/customers/all-services`)
+      .then((res) => setAllServices(res.data))
+      .catch((err) => console.error("Failed loading services:", err));
+  }, []);
+
+  const categories = [...new Set(allServices.map((s) => s.service_category))];
+
+  // Parse package string into list of { label, price }
+  function parsePackages(packageString: string) {
+    return packageString
+      .split(";")
+      .map((item) => item.trim())
+      .filter((item) => item !== "")
+      .map((item) => {
+        const parts = item.split(":");
+        return {
+          label: parts[0]?.trim(),
+          price: parts[1]?.trim() || null,
+        };
+      });
+  }
+
+  /* -------- Handle Category Change -------- */
+  const handleCategoryChange = (index: number, category: string) => {
+    const filteredSubCats = [
+      ...new Set(
+        allServices.filter((s) => s.service_category === category).map((s) => s.service_type)
+      ),
+    ];
+
+    const updated = [...serviceRows];
+    updated[index].category = category;
+    updated[index].subcategory = "";
+    updated[index].packageId = "";
+    updated[index].subcategories = filteredSubCats;
+    updated[index].packages = [];
+    updated[index].price = 0;
+    setServiceRows(updated);
+  };
+
+  /* -------- Handle Subcategory Change -------- */
+  const handleSubCategoryChange = (index: number, subcat: string) => {
+    const filtered = allServices.filter((s) => s.service_type === subcat);
+
+    const packagesMapped = filtered
+      .map((s) => {
+        const parsed = parsePackages(s.service_package);
+
+        return parsed.map((pkg) => ({
+          service_id: s.service_id,
+          fullLabel: `${s.service_name} – ${pkg.label}`,
+          price: pkg.price,
+        }));
+      })
+      .flat();
+
+    const updated = [...serviceRows];
+    updated[index].subcategory = subcat;
+    updated[index].packages = packagesMapped;
+    updated[index].packageId = "";
+    updated[index].price = 0;
+    setServiceRows(updated);
+  };
+
+  /* -------- Handle Package Change (sets price) -------- */
+  const handlePackageChange = (index: number, pkgId: string) => {
+    const updated = [...serviceRows];
+    updated[index].packageId = pkgId;
+
+    const selected = updated[index].packages.find(
+      (p) => p.service_id + "-" + p.fullLabel === pkgId
+    );
+
+    if (selected) {
+      const price = isNaN(Number(selected.price)) ? 0 : Number(selected.price);
+      updated[index].price = price; // ⭐ store price in row
+    }
+
+    setServiceRows(updated);
+  };
+
+  /* -------- Add / Remove Rows -------- */
+  const addServiceRow = () => {
+    setServiceRows([
+      ...serviceRows,
+      { category: "", subcategory: "", packageId: "", price: 0, subcategories: [], packages: [] },
+    ]);
+  };
+
+  const removeServiceRow = (index: number) => {
+    setServiceRows(serviceRows.filter((_, i) => i !== index));
+  };
+
+  /* ----------------------------------------------------
+     AUTO-UPDATE TOTAL, GST, GRAND TOTAL + SERVICE NAME
+  ------------------------------------------------------ */
+  useEffect(() => {
+    // Total price of all service packages
+    const total = serviceRows.reduce((sum, row) => sum + (row.price || 0), 0);
+
+    // SERVICE NAME: combine all selected full labels
+    const names = serviceRows
+      .filter((r) => r.packageId)
+      .map(
+        (r) =>
+          r.packages.find((p) => p.service_id + "-" + p.fullLabel === r.packageId)?.fullLabel
+      )
+      .filter(Boolean)
+      .join(", ");
+
+    setForm((prev) => ({
+      ...prev,
+      bookingAmount: total,
+      bookingServiceName: names, // ⭐ multiple service names
+    }));
+
+    const gstAmount = total * 0.18;
+    setGST(gstAmount);
+    setGrandTotal(total + gstAmount);
+  }, [serviceRows]);
+
+  /* ----------------------- CREATE BOOKING ----------------------- */
+  const handleCreate = async () => {
+    if (!form.customerName || !form.customerNumber || !form.bookingServiceName) {
+      alert("Please fill required fields: Customer Name, Phone and Service");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const bookingTimeConverted = form.bookingTime ? convert24To12(form.bookingTime) : undefined;
+
+      const payload = {
+        customerName: form.customerName,
+        customerEmail: form.customerEmail || null,
+        customerNumber: form.customerNumber,
+        addressLine1: form.addressLine1 || null,
+        city: form.city || null,
+        pincode: form.pincode || null,
+        bookingServiceName: form.bookingServiceName,
+        bookingDate: form.bookingDate || null,
+        bookingTime: bookingTimeConverted || null,
+        bookingAmount: form.bookingAmount,
+        grandTotal: grandTotal,
+        remarks: form.remarks || null,
+      };
+
+      const res = await axios.post(`${Global_API_BASE}/api/bookings/admin/create`, payload);
+
+      try {
+        await BookingsAPIService.sendBookingNotification(
+          res.data?.customer_email || form.customerEmail,
+          res.data?.customer_number || form.customerNumber,
+          "received"
+        );
+      } catch (notifyErr) {
+        console.warn("Notification failed:", notifyErr);
+      }
+
+      alert("Booking created successfully!");
+      onCreated();
+      onClose();
+    } catch (err) {
+      console.error("Failed creating booking:", err);
+      alert("Failed creating booking. Check console for details.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ----------------------- JSX UI ----------------------- */
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center border-b pb-3">
+          <h2 className="text-2xl font-bold text-navy-700">Create New Booking</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* FORM */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input name="customerName" placeholder="Customer Name" className="input" value={form.customerName} onChange={handleChange} />
+          <input name="customerEmail" placeholder="Customer Email" className="input" value={form.customerEmail} onChange={handleChange} />
+          <input name="customerNumber" placeholder="Phone Number" className="input" value={form.customerNumber} onChange={handleChange} />
+          <input name="addressLine1" placeholder="Address Line 1" className="input" value={form.addressLine1} onChange={handleChange} />
+          <input name="city" placeholder="City" className="input" value={form.city} onChange={handleChange} />
+          <input name="pincode" placeholder="Pincode" className="input" value={form.pincode} onChange={handleChange} />
+
+          {/* SERVICE SELECTION */}
+          <div className="col-span-2 space-y-2">
+            <h3 className="font-semibold text-navy-700 text-lg">Select Services</h3>
+
+            {serviceRows.map((row, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-gray-50 p-4 rounded-xl border">
+                <select className="input" value={row.category} onChange={(e) => handleCategoryChange(index, e.target.value)}>
+                  <option value="">Select Category</option>
+                  {categories.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+
+                <select className="input" value={row.subcategory} disabled={!row.category} onChange={(e) => handleSubCategoryChange(index, e.target.value)}>
+                  <option value="">Select Sub Category</option>
+                  {row.subcategories.map((sc) => (
+                    <option key={sc}>{sc}</option>
+                  ))}
+                </select>
+
+                <select className="input" value={row.packageId} disabled={!row.subcategory} onChange={(e) => handlePackageChange(index, e.target.value)}>
+                  <option value="">Select Package</option>
+                  {row.packages.map((pkg, i) => (
+                    <option key={i} value={`${pkg.service_id}-${pkg.fullLabel}`}>
+                      {pkg.fullLabel} – ₹{pkg.price}
+                    </option>
+                  ))}
+                </select>
+
+                {serviceRows.length > 1 && (
+                  <button className="text-red-600 text-sm" onClick={() => removeServiceRow(index)}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <Button onClick={addServiceRow} className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+              + Add Service
+            </Button>
+          </div>
+
+          <input type="date" name="bookingDate" className="input" value={form.bookingDate} onChange={handleChange} />
+
+          {/* Time slot */}
+          <select name="bookingTime" className="input" value={form.bookingTime} onChange={handleChange}>
+            <option value="">Select Time Slot</option>
+            {Array.from({ length: 13 }).map((_, i) => {
+              const hour = 8 + i;
+              const label = new Date(0, 0, 0, hour).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return (
+                <option key={hour} value={label}>
+                  {label}
+                </option>
+              );
+            })}
+          </select>
+
+          {/* Amount + GST */}
+          <div className="col-span-2">
+            <label className="text-sm font-semibold">Amount (Auto-filled)</label>
+            <input name="bookingAmount" className="input" value={form.bookingAmount} readOnly />
+          </div>
+
+          <div className="col-span-2 bg-gray-100 p-4 rounded-xl">
+            <div className="text-gray-700 text-sm">GST (18%)</div>
+            <div className="text-lg font-bold">₹{gst.toFixed(2)}</div>
+
+            <div className="text-gray-700 text-sm mt-2">Grand Total</div>
+            <div className="text-2xl font-bold text-green-700">₹{grandTotal.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <textarea name="remarks" placeholder="Remarks" className="w-full border rounded-lg p-3"></textarea>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 pt-3 border-t">
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button className="bg-green-600 text-white px-6 py-2 rounded-lg" onClick={handleCreate}>
+            Create Booking
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 /* -------------------------
    Main Bookings Page
 ------------------------- */
@@ -552,26 +902,24 @@ export function Bookings() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const location = useLocation();
-const autoBookingId = location.state?.bookingId || null;
-const autoOpenEdit = location.state?.openEdit || false;
-const [hasAutoOpened, setHasAutoOpened] = useState(false);
- 
- 
- 
+  const autoBookingId = location.state?.bookingId || null;
+  const autoOpenEdit = location.state?.openEdit || false;
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
-  // Date filter state (mirrors Inspection page)
+  // Date filter state
   type DateFilterOption = "all" | "today" | "yesterday" | "last7" | "thisMonth" | "custom" | "selectDate" | "selectMonth";
   const [dateFilter, setDateFilter] = useState<DateFilterOption>("all");
   const [customFrom, setCustomFrom] = useState<string>("");
   const [customTo, setCustomTo] = useState<string>("");
 
-  // single-date & month selection
-  const [selectedDate, setSelectedDate] = useState<string>(""); // yyyy-mm-dd
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // calendar popup control
   const singleDateAnchorRef = useRef<HTMLButtonElement | null>(null);
@@ -596,7 +944,9 @@ const [hasAutoOpened, setHasAutoOpened] = useState(false);
           totalAmount: b.grand_total ?? b.booking_amount ?? 0,
           discount: b.discount ?? 0,
           booking_date: b.booking_date || "N/A",
-          booking_time: b.booking_time || "",
+          booking_time: (b.booking_time && b.booking_time.includes(":") && !b.booking_time.toLowerCase().includes("am") && !b.booking_time.toLowerCase().includes("pm"))
+            ? convert24To12(b.booking_time)
+            : (b.booking_time || ""),
           bookingStatus: (b.bookingStatus || "pending").toLowerCase(),
           canceledBy: b.canceledBy?.toLowerCase(),
           cancellation_reason: b.cancellation_reason || "",
@@ -608,7 +958,7 @@ const [hasAutoOpened, setHasAutoOpened] = useState(false);
           duration: b.duration || "60",
           worker_assign:
             typeof b.worker_assign === "string"
-              ? b.worker_assign.split(",").map((w: string) => w.trim())
+              ? b.worker_assign.split(",").map((w: string) => w.trim()).filter(Boolean)
               : b.worker_assign || [],
           inspection_status: (b.inspection_status || b.inspectionStatus || "pending").toLowerCase(),
           site_visit: (b.site_visit || "pending").toLowerCase(),
@@ -626,186 +976,205 @@ const [hasAutoOpened, setHasAutoOpened] = useState(false);
     fetchBookings();
   }, [fetchBookings]);
 
- 
   // Auto open edit modal after navigating from Dashboard
-useEffect(() => {
-  if (hasAutoOpened) return;        
-  if (!autoOpenEdit || !autoBookingId) return;
- 
-  // Wait until bookings are loaded
-  if (bookings.length === 0) return;
- 
-  const found = bookings.find(b => b.booking_id === autoBookingId);
- 
-  if (found) {
-    setSelectedBooking(found);
-    setIsEditModalOpen(true);
-     setHasAutoOpened(true);
-  }
-}, [autoOpenEdit, autoBookingId, bookings]); 
- 
+  useEffect(() => {
+    if (hasAutoOpened) return;
+    if (!autoOpenEdit || !autoBookingId) return;
+    if (bookings.length === 0) return;
 
+    const found = bookings.find(b => b.booking_id === autoBookingId);
 
+    if (found) {
+      setSelectedBooking(found);
+      setIsEditModalOpen(true);
+      setHasAutoOpened(true);
+    }
+  }, [autoOpenEdit, autoBookingId, bookings, hasAutoOpened]);
 
   /* ------------------------- Existing API wrappers used by Save Status ------------------------- */
 
-  // Update status endpoint (existing)
+  // Update status endpoint
   const updateStatusApi = async (bookingId: number, payload: any) => {
     return axios.put(`${Global_API_BASE}/api/bookings/${bookingId}/status`, payload);
   };
 
-  // Update discount endpoint (existing)
+  // Update discount endpoint
   const updateDiscountApi = async (bookingId: number, payload: any) => {
     return axios.put(`${Global_API_BASE}/api/bookings/${bookingId}/discount`, payload);
   };
 
-  // Update payment status endpoint (existing)
+  // Update payment status endpoint
   const updatePaymentStatusApi = async (bookingId: number, payload: any) => {
     return axios.put(`${Global_API_BASE}/api/bookings/${bookingId}/payment-status`, payload);
   };
 
-  // Assign worker endpoint (existing)
+  // Assign worker endpoint
   const assignWorkerApi = async (bookingId: number, workerName: string) => {
     return axios.put(`${Global_API_BASE}/api/admin/${bookingId}/assign-worker`, {
       workername: workerName,
     });
   };
 
+  // REMOVE worker endpoint
+  const removeWorkerApi = async (bookingId: number, workerName: string) => {
+    return axios.put(`${Global_API_BASE}/api/admin/${bookingId}/remove-worker`, {
+      workername: workerName,
+    });
+  };
 
-  // REMOVE worker endpoint (ADD HERE)
-const removeWorkerApi = async (bookingId: number, workerName: string) => {
-  return axios.put(`${Global_API_BASE}/api/admin/${bookingId}/remove-worker`, {
-    workername: workerName,
-  });
-};
+  // Remove worker handler (calls service which uses correct admin path)
+  const handleRemoveWorker = async (bookingId: number, workerName: string) => {
+    try {
+      await BookingsAPIService.removeWorker(bookingId, workerName);
 
-
-const handleRemoveWorker = async (bookingId: number, workerName: string) => {
-  try {
-    await BookingsAPIService.removeWorker(bookingId, workerName);
-
-    // Update UI list
-    setBookings(prev =>
-      prev.map(b =>
-        b.booking_id === bookingId
-          ? { ...b, worker_assign: b.worker_assign.filter(w => w !== workerName) }
-          : b
-      )
-    );
-
-    // Update selected booking if modal is open
-    if (selectedBooking?.booking_id === bookingId) {
-      setSelectedBooking(prev =>
-        prev
-          ? {
-              ...prev,
-              worker_assign: prev.worker_assign.filter(w => w !== workerName),
-            }
-          : prev
+      // Update UI list
+      setBookings(prev =>
+        prev.map(b =>
+          b.booking_id === bookingId
+            ? { ...b, worker_assign: b.worker_assign.filter(w => w !== workerName) }
+            : b
+        )
       );
-    }
-  } catch (err) {
-    console.error("Failed to remove worker:", err);
-  }
-};
 
-
-  /* ------------------------- Combined update called by Save Status (calls existing APIs) ------------------------- */
-  const handleCombinedUpdate = async (
-    booking: Booking,
-    status: string,
-    canceledBy?: "customer" | "admin",
-    cancellationReason?: string,
-    workers?: string[],
-    discount?: number,
-    paymentStatus?: string
-  ) => {
-    // 1) status
-    try {
-      await updateStatusApi(booking.booking_id, {
-        status,
-        canceledBy,
-        cancellationReason,
-      });
-    } catch (err) {
-      console.error("Failed to update status:", err);
-      throw err;
-    }
-
-    // 2) discount
-    try {
-      // send discount even if 0 to ensure server knows value
-      await updateDiscountApi(booking.booking_id, {
-        discount: typeof discount === "number" ? discount : 0,
-      });
-    } catch (err) {
-      console.error("Failed to update discount:", err);
-      throw err;
-    }
-
-    // 3) payment status
-    try {
-      if (paymentStatus) {
-        await updatePaymentStatusApi(booking.booking_id, {
-          paymentStatus,
-        });
+      // Update selected booking if modal is open
+      if (selectedBooking?.booking_id === bookingId) {
+        setSelectedBooking(prev =>
+          prev
+            ? {
+                ...prev,
+                worker_assign: prev.worker_assign.filter(w => w !== workerName),
+              }
+            : prev
+        );
       }
     } catch (err) {
-      console.error("Failed to update payment status:", err);
-      throw err;
-    }
-
-    // 4) assign workers (call per worker)
-    if (workers && workers.length > 0) {
-      try {
-        for (const w of workers) {
-          await assignWorkerApi(booking.booking_id, w);
-        }
-      } catch (err) {
-        console.error("Failed to assign worker(s) during combined update:", err);
-        throw err;
-      }
-    }
-
-    // If all succeeded, update local UI state
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.booking_id === booking.booking_id
-          ? {
-              ...b,
-              bookingStatus: status,
-              canceledBy,
-              cancellation_reason: cancellationReason,
-              worker_assign: workers && workers.length ? workers : b.worker_assign,
-              discount: typeof discount === "number" ? discount : b.discount,
-              totalAmount:
-                typeof discount === "number" ? Math.max(0, b.booking_amount - discount) : b.totalAmount,
-              paymentStatus: paymentStatus || b.paymentStatus,
-            }
-          : b
-      )
-    );
-
-    if (selectedBooking?.booking_id === booking.booking_id) {
-      setSelectedBooking((prev) =>
-        prev
-          ? {
-              ...prev,
-              bookingStatus: status,
-              canceledBy,
-              cancellation_reason: cancellationReason,
-              worker_assign: workers && workers.length ? workers : prev.worker_assign,
-              discount: typeof discount === "number" ? discount : prev.discount,
-              totalAmount:
-                typeof discount === "number" ? Math.max(0, prev.booking_amount - discount) : prev.totalAmount,
-              paymentStatus: paymentStatus || prev.paymentStatus,
-            }
-          : prev
-      );
+      console.error("Failed to remove worker:", err);
+      alert("Failed to remove worker. See console.");
     }
   };
 
-  /* ------------------------- Immediate assign worker handler (used by Assign Workers button) ------------------------- */
+  /* ------------------------- Combined update called by Save Status ------------------------- */
+  const handleCombinedUpdate = async (
+  booking: Booking,
+  status: string,
+  canceledBy?: "customer" | "admin",
+  cancellationReason?: string,
+  workers?: string[],
+  discount?: number,
+  paymentStatus?: string,
+   paymentMethod?: string
+) => {
+    // 1) status
+   
+  try {
+    if (status.toLowerCase() === "cancelled" && !cancellationReason?.trim()) {
+      alert("Cancellation reason is required.");
+      return;
+    }
+
+    await updateStatusApi(booking.booking_id, {
+      status,
+      canceledBy: canceledBy || null,
+      reason: cancellationReason || ""    // <-- Backend uses `reason`
+    });
+
+  } catch (err) {
+    console.error("Failed to update status:", err);
+    alert("Failed to update booking");
+    throw err;
+  }
+
+
+   /* ---------------------- 2) UPDATE DISCOUNT ---------------------- */
+ try {
+    await updateDiscountApi(booking.booking_id, {
+      discount: typeof discount === "number" ? discount : 0,
+    });
+  } catch (err) {
+    console.error("Failed to update discount:", err);
+    throw err;
+  }
+
+
+   /* ---------------------- 3) UPDATE PAYMENT STATUS ---------------------- */
+  try {
+    if (paymentStatus) {
+      await updatePaymentStatusApi(booking.booking_id, { paymentStatus });
+    }
+  } catch (err) {
+    console.error("Failed to update payment status:", err);
+    throw err;
+  }
+
+  /* ---------------------- 4) UPDATE PAYMENT METHOD ---------------------- */
+  try {
+    if (paymentMethod) {
+      await axios.put(`${Global_API_BASE}/api/bookings/${booking.booking_id}/payment-method`, {
+        paymentMethod,
+      });
+    }
+  } catch (err) {
+    console.error("Failed to update payment method:", err);
+    throw err;
+  }
+    /* ---------------------- 4) ASSIGN WORKERS ---------------------- */
+  if (workers && workers.length > 0) {
+    try {
+      for (const w of workers) {
+        await assignWorkerApi(booking.booking_id, w);
+      }
+    } catch (err) {
+      console.error("Failed to assign workers:", err);
+      throw err;
+    }
+  }
+    /* ---------------------- 5) UPDATE UI ---------------------- */
+  setBookings((prev) =>
+    prev.map((b) =>
+      b.booking_id === booking.booking_id
+        ? {
+            ...b,
+             bookingStatus: status,
+            canceledBy: canceledBy || b.canceledBy,
+            cancellation_reason: cancellationReason || b.cancellation_reason,
+            statusReason: cancellationReason || b.statusReason,     // <-- ADDED
+            worker_assign: workers && workers.length ? workers : b.worker_assign,
+            discount: typeof discount === "number" ? discount : b.discount,
+            totalAmount:
+              typeof discount === "number"
+                ? Math.max(0, b.booking_amount - discount)
+                : b.totalAmount,
+             paymentStatus: paymentStatus || b.paymentStatus,
+            paymentMethod: paymentMethod || b.paymentMethod,
+          }
+        : b
+    )
+  );
+
+  if (selectedBooking?.booking_id === booking.booking_id) {
+    setSelectedBooking((prev) =>
+      prev
+        ? {
+            ...prev,
+            bookingStatus: status,
+            canceledBy: canceledBy || prev.canceledBy,
+            cancellation_reason: cancellationReason || prev.cancellation_reason,
+            statusReason: cancellationReason || prev.statusReason,   // <-- ADDED
+            worker_assign: workers && workers.length ? workers : prev.worker_assign,
+            discount: typeof discount === "number" ? discount : prev.discount,
+            totalAmount:
+              typeof discount === "number"
+                ? Math.max(0, prev.booking_amount - discount)
+                : prev.totalAmount,
+            paymentStatus: paymentStatus || prev.paymentStatus,
+            paymentMethod: paymentMethod || prev.paymentMethod,
+          }
+        : prev
+    );
+  }
+};
+
+  /* ------------------------- Immediate assign worker handler ------------------------- */
   const handleAssignWorkerImmediate = async (bookingId: number, workerName: string) => {
     try {
       await assignWorkerApi(bookingId, workerName);
@@ -831,10 +1200,7 @@ const handleRemoveWorker = async (bookingId: number, workerName: string) => {
   };
 
   /* -------------------------
-     Filtering pipeline:
-     1. status filter (all / pending / confirmed / completed / cancelled)
-     2. date filter (booking_date)
-     3. search filter (name, email, phone, id)
+     Filtering pipeline
   ------------------------- */
 
   const filteredByStatus = useMemo(
@@ -1019,6 +1385,15 @@ const handleRemoveWorker = async (bookingId: number, workerName: string) => {
 
           {/* Filters */}
           <div className="bg-white p-4 rounded-xl shadow-md border sticky top-0 z-10">
+            <div className="flex justify-end">
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 mb-4"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                + Create Booking
+              </Button>
+            </div>
+
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center w-full sm:w-1/2 relative">
                 <Search className="absolute left-3 text-gray-400 w-5 h-5" />
@@ -1050,7 +1425,7 @@ const handleRemoveWorker = async (bookingId: number, workerName: string) => {
                   <option value="yesterday">Yesterday</option>
                   <option value="last7">Last 7 Days</option>
                   <option value="thisMonth">This Month</option>
-                 
+
                   <option value="custom">Custom Range</option>
                 </select>
 
@@ -1148,9 +1523,11 @@ const handleRemoveWorker = async (bookingId: number, workerName: string) => {
                     </div>
                   </div>
 
-                  <Button className="mt-3 sm:mt-0 sm:ml-4 bg-navy-600 hover:bg-navy-700 text-sm py-2 px-4" onClick={() => { setSelectedBooking(b); setIsEditModalOpen(true); }}>
-                    <Edit className="w-4 h-4 mr-2" /> Update
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button className="mt-3 sm:mt-0 sm:ml-4 bg-navy-600 hover:bg-navy-700 text-sm py-2 px-4" onClick={() => { setSelectedBooking(b); setIsEditModalOpen(true); }}>
+                      <Edit className="w-4 h-4 mr-2" /> Update
+                    </Button>
+                  </div>
                 </Card>
               ))
             )}
@@ -1177,6 +1554,13 @@ const handleRemoveWorker = async (bookingId: number, workerName: string) => {
                 Next
               </Button>
             </div>
+          )}
+
+          {isCreateModalOpen && (
+            <AdminCreateBookingModal
+              onClose={() => setIsCreateModalOpen(false)}
+              onCreated={() => { setIsCreateModalOpen(false); fetchBookings(); }}
+            />
           )}
 
           {/* Edit Modal */}
