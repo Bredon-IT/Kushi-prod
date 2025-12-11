@@ -9,7 +9,7 @@ interface Offer {
   fontFamily?: string;
   color?: string;
   emoji?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
 }
 
 interface RotatingOffersProps {
@@ -74,7 +74,11 @@ const RotatingOffers: React.FC<RotatingOffersProps> = ({ onHeroImageUpdate }) =>
       offsetRef.current = 0;
       requestRef.current = requestAnimationFrame(animateScroll);
     }
-    return () => requestRef.current && cancelAnimationFrame(requestRef.current);
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
   }, [offers]);
 
   const duplicated = [...offers];
