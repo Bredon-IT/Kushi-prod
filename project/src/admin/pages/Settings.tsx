@@ -11,6 +11,8 @@ import { Button } from "../components/ui/Button";
 // Removed useTheme, Moon, Sun imports as App Preferences (Dark Mode toggle) is gone
 import axios from "axios";
 import Global_API_BASE from "../services/GlobalConstants";
+import toast from "react-hot-toast";
+ 
  
 interface Admin {
   adminId: number;
@@ -80,7 +82,7 @@ export function Settings() {
  
   const phone = newUser.phoneNumber?.trim() || "";
   if (phone.length !== 10) {
-    alert("❌ Phone number must be exactly 10 digits");
+    toast.error(" Phone number must be exactly 10 digits");
     return;
   }
   try {
@@ -89,30 +91,56 @@ export function Settings() {
       {...newUser, phoneNumber: `+91${phone}`},
       {params: { adminId: admin?.adminId } }// current logged-in admin
     );
-    alert("✅ User added successfully");
+   toast.success(" User added successfully");
     setNewUser({ adminname: "", email: "", phoneNumber: "", password: "", role: "" });
     fetchUsers(); // refresh list
   } catch (err: any) {
     const msg = err.response?.data || err.message || "Error adding user";
-    alert(`❌ ${msg}`);
+   toast.error(msg || "Error adding user");
   }
 };
  
  
-const handleDeleteUser = async (adminId: number) => {
-  if (!window.confirm("Are you sure you want to delete this user?")) return;
-  try {
-    await axios.delete(
-        `${Global_API_BASE}/api/login/delete-user/${adminId}`, {
-      params: { adminId: admin?.adminId } // current logged-in admin
-    });
-    alert("✅ User deleted successfully");
-    fetchUsers(); // refresh list
-  } catch (err: any) {
-    const msg = err.response?.data || err.message || "Error deleting user";
-    alert(`❌ ${msg}`);
-  }
+const handleDeleteUser = (adminId: number) => {
+  toast((t) => (
+    <div className="flex flex-col gap-3">
+      <p className="text-base mb-6 text-center">
+        Are you sure you want to delete this user?
+      </p>
+ 
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-3 py-1 text-sm bg-gray-200 rounded"
+        >
+          Cancel
+        </button>
+ 
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id);
+            try {
+              await axios.delete(
+                `${Global_API_BASE}/api/login/delete-user/${adminId}`,
+                { params: { adminId: admin?.adminId } }
+              );
+              toast.success("User deleted successfully");
+              fetchUsers();
+            } catch (err: any) {
+              const msg =
+                err.response?.data || err.message || "Error deleting user";
+              toast.error(msg);
+            }
+          }}
+          className="px-3 py-1 text-sm bg-red-600 text-white rounded"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ));
 };
+ 
  
  
   // ✅ settings state
@@ -153,9 +181,10 @@ const handleDeleteUser = async (adminId: number) => {
         .then((res) => {
           setAdmin(res.data);
           setEditMode(false);
-          alert("✅ Profile updated successfully");
+          toast.success(" Profile updated successfully");
         })
-        .catch((err) => console.error("Error updating profile:", err));
+        .catch(() => toast.error("Failed to update profile"));
+ 
     }
   };
  
@@ -163,16 +192,16 @@ const handleDeleteUser = async (adminId: number) => {
   // ✅ password change
 const handlePasswordChange = () => {
   if (settings.newPassword !== settings.confirmPassword) {
-    alert("❌ New password and confirm password do not match");
+    toast.error(" New password and confirm password do not match");
     return;
   }
   if (!settings.currentPassword) {
-    alert("❌ Please enter current password");
+    toast.error(" Please enter current password");
     return;
   }
  
   if (!admin) {
-    alert("❌ Admin not loaded");
+   toast.error(" Admin not loaded");
     return;
   }
  
@@ -187,7 +216,7 @@ const handlePasswordChange = () => {
       }
     )
     .then(() => {
-      alert("✅ Password updated successfully");
+      toast.success(" Password updated successfully");
       setSettings((prev) => ({
         ...prev,
         currentPassword: "",
@@ -197,9 +226,9 @@ const handlePasswordChange = () => {
     })
     .catch((err) => {
       if (err.response?.data) {
-        alert(`❌ ${err.response.data}`);
+        toast.error(err.response.data.toString());
       } else {
-        alert("❌ Error updating password");
+        toast.error("Error updating password");
       }
     });
 };
@@ -239,7 +268,7 @@ const handlePasswordChange = () => {
             Settings
           </h1>
         </div>
-        <Button onClick={() => alert("✅ Settings saved successfully!")}>
+        <Button onClick={() => toast.success(" Settings saved successfully!")}>
           <Save className="h-4 w-4 mr-2" />
           Save All Changes
         </Button>
@@ -525,4 +554,5 @@ const handlePasswordChange = () => {
     </div>
     </div>
   );
-}
+} 
+ 

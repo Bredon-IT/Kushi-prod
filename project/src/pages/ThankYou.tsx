@@ -1,9 +1,14 @@
 import React from "react";
+import { useEffect } from "react";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
  
 const ThankYou: React.FC = () => {
   const navigate = useNavigate();
+
+   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
  
   return (
     <div className="min-h-[calc(80vh-4rem)] flex items-center justify-center bg-gray-50 px-4">

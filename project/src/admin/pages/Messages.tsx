@@ -2,15 +2,10 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Global_API_BASE from "../services/GlobalConstants";
 import {
-  Mail,
-  Phone,
-  MapPin,
-  User,
-  ClipboardList,
   Search,
   Calendar,
   Check,
-  MessageCircle
+  MessageCircle,
 } from "lucide-react";
 
 const Messages: React.FC = () => {
@@ -18,7 +13,6 @@ const Messages: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"all" | "read" | "unread">("all");
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   const fetchAll = async () => {
@@ -127,43 +121,48 @@ const Messages: React.FC = () => {
 
   const isRead = (r: any) => r.isRead === true || r.read === true;
 
-  // 👉 WhatsApp Redirect
+  // ⭐ WhatsApp Redirect
   const openWhatsApp = (req: any) => {
     let phone = req.phone || "";
-    phone = phone.replace(/\D/g, ""); // remove non-numbers
+    phone = phone.replace(/\D/g, "");
     if (phone.length === 10) {
-      phone = "91" + phone; // auto-add India code
+      phone = "91" + phone;
     }
-
     const message = `Hello ${req.name}, regarding your service request for ${req.serviceCategory}.`;
-
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
 
-  /* ------------------------------------------------------
-     ⭐ MOBILE SCROLL WRAPPER ADDED BELOW
-     ------------------------------------------------------ */
+  // ⭐⭐⭐ CREATE BOOKING BUTTON — IMPORTANT ⭐⭐⭐
+  const openBookingModal = (req: any) => {
+    const prefill = {
+      name: req.name,
+      email: req.email,
+      phone: req.phone,
+      location: req.location,
+      serviceCategory: req.serviceCategory,
+      subcategory: req.subcategory,
+    };
+
+    localStorage.setItem("prefillBookingData", JSON.stringify(prefill));
+
+    window.location.href = "/admin/bookings?openCreate=true";
+  };
+
   return (
     <div className="w-full overflow-x-scroll md:overflow-x-visible scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
-
-      {/* Force minimum width for mobile scroll */}
       <div className="min-w-[950px]">
-
-        {/* ORIGINAL CONTENT – UNTOUCHED */}
         <div className="p-6">
 
           <h2 className="text-4xl font-bold text-center mb-6 text-navy-800">
             Customer Service
           </h2>
 
+          {/* Search & Filters */}
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
 
             <div className="relative w-full md:w-1/3">
-              <Search
-                className="absolute left-3 top-2.5 text-gray-500"
-                size={18}
-              />
+              <Search className="absolute left-3 top-2.5 text-gray-500" size={18} />
               <input
                 className="w-full pl-10 p-2 border rounded-lg shadow-sm"
                 placeholder="Search by name, email or phone..."
@@ -198,9 +197,7 @@ const Messages: React.FC = () => {
                     key={t}
                     onClick={() => changeTab(t)}
                     className={`px-4 py-2 rounded-lg capitalize font-medium ${
-                      activeTab === t
-                        ? "bg-navy-700 text-white"
-                        : "bg-gray-200"
+                      activeTab === t ? "bg-navy-700 text-white" : "bg-gray-200"
                     }`}
                   >
                     {t}
@@ -211,11 +208,10 @@ const Messages: React.FC = () => {
             </div>
           </div>
 
+          {/* LIST */}
           <div className="space-y-3">
             {filteredRequests.length === 0 && (
-              <p className="text-center text-gray-500 py-10">
-                No messages found.
-              </p>
+              <p className="text-center text-gray-500 py-10">No messages found.</p>
             )}
 
             {filteredRequests.map((req) => (
@@ -224,7 +220,6 @@ const Messages: React.FC = () => {
                 className="p-4 rounded-lg border shadow-sm bg-white hover:shadow-md transition cursor-default"
               >
                 <div className="grid grid-cols-5 items-center text-sm font-medium gap-2">
-
                   <span
                     className="text-navy-700 font-semibold cursor-pointer underline"
                     onClick={() => setSelectedRequest(req)}
@@ -235,7 +230,6 @@ const Messages: React.FC = () => {
                   <span>{req.phone}</span>
                   <span>{req.email}</span>
                   <span>{req.location}</span>
-
                   <span className="text-gray-600 text-xs">
                     {formatDate(req.submittedAt)}
                   </span>
@@ -285,13 +279,9 @@ const Messages: React.FC = () => {
                   <p>
                     <strong>Status:</strong>{" "}
                     {isRead(selectedRequest) ? (
-                      <span className="text-green-700 font-semibold">
-                        Read
-                      </span>
+                      <span className="text-green-700 font-semibold">Read</span>
                     ) : (
-                      <span className="text-red-700 font-semibold">
-                        Unread
-                      </span>
+                      <span className="text-red-700 font-semibold">Unread</span>
                     )}
                   </p>
                 </div>
@@ -315,12 +305,19 @@ const Messages: React.FC = () => {
                   WhatsApp Customer
                 </button>
 
+                {/* ⭐⭐⭐ CREATE BOOKING BUTTON ⭐⭐⭐ */}
+                <button
+                  onClick={() => openBookingModal(selectedRequest)}
+                  className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center gap-2"
+                >
+                  Create Booking
+                </button>
+
               </div>
             </div>
           )}
 
         </div>
-
       </div>
     </div>
   );

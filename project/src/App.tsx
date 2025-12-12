@@ -1,5 +1,10 @@
 // App.tsx
 import React, { useEffect } from 'react';
+
+import { useLocation } from "react-router-dom";
+
+
+
 import { Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
@@ -56,6 +61,11 @@ function App() {
     initConfigs();
   }, []);
 
+
+  const location = useLocation();
+const isAdminRoute = location.pathname.startsWith("/admin");
+
+
   return (
     <HelmetProvider>
       <AuthProvider>
@@ -103,9 +113,13 @@ function App() {
               </Routes>
 
             </main>
-            <Footer />
-            <GoBackButton />
-            <WhatsAppButton />
+          {!isAdminRoute && (
+  <>
+    <Footer />
+    <GoBackButton />
+    <WhatsAppButton />
+    </>
+)}
             {/* <ChatbotWidget /> */}
 
           </div>

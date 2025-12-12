@@ -6,6 +6,8 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import Global_API_BASE from "../services/GlobalConstants";
 import { useLocation } from "react-router-dom";
+import AdminCreateBookingModal from "../components/bookings/AdminCreateBookingModal";
+
 
 import {
   Edit,
@@ -566,328 +568,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorRef, initialDate = 
   );
 };
 
-/* ----------------------------------------------------
-   ADMIN CREATE BOOKING MODAL
----------------------------------------------------- */
-const AdminCreateBookingModal: React.FC<{ onClose: () => void; onCreated: () => void }> = ({
-  onClose,
-  onCreated,
-}) => {
-  const [form, setForm] = useState({
-    customerName: "",
-    customerEmail: "",
-    customerNumber: "",
-    addressLine1: "",
-    city: "",
-    pincode: "",
-    bookingServiceName: "",
-    bookingDate: "",
-    bookingTime: "",
-    bookingAmount: 0,        // ✅ FIXED: should start as number
-    remarks: "",
-  });
 
-  const [saving, setSaving] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value }));
-  };
-
-  /* ------------------ SERVICES ------------------ */
-  const [allServices, setAllServices] = useState<any[]>([]);
-  const [serviceRows, setServiceRows] = useState([
-    { category: "", subcategory: "", packageId: "", price: 0, subcategories: [], packages: [] },
-  ]);
-
-  const [gst, setGST] = useState(0);
-  const [grandTotal, setGrandTotal] = useState(0);
-
-  useEffect(() => {
-    axios
-      .get(`${Global_API_BASE}/api/customers/all-services`)
-      .then((res) => setAllServices(res.data))
-      .catch((err) => console.error("Failed loading services:", err));
-  }, []);
-
-  const categories = [...new Set(allServices.map((s) => s.service_category))];
-
-  // Parse package string into list of { label, price }
-  function parsePackages(packageString: string) {
-    return packageString
-      .split(";")
-      .map((item) => item.trim())
-      .filter((item) => item !== "")
-      .map((item) => {
-        const parts = item.split(":");
-        return {
-          label: parts[0]?.trim(),
-          price: parts[1]?.trim() || null,
-        };
-      });
-  }
-
-  /* -------- Handle Category Change -------- */
-  const handleCategoryChange = (index: number, category: string) => {
-    const filteredSubCats = [
-      ...new Set(
-        allServices.filter((s) => s.service_category === category).map((s) => s.service_type)
-      ),
-    ];
-
-    const updated = [...serviceRows];
-    updated[index].category = category;
-    updated[index].subcategory = "";
-    updated[index].packageId = "";
-    updated[index].subcategories = filteredSubCats;
-    updated[index].packages = [];
-    updated[index].price = 0;
-    setServiceRows(updated);
-  };
-
-  /* -------- Handle Subcategory Change -------- */
-  const handleSubCategoryChange = (index: number, subcat: string) => {
-    const filtered = allServices.filter((s) => s.service_type === subcat);
-
-    const packagesMapped = filtered
-      .map((s) => {
-        const parsed = parsePackages(s.service_package);
-
-        return parsed.map((pkg) => ({
-          service_id: s.service_id,
-          fullLabel: `${s.service_name} – ${pkg.label}`,
-          price: pkg.price,
-        }));
-      })
-      .flat();
-
-    const updated = [...serviceRows];
-    updated[index].subcategory = subcat;
-    updated[index].packages = packagesMapped;
-    updated[index].packageId = "";
-    updated[index].price = 0;
-    setServiceRows(updated);
-  };
-
-  /* -------- Handle Package Change (sets price) -------- */
-  const handlePackageChange = (index: number, pkgId: string) => {
-    const updated = [...serviceRows];
-    updated[index].packageId = pkgId;
-
-    const selected = updated[index].packages.find(
-      (p) => p.service_id + "-" + p.fullLabel === pkgId
-    );
-
-    if (selected) {
-      const price = isNaN(Number(selected.price)) ? 0 : Number(selected.price);
-      updated[index].price = price; // ⭐ store price in row
-    }
-
-    setServiceRows(updated);
-  };
-
-  /* -------- Add / Remove Rows -------- */
-  const addServiceRow = () => {
-    setServiceRows([
-      ...serviceRows,
-      { category: "", subcategory: "", packageId: "", price: 0, subcategories: [], packages: [] },
-    ]);
-  };
-
-  const removeServiceRow = (index: number) => {
-    setServiceRows(serviceRows.filter((_, i) => i !== index));
-  };
-
-  /* ----------------------------------------------------
-     AUTO-UPDATE TOTAL, GST, GRAND TOTAL + SERVICE NAME
-  ------------------------------------------------------ */
-  useEffect(() => {
-    // Total price of all service packages
-    const total = serviceRows.reduce((sum, row) => sum + (row.price || 0), 0);
-
-    // SERVICE NAME: combine all selected full labels
-    const names = serviceRows
-      .filter((r) => r.packageId)
-      .map(
-        (r) =>
-          r.packages.find((p) => p.service_id + "-" + p.fullLabel === r.packageId)?.fullLabel
-      )
-      .filter(Boolean)
-      .join(", ");
-
-    setForm((prev) => ({
-      ...prev,
-      bookingAmount: total,
-      bookingServiceName: names, // ⭐ multiple service names
-    }));
-
-    const gstAmount = total * 0.18;
-    setGST(gstAmount);
-    setGrandTotal(total + gstAmount);
-  }, [serviceRows]);
-
-  /* ----------------------- CREATE BOOKING ----------------------- */
-  const handleCreate = async () => {
-    if (!form.customerName || !form.customerNumber || !form.bookingServiceName) {
-      alert("Please fill required fields: Customer Name, Phone and Service");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const bookingTimeConverted = form.bookingTime ? convert24To12(form.bookingTime) : undefined;
-
-      const payload = {
-        customerName: form.customerName,
-        customerEmail: form.customerEmail || null,
-        customerNumber: form.customerNumber,
-        addressLine1: form.addressLine1 || null,
-        city: form.city || null,
-        pincode: form.pincode || null,
-        bookingServiceName: form.bookingServiceName,
-        bookingDate: form.bookingDate || null,
-        bookingTime: bookingTimeConverted || null,
-        bookingAmount: form.bookingAmount,
-        grandTotal: grandTotal,
-        remarks: form.remarks || null,
-      };
-
-      const res = await axios.post(`${Global_API_BASE}/api/bookings/admin/create`, payload);
-
-      try {
-        await BookingsAPIService.sendBookingNotification(
-          res.data?.customer_email || form.customerEmail,
-          res.data?.customer_number || form.customerNumber,
-          "received"
-        );
-      } catch (notifyErr) {
-        console.warn("Notification failed:", notifyErr);
-      }
-
-      alert("Booking created successfully!");
-      onCreated();
-      onClose();
-    } catch (err) {
-      console.error("Failed creating booking:", err);
-      alert("Failed creating booking. Check console for details.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  /* ----------------------- JSX UI ----------------------- */
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center border-b pb-3">
-          <h2 className="text-2xl font-bold text-navy-700">Create New Booking</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* FORM */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input name="customerName" placeholder="Customer Name" className="input" value={form.customerName} onChange={handleChange} />
-          <input name="customerEmail" placeholder="Customer Email" className="input" value={form.customerEmail} onChange={handleChange} />
-          <input name="customerNumber" placeholder="Phone Number" className="input" value={form.customerNumber} onChange={handleChange} />
-          <input name="addressLine1" placeholder="Address Line 1" className="input" value={form.addressLine1} onChange={handleChange} />
-          <input name="city" placeholder="City" className="input" value={form.city} onChange={handleChange} />
-          <input name="pincode" placeholder="Pincode" className="input" value={form.pincode} onChange={handleChange} />
-
-          {/* SERVICE SELECTION */}
-          <div className="col-span-2 space-y-2">
-            <h3 className="font-semibold text-navy-700 text-lg">Select Services</h3>
-
-            {serviceRows.map((row, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-gray-50 p-4 rounded-xl border">
-                <select className="input" value={row.category} onChange={(e) => handleCategoryChange(index, e.target.value)}>
-                  <option value="">Select Category</option>
-                  {categories.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
-
-                <select className="input" value={row.subcategory} disabled={!row.category} onChange={(e) => handleSubCategoryChange(index, e.target.value)}>
-                  <option value="">Select Sub Category</option>
-                  {row.subcategories.map((sc) => (
-                    <option key={sc}>{sc}</option>
-                  ))}
-                </select>
-
-                <select className="input" value={row.packageId} disabled={!row.subcategory} onChange={(e) => handlePackageChange(index, e.target.value)}>
-                  <option value="">Select Package</option>
-                  {row.packages.map((pkg, i) => (
-                    <option key={i} value={`${pkg.service_id}-${pkg.fullLabel}`}>
-                      {pkg.fullLabel} – ₹{pkg.price}
-                    </option>
-                  ))}
-                </select>
-
-                {serviceRows.length > 1 && (
-                  <button className="text-red-600 text-sm" onClick={() => removeServiceRow(index)}>
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-
-            <Button onClick={addServiceRow} className="bg-blue-600 text-white px-4 py-2 rounded-lg">
-              + Add Service
-            </Button>
-          </div>
-
-          <input type="date" name="bookingDate" className="input" value={form.bookingDate} onChange={handleChange} />
-
-          {/* Time slot */}
-          <select name="bookingTime" className="input" value={form.bookingTime} onChange={handleChange}>
-            <option value="">Select Time Slot</option>
-            {Array.from({ length: 13 }).map((_, i) => {
-              const hour = 8 + i;
-              const label = new Date(0, 0, 0, hour).toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-              return (
-                <option key={hour} value={label}>
-                  {label}
-                </option>
-              );
-            })}
-          </select>
-
-          {/* Amount + GST */}
-          <div className="col-span-2">
-            <label className="text-sm font-semibold">Amount (Auto-filled)</label>
-            <input name="bookingAmount" className="input" value={form.bookingAmount} readOnly />
-          </div>
-
-          <div className="col-span-2 bg-gray-100 p-4 rounded-xl">
-            <div className="text-gray-700 text-sm">GST (18%)</div>
-            <div className="text-lg font-bold">₹{gst.toFixed(2)}</div>
-
-            <div className="text-gray-700 text-sm mt-2">Grand Total</div>
-            <div className="text-2xl font-bold text-green-700">₹{grandTotal.toFixed(2)}</div>
-          </div>
-        </div>
-
-        <textarea name="remarks" placeholder="Remarks" className="w-full border rounded-lg p-3"></textarea>
-
-        {/* Footer */}
-        <div className="flex justify-end gap-3 pt-3 border-t">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button className="bg-green-600 text-white px-6 py-2 rounded-lg" onClick={handleCreate}>
-            Create Booking
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
+  
 
 /* -------------------------
    Main Bookings Page
@@ -905,6 +587,9 @@ export function Bookings() {
   const autoBookingId = location.state?.bookingId || null;
   const autoOpenEdit = location.state?.openEdit || false;
   const [hasAutoOpened, setHasAutoOpened] = useState(false);
+
+ 
+
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -926,6 +611,27 @@ export function Bookings() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarMode, setCalendarMode] = useState<"single" | "month">("single");
   const [calendarInitial, setCalendarInitial] = useState<Date | null>(null);
+
+   const [prefillData, setPrefillData] = useState<any>(null);
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const openCreate = params.get("openCreate");
+
+  const saved = localStorage.getItem("prefillBookingData");
+
+  if (openCreate && saved) {
+    setPrefillData(JSON.parse(saved));
+    setIsCreateModalOpen(true);
+    localStorage.removeItem("prefillBookingData");
+  }
+}, [location]);
+
+
+
+
+
+
 
   const fetchBookings = useCallback(() => {
     setLoading(true);
@@ -1374,6 +1080,10 @@ export function Bookings() {
       </div>
     );
 
+
+
+
+    
   return (
     <div className="w-full overflow-x-scroll md:overflow-x-visible scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
       <div className="min-w-[950px]">
@@ -1556,12 +1266,16 @@ export function Bookings() {
             </div>
           )}
 
-          {isCreateModalOpen && (
-            <AdminCreateBookingModal
-              onClose={() => setIsCreateModalOpen(false)}
-              onCreated={() => { setIsCreateModalOpen(false); fetchBookings(); }}
-            />
-          )}
+         {isCreateModalOpen && (
+  <AdminCreateBookingModal
+    prefillData={prefillData}
+    onClose={() => setIsCreateModalOpen(false)}
+    onCreated={() => {
+      setIsCreateModalOpen(false);
+      fetchBookings();
+    }}
+  />
+)}
 
           {/* Edit Modal */}
           {isEditModalOpen && selectedBooking && (
