@@ -55,10 +55,10 @@ export const RunningOffersCard: React.FC<RunningOffersCardProps> = ({ onClose })
 
     // 2) If backend returned "/uploads/file.jpg"
     if (s.startsWith("/uploads/"))
-      return `Global_API_BASE${s}`;
+      return `${Global_API_BASE}${s}`;
 
     // 3) If backend returned only filename → convert to backend URL
-    return `Global_API_BASE/${s}`;
+    return `${Global_API_BASE}/${s}`;
   };
 
   // ----------------------
@@ -177,8 +177,8 @@ export const RunningOffersCard: React.FC<RunningOffersCardProps> = ({ onClose })
       offer.text && offer.imageUrl
         ? "both"
         : offer.text
-        ? "text"
-        : "image"
+          ? "text"
+          : "image"
     );
   };
 
