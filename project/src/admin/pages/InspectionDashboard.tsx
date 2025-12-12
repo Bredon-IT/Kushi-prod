@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import InspectionAPIService from "../services/InspectionAPIService";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+
+import AdminCreateBookingModal from "../components/bookings/AdminCreateBookingModal";
+
 import {
   Edit,
   Search,
@@ -487,6 +490,9 @@ export function InspectionDashboard() {
   const [customFrom, setCustomFrom] = useState<string>(""); // yyyy-mm-dd
   const [customTo, setCustomTo] = useState<string>("");
 
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+
   // For single-date selection
   const [selectedDate, setSelectedDate] = useState<string>(""); // yyyy-mm-dd
   const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
@@ -790,6 +796,8 @@ export function InspectionDashboard() {
 
           {/* Filters + Top Pagination Info */}
           <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 sticky top-0 z-10">
+
+
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex items-center w-full md:w-1/2 relative">
                 <Search className="absolute left-3 text-gray-400 w-5 h-5" />
@@ -801,6 +809,14 @@ export function InspectionDashboard() {
                   className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white shadow-inner"
                 />
               </div>
+
+              <Button
+  onClick={() => setIsBookingModalOpen(true)}
+  className="bg-green-600 text-white px-4 py-2 rounded-lg"
+>
+  + Create Booking
+</Button>
+
 
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <select value={filter} onChange={handleFilterChange} className="px-3 py-2 rounded-lg border border-navy-400 bg-white font-semibold text-navy-600 shadow-sm">
@@ -969,6 +985,17 @@ export function InspectionDashboard() {
               </Button>
             </div>
           )}
+
+          {isBookingModalOpen && (
+  <AdminCreateBookingModal
+    onClose={() => setIsBookingModalOpen(false)}
+    onCreated={() => {
+      setIsBookingModalOpen(false);
+      fetchInspections(); // refresh inspection list
+    }}
+  />
+)}
+
 
           {isEditModalOpen && selectedBooking && (
             <EditInspectionModal
