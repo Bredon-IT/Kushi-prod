@@ -5,7 +5,9 @@ import { useAuth } from '../hooks/useAuth';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import Global_API_BASE from '../services/GlobalConstants';
-
+import toast from "react-hot-toast";
+ 
+ 
 export function Login() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -13,12 +15,12 @@ export function Login() {
     email: '',
     password: ''
   });
-
+ 
   const navigate = useNavigate();
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+ 
     try {
       const res = await fetch(Global_API_BASE + '/api/login/login', {
         method: 'POST',
@@ -28,7 +30,7 @@ export function Login() {
           password: formData.password
         })
       });
-
+ 
       if (res.ok) {
         const admin = await res.json();
         localStorage.setItem('admin', JSON.stringify(admin));
@@ -36,29 +38,28 @@ export function Login() {
         login();
         navigate('/admin');
       } else {
-        const msg = await res.text();
-        alert(msg || 'Invalid email or password');
+         toast.error("Invalid email or password");
       }
     } catch (err) {
       console.error(err);
-      alert('Something went wrong');
+      toast.error("Something went wrong. Please try again.");
     }
   };
-
+ 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
-
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-coral-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-
+ 
         {/* Logo Section */}
         <div className="text-center mb-8">
-
+ 
           <h1 className="text-3xl font-bold bg-gradient-to-r from-navy-700 to-peach-300 bg-clip-text text-transparent">
             Kushi Services
           </h1>
@@ -66,17 +67,17 @@ export function Login() {
             Welcome back to your dashboard
           </p>
         </div>
-
+ 
         {/* Login Card */}
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardContent className="p-8">
-
+ 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Sign In</h2>
                 <p className="text-gray-600 mt-1">Access your admin dashboard</p>
               </div>
-
+ 
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
@@ -93,7 +94,7 @@ export function Login() {
                   />
                 </div>
               </div>
-
+ 
               {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
@@ -108,7 +109,7 @@ export function Login() {
                     placeholder="Enter your password"
                     required
                   />
-
+ 
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -118,7 +119,7 @@ export function Login() {
                   </button>
                 </div>
               </div>
-
+ 
               {/* Remember me only */}
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
@@ -126,7 +127,7 @@ export function Login() {
                   <span className="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
               </div>
-
+ 
               {/* Submit */}
               <Button type="submit" className="w-full py-3 text-base font-semibold">
                 Sign In
@@ -134,7 +135,7 @@ export function Login() {
             </form>
           </CardContent>
         </Card>
-
+ 
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">© 2024 Kushi Services. All rights reserved.</p>
         </div>
@@ -142,4 +143,6 @@ export function Login() {
     </div>
   );
 }
-
+ 
+ 
+ 

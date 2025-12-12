@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 `${API_BASE}/api/auth/signin`,
                 { email, password },
                 {
-                    withCredentials: true, // important for cookies/sessions
+                    withCredentials: true,
                     headers: { 'Content-Type': 'application/json' },
                 }
             );
@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (data.token) {
                 localStorage.setItem('kushiToken', data.token);
             }
-            // Fetch full profile if backend provides a profile API
+
             let profile = data;
             try {
                 const profileRes = await axios.get(`${API_BASE}/api/auth/profile/${userId}`, {
@@ -108,7 +108,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn('Profile fetch failed, using login payload.');
             }
 
-            const { firstName, lastName } = deriveNames(profile.fullName ?? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim());
+            const { firstName, lastName } = deriveNames(
+                profile.fullName ?? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim()
+            );
 
             const normalizedUser: User = {
                 id: String(profile.id ?? userId),
@@ -141,10 +143,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     /** SIGNUP */
     const signup: AuthContextType['signup'] = async (userData) => {
         try {
-            const res = await axios.post(`${API_BASE}/api/auth/signup`, userData, {
-                withCredentials: true,
-                headers: { 'Content-Type': 'application/json' },
-            });
+            const res = await axios.post(
+                `${API_BASE}/api/auth/signup`,
+                userData,
+                {
+                    withCredentials: true,
+                    headers: { 'Content-Type': 'application/json' },
+                }
+            );
 
             const data = res.data;
             const fullName = data.fullName ?? `${userData.firstName} ${userData.lastName}`.trim();
@@ -165,7 +171,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             return { ok: true };
         } catch (err: any) {
-            return { ok: false, message: err.response?.data?.message || 'Signup failed' };
+
+            const backendMessage =
+                err.response?.data?.message ||
+                err.response?.data ||
+                err.message ||
+                "Signup failed";
+
+            return { ok: false, message: backendMessage };
         }
     };
 
@@ -182,7 +195,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             if (!user) return false;
             const updatedUser = { ...user, ...userData };
-            // Optional: Call backend to persist
             setUser(updatedUser);
             localStorage.setItem('kushiUser', JSON.stringify(updatedUser));
             return true;
@@ -191,6 +203,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const value: AuthContextType = { user, isAuthenticated, login, signup, logout, updateProfile, isUserLoading };
+    const value: AuthContextType = {
+        user,
+        isAuthenticated,
+        login,
+        signup,
+        logout,
+        updateProfile,
+        isUserLoading
+    };
+
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

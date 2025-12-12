@@ -40,7 +40,7 @@ const BookingsAPIService = {
       workername: workerName,
     }),
 
-  // ⭐ ADMIN Create Booking
+  //  ADMIN Create Booking
   adminCreateBooking: (payload: any) =>
     axios.post(`${API_URL}/admin/create`, payload),
 };
