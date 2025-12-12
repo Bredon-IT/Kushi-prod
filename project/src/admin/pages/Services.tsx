@@ -1,5 +1,5 @@
 /* FULL CODE WITH MOBILE SCROLL ENABLED */
- 
+
 import { useState, useEffect } from 'react';
 import { useLocation } from "react-router-dom";
 import { Wrench, Plus, Edit, Trash2, Eye, Search, Filter, X } from 'lucide-react';
@@ -9,18 +9,18 @@ import { Badge } from '../components/ui/Badge';
 import axios, { AxiosResponse } from 'axios';
 import Global_API_BASE from '../services/GlobalConstants';
 import toast from "react-hot-toast";
- 
- 
+
+
 // Reusable component for Read More / Read Less
 function DescriptionWithToggle({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
   const MAX_LENGTH = 120;
- 
+
   if (!text) return null;
- 
+
   const isLong = text.length > MAX_LENGTH;
   const displayText = expanded ? text : text.slice(0, MAX_LENGTH);
- 
+
   return (
     <p className="text-sm md:text-base text-black leading-relaxed w-full break-words">
       {displayText}
@@ -39,7 +39,7 @@ function DescriptionWithToggle({ text }: { text: string }) {
     </p>
   );
 }
- 
+
 export interface Service {
   id: string;
   title: string;
@@ -69,7 +69,7 @@ export interface Service {
   create_date?: string;
   updated_date?: string;
 }
- 
+
 const initialEmptyFormData = {
   service_name: '',
   service_cost: '',
@@ -96,7 +96,7 @@ const initialEmptyFormData = {
   kushi_teamwork: '',
   faq: '',
 };
- 
+
 export function Services() {
   const [services, setServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -110,27 +110,27 @@ export function Services() {
   const [packages, setPackages] = useState<{
     description: string; name: string, price: string
   }[]>([]);
- 
+
   const handlePackageChange = (index: number, field: 'name' | 'price' | 'description', value: string) => {
     const updated = [...packages];
     updated[index][field] = value;
     setPackages(updated);
   };
- 
-   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
- 
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const addPackage = () => setPackages([...packages, { name: '', price: '', description: "" }]);
   const removePackage = (index: number) => setPackages(packages.filter((_, i) => i !== index));
- 
+
   const location = useLocation();
   useEffect(() => {
     if (location.state?.openForm) {
       setShowForm(true);
     }
   }, [location.state]);
- 
+
   const [formData, setFormData] = useState({ ...initialEmptyFormData });
- 
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -167,11 +167,11 @@ export function Services() {
     };
     fetchServices();
   }, []);
- 
+
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
- 
+
   const handleEdit = (service: Service) => {
     setFormData({
       service_name: service.title,
@@ -199,28 +199,28 @@ export function Services() {
       kushi_teamwork: service.kushi_teamwork || '',
       faq: service.faq || '',
     });
- 
+
     setPackages(
       service.service_package
         ? service.service_package.split(';').map(pkg => {
-            const [name, price, description] = pkg.split(':');
-            return { name, price, description: description || "" };
-          })
+          const [name, price, description] = pkg.split(':');
+          return { name, price, description: description || "" };
+        })
         : []
     );
     setEditServiceId(service.id);
     setIsEditing(true);
     setShowForm(true);
   };
- 
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
- 
+
     formData.service_package = packages.map(p => `${p.name}:${p.price}:${p.description || ""}`).join(';');
- 
+
     try {
       const formDataToSend = new FormData();
- 
+
       formDataToSend.append(
         "service",
         new Blob([JSON.stringify({
@@ -229,11 +229,11 @@ export function Services() {
           updated_date: new Date().toISOString().split("T")[0],
         })], { type: "application/json" })
       );
- 
+
       if (serviceImageFile) {
         formDataToSend.append("image", serviceImageFile);
       }
- 
+
       let response: AxiosResponse<any, any>;
       if (isEditing && editServiceId) {
         response = await axios.put(Global_API_BASE + `/api/customers/update-service/${editServiceId}`, formDataToSend, {
@@ -241,32 +241,32 @@ export function Services() {
           maxContentLength: Infinity,
           maxBodyLength: Infinity,
         });
- 
+
         setServices(prev =>
           prev.map(s =>
             s.id === editServiceId
               ? {
-                  ...s,
-                  title: response.data.service_name,
-                  description: response.data.service_description,
-                  details: response.data.service_details,
-                  image: response.data.service_image_url,
-                  price: Number(response.data.service_cost) || 0,
-                  rating: Number(response.data.rating) || 0,
-                  bookingCount: Number(response.data.rating_count) || 0,
-                  category: response.data.service_category || 'General',
-                  type: response.data.service_type || 'Other',
-                  service_package: response.data.service_package || '',
-                  available: response.data.active === 'Y',
-                  overview: response.data.overview,
-                  our_process: response.data.our_process,
-                  benefits: response.data.benefits,
-                  whats_included: response.data.whats_included,
-                  whats_not_included: response.data.whats_not_included,
-                  why_choose_us: response.data.why_choose_us,
-                  kushi_teamwork: response.data.kushi_teamwork,
-                  faq: response.data.faq,
-                }
+                ...s,
+                title: response.data.service_name,
+                description: response.data.service_description,
+                details: response.data.service_details,
+                image: response.data.service_image_url,
+                price: Number(response.data.service_cost) || 0,
+                rating: Number(response.data.rating) || 0,
+                bookingCount: Number(response.data.rating_count) || 0,
+                category: response.data.service_category || 'General',
+                type: response.data.service_type || 'Other',
+                service_package: response.data.service_package || '',
+                available: response.data.active === 'Y',
+                overview: response.data.overview,
+                our_process: response.data.our_process,
+                benefits: response.data.benefits,
+                whats_included: response.data.whats_included,
+                whats_not_included: response.data.whats_not_included,
+                why_choose_us: response.data.why_choose_us,
+                kushi_teamwork: response.data.kushi_teamwork,
+                faq: response.data.faq,
+              }
               : s
           )
         );
@@ -277,7 +277,7 @@ export function Services() {
           maxContentLength: Infinity,
           maxBodyLength: Infinity,
         });
- 
+
         const newService: Service = {
           id: response.data.service_id?.toString() || crypto.randomUUID(),
           title: response.data.service_name,
@@ -305,7 +305,7 @@ export function Services() {
         setServices(prev => [newService, ...prev]);
         toast.success('Service added successfully!');
       }
- 
+
       setShowForm(false);
       setIsEditing(false);
       setEditServiceId(null);
@@ -313,83 +313,83 @@ export function Services() {
       setServiceImageFile(null);
     } catch (err) {
       console.error(err);
-     toast.error(isEditing ? 'Failed to update service' : 'Failed to add service');
+      toast.error(isEditing ? 'Failed to update service' : 'Failed to add service');
     }
   };
- 
+
   const toggleAvailability = async (serviceId: string, currentAvailable: boolean) => {
     const newAvailable = !currentAvailable;
     const newStatus = newAvailable ? "Y" : "N";
- 
+
     const prevServices = [...services];
     setServices(prev =>
       prev.map(s =>
         s.id === serviceId ? { ...s, available: newAvailable } : s
       )
     );
- 
-   toast.success(
+
+    toast.success(
       newAvailable
         ? "Service enabled successfully!"
         : "Service disabled successfully!"
     );
- 
+
     try {
       await axios.put(
         Global_API_BASE + `/api/customers/${serviceId}/status`,
         null,
         { params: { status: newStatus } }
       );
- 
+
     } catch (err) {
       console.error("Error updating service:", err);
       setServices(prevServices);
-     toast.error("Failed to update service status. Please try again.");
+      toast.error("Failed to update service status. Please try again.");
     }
   };
- 
+
   const handleDelete = async () => {
-  if (!confirmDeleteId) return;
- 
-  const serviceId = confirmDeleteId;
-  setConfirmDeleteId(null);
- 
-  setServices(prev => prev.filter(service => service.id !== serviceId));
- 
-  try {
-    await axios.delete(Global_API_BASE + `/api/customers/delete-service/${serviceId}`);
-   
-  } catch (error) {
-    toast.error("Failed to delete service. Please try again.");
-  }
-};
- 
- 
+    if (!confirmDeleteId) return;
+
+    const serviceId = confirmDeleteId;
+    setConfirmDeleteId(null);
+
+    setServices(prev => prev.filter(service => service.id !== serviceId));
+
+    try {
+      await axios.delete(Global_API_BASE + `/api/customers/delete-service/${serviceId}`);
+
+    } catch (error) {
+      toast.error("Failed to delete service. Please try again.");
+    }
+  };
+
+
   const allCategories = Array.from(new Set(services.map(s => s.category)));
   const subcategories = selectedCategory === 'all'
     ? []
     : Array.from(new Set(services.filter(s => s.category === selectedCategory).map(s => s.type)));
- 
+
   const filteredServices = services.filter(service => {
     const matchesSearch =
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
     const matchesType = selectedType === 'all' || service.type === selectedType;
- 
+
     return matchesSearch && matchesCategory && matchesType;
   });
- 
+
   /* ------------------------------------------------------
      ⭐ MOBILE SCROLL WRAPPER STARTS HERE
      ------------------------------------------------------ */
   return (
     <div className="w-full overflow-x-scroll md:overflow-x-visible scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
       <div className="min-w-[950px]">
- 
+
         {/* ORIGINAL CONTENT BELOW — NOT MODIFIED */}
         <div className="space-y-4 md:space-y-6">
- 
+
           {/* Header and Add button */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
@@ -406,7 +406,7 @@ export function Services() {
               <span className="sm:hidden">Add</span>
             </Button>
           </div>
- 
+
           {/* Filters */}
           <Card>
             <CardContent className="p-3 md:p-4">
@@ -452,20 +452,18 @@ export function Services() {
               </div>
             </CardContent>
           </Card>
- 
+
           {/* Services Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-start">
             {filteredServices.map(service => (
               <Card key={service.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
                 <div className="aspect-video overflow-hidden bg-gray-100">
                   <img
-                    src={
-                      service.image && service.image.startsWith("http")
-                        ? service.image
-                        : service.image
-                          ? `Global_API_BASE${service.image}`
-                          : "/placeholder.png"
-                    }
+                    src={(() => {
+                      const img = service.image;
+                      if (!img) return "/placeholder.png";
+                      return img.startsWith("http") ? img : `${Global_API_BASE}${img}`;
+                    })()}
                     alt={service.title || "Service"}
                     className="w-full h-full object-cover"
                   />
@@ -475,22 +473,22 @@ export function Services() {
                     <h3 className="font-semibold text-black text-sm md:text-base leading-tight line-clamp-2 flex-1">
                       {service.title}
                     </h3>
- 
+
                     <Badge variant={service.available ? 'success' : 'danger'} className="ml-2">
                       {service.available ? 'Available' : 'Unavailable'}
                     </Badge>
                   </div>
- 
+
                   {service.details && (
                     <p className="text-xs md:text-sm mt-1 text-justify">{service.details}</p>
                   )}
- 
+
                   <div className="text-xs md:text-sm mt-1">
                     <div><b>Rating:</b> {service.rating} | <b>Bookings:</b> {service.bookingCount}</div>
                     <div><b>Category:</b> {service.category}</div>
                     <div><b>Subcategory:</b> {service.type}</div>
                   </div>
- 
+
                   <div className="flex items-center space-x-1 md:space-x-2 flex-wrap gap-1 mt-auto pt-3">
                     <Button
                       size="sm"
@@ -501,11 +499,11 @@ export function Services() {
                       <Eye className="h-4 w-4 md:mr-2" />
                       <span className="hidden md:inline">View</span>
                     </Button>
- 
+
                     <Button size="sm" variant="secondary" onClick={() => handleEdit(service)}>
                       <Edit className="h-4 w-4" />
                     </Button>
- 
+
                     <Button
                       size="sm"
                       variant={service.available ? "danger" : "success"}
@@ -513,7 +511,7 @@ export function Services() {
                     >
                       {service.available ? "Disable" : "Enable"}
                     </Button>
- 
+
                     <Button size="sm" variant="danger" onClick={() => setConfirmDeleteId(service.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -522,7 +520,7 @@ export function Services() {
               </Card>
             ))}
           </div>
- 
+
           {/* Add/Edit Service Modal */}
           {showForm && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -548,7 +546,7 @@ export function Services() {
                     <X className="h-5 w-5" />
                   </button>
                 </div>
- 
+
                 <div className="flex-1 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input name="service_name" placeholder="Service Name" value={formData.service_name} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" required />
@@ -566,7 +564,7 @@ export function Services() {
                       className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto"
                       style={{ minHeight: '100px', resize: 'vertical' }}
                     />
- 
+
                     {/* File Upload */}
                     <div className="col-span-1 md:col-span-2">
                       <input
@@ -576,11 +574,11 @@ export function Services() {
                         className="block w-full text-sm text-gray-700 border border-gray-300 rounded-md p-2"
                       />
                     </div>
- 
+
                     <input name="service_image_url" placeholder="Image URL" value={formData.service_image_url} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
                     <input name="service_category" placeholder="Category" value={formData.service_category} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
                     <input name="service_type" placeholder="Subcategory" value={formData.service_type} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
- 
+
                     <div className="col-span-1 md:col-span-2 space-y-2">
                       <label className="font-semibold">Service Packages</label>
                       {packages.map((pkg, index) => (
@@ -599,7 +597,7 @@ export function Services() {
                             onChange={(e) => handlePackageChange(index, 'price', e.target.value)}
                             className="input border border-black px-3 py-2 rounded-md text-black placeholder-black w-32"
                           />
- 
+
                           <textarea
                             placeholder="Package Description"
                             value={pkg.description || ""}
@@ -609,18 +607,18 @@ export function Services() {
                             className="input border border-black px-3 py-2 rounded-md text-black placeholder-black w-full resize-none"
                             rows={2}
                           />
- 
+
                           <button type="button" onClick={() => removePackage(index)} className="text-red-500 font-bold">X</button>
                         </div>
                       ))}
                       <button type="button" onClick={addPackage} className="text-blue-500 font-bold mt-1">+ Add Package</button>
                     </div>
- 
+
                     <input name="rating" placeholder="Rating" value={formData.rating} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
                     <input name="rating_count" placeholder="Rating Count" value={formData.rating_count} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
                     <input name="created_by" placeholder="Created By" value={formData.created_by} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
                     <input name="updated_by" placeholder="Updated By" value={formData.updated_by} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black" />
- 
+
                     <textarea name="overview" placeholder="Overview" wrap="soft" value={formData.overview} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight: '100px', resize: 'vertical' }} />
                     <textarea name="our_process" placeholder="Our Process" wrap="soft" value={formData.our_process} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight: '100px', resize: 'vertical' }} />
                     <textarea name="benefits" placeholder="Benefits" wrap="soft" value={formData.benefits} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight: '100px', resize: 'vertical' }} />
@@ -631,7 +629,7 @@ export function Services() {
                     <textarea name="faq" placeholder="FAQs" wrap="soft" value={formData.faq} onChange={handleFormChange} className="input border border-black px-3 py-2 rounded-md text-black placeholder-black overflow-auto" style={{ minHeight: '100px', resize: 'vertical' }} />
                   </div>
                 </div>
- 
+
                 <div className="flex justify-end gap-3 mt-6 flex-shrink-0">
                   <Button type="button" variant="secondary" onClick={() => {
                     setShowForm(false);
@@ -649,7 +647,7 @@ export function Services() {
               </form>
             </div>
           )}
- 
+
           {/* Service View Modal */}
           {viewService && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -664,26 +662,26 @@ export function Services() {
                     <X className="h-5 w-5" />
                   </button>
                 </div>
- 
+
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                   <div className="aspect-video overflow-hidden rounded-lg bg-gray-100">
                     <img
-                      src={viewService?.image && viewService.image.startsWith("http")
-                        ? viewService.image
-                        : viewService?.image
-                          ? `Global_API_BASE${viewService.image}`
-                          : "/placeholder.png"}
+                      src={(() => {
+                        const img = viewService?.image;
+                        if (!img) return "/placeholder.png";
+                        return img.startsWith("http") ? img : `${Global_API_BASE}${img}`;
+                      })()}
                       alt={viewService?.title || "Service"}
                       className="w-full h-full object-cover"
                     />
                   </div>
- 
+
                   <div>
                     <div>
                       <b>Description:</b>
                       <DescriptionWithToggle text={viewService.description} />
                     </div>
- 
+
                     <p><b>Price:</b> ₹{viewService.price}</p>
                     <p><b>Category:</b> {viewService.category}</p>
                     <p><b>Subcategory:</b> {viewService.type}</p>
@@ -691,7 +689,7 @@ export function Services() {
                     <p><b>Bookings:</b> {viewService.bookingCount}</p>
                     <p><b>Availability:</b> <Badge variant={viewService.available ? 'success' : 'danger'}>{viewService.available ? 'Available' : 'Unavailable'}</Badge></p>
                   </div>
- 
+
                   <div>
                     <b>Packages:</b>
                     {viewService.service_package?.split(';').map((pkg, idx) => {
@@ -699,56 +697,56 @@ export function Services() {
                       return <div key={idx}>{name}: ₹{price}</div>;
                     })}
                   </div>
- 
+
                   {viewService.overview && (
                     <div>
                       <h4 className="font-semibold text-lg">Overview</h4>
                       <p className="whitespace-pre-wrap">{viewService.overview}</p>
                     </div>
                   )}
- 
+
                   {viewService.our_process && (
                     <div>
                       <h4 className="font-semibold text-lg">Our Process</h4>
                       <p className="whitespace-pre-wrap">{viewService.our_process}</p>
                     </div>
                   )}
- 
+
                   {viewService.benefits && (
                     <div>
                       <h4 className="font-semibold text-lg">Benefits</h4>
                       <p className="whitespace-pre-wrap">{viewService.benefits}</p>
                     </div>
                   )}
- 
+
                   {viewService.whats_included && (
                     <div>
                       <h4 className="font-semibold text-lg">What's Included</h4>
                       <p className="whitespace-pre-wrap">{viewService.whats_included}</p>
                     </div>
                   )}
- 
+
                   {viewService.whats_not_included && (
                     <div>
                       <h4 className="font-semibold text-lg">What's Not Included</h4>
                       <p className="whitespace-pre-wrap">{viewService.whats_not_included}</p>
                     </div>
                   )}
- 
+
                   {viewService.why_choose_us && (
                     <div>
                       <h4 className="font-semibold text-lg">Why Choose Us</h4>
                       <p className="whitespace-pre-wrap">{viewService.why_choose_us}</p>
                     </div>
                   )}
- 
+
                   {viewService.kushi_teamwork && (
                     <div>
                       <h4 className="font-semibold text-lg">Kushi Teamwork</h4>
                       <p className="whitespace-pre-wrap">{viewService.kushi_teamwork}</p>
                     </div>
                   )}
- 
+
                   {viewService.faq && (
                     <div>
                       <h4 className="font-semibold text-lg">FAQs</h4>
@@ -759,47 +757,46 @@ export function Services() {
               </div>
             </div>
           )}
- 
-{confirmDeleteId && (
-  <div className="fixed inset-x-0 top-20 z-50 flex justify-center">
-    <div className="bg-white rounded-xl shadow-lg w-full max-w-sm p-6 text-black border">
- 
-      <h2 className="text-xl font-semibold mb-4 text-center">Confirm Delete</h2>
-      <p className="text-sm mb-6 text-center">
-        Are you sure you want to delete this service?
-      </p>
- 
-      <div className="flex justify-center gap-3">
-        <button
-          onClick={() => setConfirmDeleteId(null)}
-          className="px-4 py-2 bg-gray-200 rounded-lg text-sm"
-        >
-          Cancel
-        </button>
- 
-        <button
-  onClick={() => {
-    handleDelete();
-    toast.success("Service deleted successfully!");
-  }}
-  className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm"
->
-  Delete
-</button>
- 
-      </div>
- 
-    </div>
-  </div>
-)}
- 
-         
- 
+
+          {confirmDeleteId && (
+            <div className="fixed inset-x-0 top-20 z-50 flex justify-center">
+              <div className="bg-white rounded-xl shadow-lg w-full max-w-sm p-6 text-black border">
+
+                <h2 className="text-xl font-semibold mb-4 text-center">Confirm Delete</h2>
+                <p className="text-sm mb-6 text-center">
+                  Are you sure you want to delete this service?
+                </p>
+
+                <div className="flex justify-center gap-3">
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="px-4 py-2 bg-gray-200 rounded-lg text-sm"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleDelete();
+                      toast.success("Service deleted successfully!");
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+          )}
+
+
+
         </div>
- 
+
       </div>
     </div>
   );
 }
- 
- 
+
