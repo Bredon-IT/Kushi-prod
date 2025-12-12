@@ -7,7 +7,7 @@ interface GalleryItem {
   fileName: string;
   fileUrl: string;
   uploadedAt: string;
-  description: string; 
+  description: string;
 }
 
 const CustomerGallery: React.FC = () => {
@@ -24,8 +24,8 @@ const CustomerGallery: React.FC = () => {
   };
 
   useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, []);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   // Fetch gallery on mount and every 5 seconds
   useEffect(() => {
@@ -47,7 +47,7 @@ const CustomerGallery: React.FC = () => {
             className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden"
           >
             <img
-              src={`${Global_API_BASE}/${item.fileUrl}`}
+              src={item.fileUrl.startsWith('http') ? item.fileUrl : `${Global_API_BASE}/${item.fileUrl}`}
               alt={item.fileName}
               className="w-full h-40 sm:h-48 object-cover"
               onError={(e) => {

@@ -23,7 +23,8 @@ const isVideoFile = (url: string) => {
 
 // --- Gallery Media Component ---
 const GalleryMedia: React.FC<{ item: GalleryItem }> = ({ item }) => {
-  const fullUrl = `${Global_API_BASE}/${item.fileUrl}`;
+  const isAbsoluteUrl = item.fileUrl.startsWith('http');
+  const fullUrl = isAbsoluteUrl ? item.fileUrl : `${Global_API_BASE}/${item.fileUrl}`;
   const isVideo = isVideoFile(item.fileUrl);
 
   return (
